@@ -10,16 +10,33 @@ export function errorMessage(e: unknown): string {
   return "Something went wrong. Please try again.";
 }
 
-export const useIngredients = () => useQuery({ queryKey: ["ingredients"], queryFn: () => svc().listIngredients(), staleTime: Infinity });
-export const usePantry = () => useQuery({ queryKey: ["pantry"], queryFn: () => svc().listPantry() });
-export const useRecipes = (query?: string, category?: string) =>
-  useQuery({ queryKey: ["recipes", query, category], queryFn: () => svc().listRecipes({ query, category }) });
+export const useIngredients = () =>
+  useQuery({
+    queryKey: ["ingredients"],
+    queryFn: () => svc().listIngredients(),
+    staleTime: Infinity,
+  });
+export const usePantry = () =>
+  useQuery({ queryKey: ["pantry"], queryFn: () => svc().listPantry() });
+export const useRecipes = (query?: string, category?: string, sort: "match" | "title" = "match") =>
+  useQuery({
+    queryKey: ["recipes", query, category, sort],
+    queryFn: () =>
+      svc().listRecipes({ ...(query ? { query } : {}), ...(category ? { category } : {}), sort }),
+  });
 export const useRecipe = (id: string, servings?: number, subs: ConfirmedSubstitution[] = []) =>
-  useQuery({ queryKey: ["recipe", id, servings, subs], queryFn: () => svc().getRecipe(id, servings, subs), placeholderData: (p) => p });
+  useQuery({
+    queryKey: ["recipe", id, servings, subs],
+    queryFn: () => svc().getRecipe(id, servings, subs),
+    placeholderData: (p) => p,
+  });
 export const useBasket = () => useQuery({ queryKey: ["basket"], queryFn: () => svc().getBasket() });
-export const useShopping = () => useQuery({ queryKey: ["shopping"], queryFn: () => svc().getShoppingList() });
-export const useHistory = () => useQuery({ queryKey: ["history"], queryFn: () => svc().listHistory() });
-export const useDashboard = () => useQuery({ queryKey: ["dashboard"], queryFn: () => svc().getDashboard() });
+export const useShopping = () =>
+  useQuery({ queryKey: ["shopping"], queryFn: () => svc().getShoppingList() });
+export const useHistory = () =>
+  useQuery({ queryKey: ["history"], queryFn: () => svc().listHistory() });
+export const useDashboard = () =>
+  useQuery({ queryKey: ["dashboard"], queryFn: () => svc().getDashboard() });
 
 /** Mutation that toasts only after the service confirms, then refreshes every view. */
 export function useAction<TArgs, TOut>(

@@ -6,14 +6,25 @@ import type { PantryItem, Recipe } from "./types";
 const T = "2026-10-19";
 const ings = new Map(CATALOG.map((i) => [i.id, i]));
 const recipe: Recipe = {
-  id: "r", external_id: "x", title: "Test", category: "C", instructions: "", image_url: "", base_servings: 2,
+  id: "r",
+  external_id: "x",
+  title: "Test",
+  category: "C",
+  instructions: "",
+  image_url: "",
+  base_servings: 2,
   ingredients: [
     { ingredient_id: "egg", quantity: 2 },
     { ingredient_id: "milk", quantity: 200 },
     { ingredient_id: "cream", quantity: 100 },
   ],
 };
-const p = (ingredient_id: string, quantity: number, expiry_date: string): PantryItem => ({ id: ingredient_id, ingredient_id, quantity, expiry_date });
+const p = (ingredient_id: string, quantity: number, expiry_date: string): PantryItem => ({
+  id: ingredient_id,
+  ingredient_id,
+  quantity,
+  expiry_date,
+});
 
 describe("units", () => {
   it("converts kg→g and l→ml", () => {
@@ -51,7 +62,12 @@ describe("expiry", () => {
 
 describe("matching & ranking", () => {
   it("computes covered lines / total, rounded", () => {
-    const m = D.computeMatch(recipe, [p("egg", 6, "2026-10-30"), p("milk", 500, "2026-10-30")], T, ings);
+    const m = D.computeMatch(
+      recipe,
+      [p("egg", 6, "2026-10-30"), p("milk", 500, "2026-10-30")],
+      T,
+      ings,
+    );
     expect(m.score).toBe(67);
     expect(m.missing).toEqual(["Heavy cream"]);
   });
@@ -65,7 +81,7 @@ describe("matching & ranking", () => {
       { title: "A", match: { ...base, expiring_used: [] } },
       { title: "B", match: { ...base, expiring_used: ["Eggs"] } },
     ]);
-    expect(ranked[0].title).toBe("B");
+    expect(ranked[0]!.title).toBe("B");
   });
 });
 
@@ -75,16 +91,27 @@ describe("scaling & substitutions", () => {
     expect(d.map((x) => x.quantity)).toEqual([4, 400, 200]);
   });
   it("applies only confirmed substitutions with the rule ratio", () => {
-    const d = D.recipeDemands(recipe, 2, [{ rule_id: "r1", original_ingredient_id: "cream", substitute_ingredient_id: "milk" }], SUBSTITUTION_RULES);
+    const d = D.recipeDemands(
+      recipe,
+      2,
+      [{ rule_id: "r1", original_ingredient_id: "cream", substitute_ingredient_id: "milk" }],
+      SUBSTITUTION_RULES,
+    );
     expect(d[2]).toEqual({ ingredient_id: "milk", quantity: 100, substituted_from: "cream" });
   });
   it("suggests substitutes only with enough non-expired stock", () => {
     const stock = new Map([["milk", 50]]);
     const lines = D.toLines(D.recipeDemands(recipe, 2, [], SUBSTITUTION_RULES), stock, ings);
-    expect(D.suggestSubstitutions(lines, SUBSTITUTION_RULES, stock, ings).find((s) => s.rule.id === "r1")).toBeUndefined();
+    expect(
+      D.suggestSubstitutions(lines, SUBSTITUTION_RULES, stock, ings).find(
+        (s) => s.rule.id === "r1",
+      ),
+    ).toBeUndefined();
     const stock2 = new Map([["milk", 500]]);
     const lines2 = D.toLines(D.recipeDemands(recipe, 2, [], SUBSTITUTION_RULES), stock2, ings);
-    expect(D.suggestSubstitutions(lines2, SUBSTITUTION_RULES, stock2, ings).map((s) => s.rule.id)).toContain("r1");
+    expect(
+      D.suggestSubstitutions(lines2, SUBSTITUTION_RULES, stock2, ings).map((s) => s.rule.id),
+    ).toContain("r1");
   });
 });
 
@@ -95,7 +122,13 @@ describe("shopping", () => {
       { ingredient_id: "milk", quantity: 400 },
       { ingredient_id: "egg", quantity: 2 },
     ]);
-    const out = D.computeShopping(totals, new Map([["milk", 500], ["egg", 6]]));
+    const out = D.computeShopping(
+      totals,
+      new Map([
+        ["milk", 500],
+        ["egg", 6],
+      ]),
+    );
     expect(out.get("milk")).toBe(200);
     expect(out.has("egg")).toBe(false);
   });

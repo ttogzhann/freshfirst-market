@@ -199,8 +199,15 @@ paths:
           $ref: '#/components/responses/ServerError'
       description: >-
         Sort by match score descending, then number of expiring ingredients descending, then title
-        ascending. No pagination wrapper.
+        ascending by default (sort=match). sort=title orders alphabetically. No pagination wrapper.
       parameters:
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [match, title]
+            default: match
         - name: query
           in: query
           required: false
@@ -276,6 +283,8 @@ paths:
         - Recipes
       security: []
       responses:
+        '422':
+          $ref: '#/components/responses/ValidationError'
         '200':
           description: Success.
           content:
@@ -433,7 +442,7 @@ paths:
                   $ref: '#/components/schemas/ShoppingItem'
         '409':
           description: >-
-            EDITS_WOULD_BE_LOST: force is false and any generated item is edited/purchased, or
+            EDITS_WOULD_BE_LOST: force is false and any generated item is edited/purchased/removed, or
             resetAll would remove manual items.
           content:
             application/json:
@@ -574,7 +583,7 @@ paths:
         Return the updated shopping item, not the pantry entry. Requires a catalog-linked purchased
         item. Atomically update pantry and set transferred_to_pantry=true. Repeating the transfer
         returns the already transferred item without adding stock again. Matching expiry merges
-        quantities; differing expiry may replace expired or zero stock, otherwise conflicts.
+        quantities; differing expiry always conflicts and requires editing the existing pantry entry.
         Non-catalog items return 422.
       requestBody:
         required: true
@@ -1086,11 +1095,13 @@ components:
           minimum: 0
         unit:
           type: string
+          minLength: 1
+          pattern: \S
         ingredient_id:
           type: string
           nullable: true
       description: >-
-        Creates a manual item. Label is trimmed. Blank unit defaults to pcs. With ingredient_id,
+        Creates a manual item. Label and unit must be nonblank and are trimmed. With ingredient_id,
         unit is set to that catalog ingredient canonical unit and quantity is interpreted in that
         unit (not converted). Without ingredient_id, exact case-insensitive label matching links a
         catalog ingredient only if the unit is canonical and compatible.

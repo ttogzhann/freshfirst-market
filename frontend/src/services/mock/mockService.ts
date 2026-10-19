@@ -27,6 +27,7 @@ export function memoryStorage(): KeyValueStorage {
 }
 
 interface State {
+  removedGenerated?: boolean;
   pantry: PantryItem[];
   recipes: Recipe[];
   basket: BasketItem[];
@@ -45,7 +46,7 @@ export interface MockOptions {
 }
 
 const KEY = "freshfirst:mock-db:v1";
-const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v));
+const clone = <T>(v: T): T => (v === undefined ? v : JSON.parse(JSON.stringify(v)));
 
 export function createMockService(opts: MockOptions = {}): FreshService {
   const storage = opts.storage ?? memoryStorage();
@@ -157,7 +158,8 @@ export function createMockService(opts: MockOptions = {}): FreshService {
   function validatePantry(input: PantryInput): number {
     const ing = ingredients.get(input.ingredient_id);
     if (!ing) throw bad("Choose an ingredient from the catalog");
-    if (!(typeof input.quantity === "number" && input.quantity > 0)) throw bad("Quantity must be greater than zero");
+    if (!(Number.isFinite(input.quantity) && input.quantity > 0))
+      throw bad("Quantity must be greater than zero");
     if (!D.isValidDate(input.expiry_date)) throw bad("Enter a valid expiry date");
     const q = D.toCanonical(input.quantity, input.unit, ing.canonical_unit);
     if (q === null) throw bad(`Unit "${input.unit}" is not compatible with ${ing.name}`);
@@ -170,9 +172,12 @@ export function createMockService(opts: MockOptions = {}): FreshService {
     return r;
   }
   function checkServings(n: number) {
-    if (!D.validServings(n)) throw bad(`Servings must be a whole number between ${D.MIN_SERVINGS} and ${D.MAX_SERVINGS}`);
+    if (!D.validServings(n))
+      throw bad(`Servings must be a whole number between ${D.MIN_SERVINGS} and ${D.MAX_SERVINGS}`);
   }
   function checkSubs(recipe: Recipe, subs: ConfirmedSubstitution[]) {
+    if (new Set(subs.map((s) => s.original_ingredient_id)).size !== subs.length)
+      throw bad("Choose only one substitute per ingredient");
     for (const s of subs) {
       const rule = rules.find((r) => r.id === s.rule_id);
       if (
@@ -207,7 +212,16 @@ export function createMockService(opts: MockOptions = {}): FreshService {
       ...l,
       sufficient: (stock.get(l.ingredient_id) ?? 0) >= (agg.get(l.ingredient_id) ?? 0),
     }));
-    return { recipe, agg, preview: { recipe_id: recipe.id, servings: req.servings, lines, can_cook: lines.every((l) => l.sufficient) } };
+    return {
+      recipe,
+      agg,
+      preview: {
+        recipe_id: recipe.id,
+        servings: req.servings,
+        lines,
+        can_cook: lines.every((l) => l.sufficient),
+      },
+    };
   }
 
   const service: FreshService = {
@@ -230,7 +244,12 @@ export function createMockService(opts: MockOptions = {}): FreshService {
           existing.quantity = D.round(existing.quantity + q);
           return existing;
         }
-        const item: PantryItem = { id: id("p"), ingredient_id: input.ingredient_id, quantity: q, expiry_date: input.expiry_date };
+        const item: PantryItem = {
+          id: id("p"),
+          ingredient_id: input.ingredient_id,
+          quantity: q,
+          expiry_date: input.expiry_date,
+        };
         state.pantry.push(item);
         return item;
       }),
@@ -241,8 +260,16 @@ export function createMockService(opts: MockOptions = {}): FreshService {
         if (!item) throw notFound("Pantry item");
         const q = validatePantry(input);
         if (state.pantry.some((p) => p.id !== pid && p.ingredient_id === input.ingredient_id))
-          throw new ServiceError(409, "DUPLICATE_INGREDIENT", "Another entry already uses this ingredient");
-        Object.assign(item, { ingredient_id: input.ingredient_id, quantity: q, expiry_date: input.expiry_date });
+          throw new ServiceError(
+            409,
+            "DUPLICATE_INGREDIENT",
+            "Another entry already uses this ingredient",
+          );
+        Object.assign(item, {
+          ingredient_id: input.ingredient_id,
+          quantity: q,
+          expiry_date: input.expiry_date,
+        });
         return item;
       }),
 
@@ -255,12 +282,16 @@ export function createMockService(opts: MockOptions = {}): FreshService {
 
     listRecipes: (params = {}) =>
       wrap(() => {
+        if (params.sort && !["match", "title"].includes(params.sort))
+          throw bad("Unsupported recipe sort");
         const q = params.query?.trim().toLowerCase();
         const list = state.recipes
           .filter((r) => !q || r.title.toLowerCase().includes(q))
           .filter((r) => !params.category || r.category === params.category)
           .map(summary);
-        return D.rankRecipes(list);
+        return params.sort === "title"
+          ? list.sort((a, b) => a.title.localeCompare(b.title))
+          : D.rankRecipes(list);
       }),
 
     getRecipe: (rid, servings, substitutions = []) =>
@@ -270,7 +301,11 @@ export function createMockService(opts: MockOptions = {}): FreshService {
         checkServings(s);
         checkSubs(recipe, substitutions);
         const stock = D.usableStock(state.pantry, today());
-        const lines = D.toLines(D.recipeDemands(recipe, s, substitutions, rules), stock, ingredients);
+        const lines = D.toLines(
+          D.recipeDemands(recipe, s, substitutions, rules),
+          stock,
+          ingredients,
+        );
         return {
           ...summary(recipe),
           servings: s,
@@ -335,11 +370,19 @@ export function createMockService(opts: MockOptions = {}): FreshService {
 
     generateShoppingList: ({ resetAll = false, force = false } = {}) =>
       wrap(() => {
-        const edited = state.shopping.some(
-          (s) => (s.origin === "generated" && (s.edited || s.purchased)) || (resetAll && s.origin === "manual"),
-        );
+        const edited =
+          state.removedGenerated ||
+          state.shopping.some(
+            (s) =>
+              (s.origin === "generated" && (s.edited || s.purchased)) ||
+              (resetAll && s.origin === "manual"),
+          );
         if (edited && !force)
-          throw new ServiceError(409, "EDITS_WOULD_BE_LOST", "Regenerating will overwrite your edits to the list.");
+          throw new ServiceError(
+            409,
+            "EDITS_WOULD_BE_LOST",
+            "Regenerating will overwrite your edits to the list.",
+          );
         const toBuy = D.computeShopping(basketTotals(), D.usableStock(state.pantry, today()));
         const keep = resetAll ? [] : state.shopping.filter((s) => s.origin === "manual");
         const generated: ShoppingItem[] = [...toBuy].map(([ingredient_id, quantity]) => {
@@ -357,21 +400,26 @@ export function createMockService(opts: MockOptions = {}): FreshService {
           };
         });
         state.shopping = [...generated, ...keep];
+        state.removedGenerated = false;
         return state.shopping;
       }),
 
     addShoppingItem: (input) =>
       wrap(() => {
         if (!input.label?.trim()) throw bad("Item name is required");
-        if (!(input.quantity > 0)) throw bad("Quantity must be greater than zero");
+        if (!(Number.isFinite(input.quantity) && input.quantity > 0))
+          throw bad("Quantity must be greater than zero");
         let ingredient_id = input.ingredient_id ?? null;
-        let unit = input.unit?.trim() || "pcs";
+        let unit = input.unit?.trim();
+        if (!unit) throw bad("Unit is required");
         if (ingredient_id) {
           const ing = ingredients.get(ingredient_id);
           if (!ing) throw bad("Unknown ingredient");
           unit = ing.canonical_unit;
         } else {
-          const match = CATALOG.find((i) => i.name.toLowerCase() === input.label.trim().toLowerCase());
+          const match = CATALOG.find(
+            (i) => i.name.toLowerCase() === input.label.trim().toLowerCase(),
+          );
           if (match && match.canonical_unit === unit) ingredient_id = match.id;
         }
         const item: ShoppingItem = {
@@ -394,13 +442,18 @@ export function createMockService(opts: MockOptions = {}): FreshService {
         const item = state.shopping.find((s) => s.id === sid);
         if (!item) throw notFound("Shopping item");
         if (patch.quantity !== undefined) {
-          if (!(patch.quantity > 0)) throw bad("Quantity must be greater than zero");
+          if (!(Number.isFinite(patch.quantity) && patch.quantity > 0))
+            throw bad("Quantity must be greater than zero");
           item.quantity = D.round(patch.quantity);
           item.edited = true;
         }
         if (patch.purchased !== undefined) {
           if (item.transferred_to_pantry && !patch.purchased)
-            throw new ServiceError(409, "ALREADY_TRANSFERRED", "This item was already added to the pantry");
+            throw new ServiceError(
+              409,
+              "ALREADY_TRANSFERRED",
+              "This item was already added to the pantry",
+            );
           item.purchased = patch.purchased;
         }
         return item;
@@ -408,6 +461,8 @@ export function createMockService(opts: MockOptions = {}): FreshService {
 
     removeShoppingItem: (sid) =>
       wrap(() => {
+        if (state.shopping.some((s) => s.id === sid && s.origin === "generated"))
+          state.removedGenerated = true;
         const before = state.shopping.length;
         state.shopping = state.shopping.filter((s) => s.id !== sid);
         if (before === state.shopping.length) throw notFound("Shopping item");
@@ -418,16 +473,17 @@ export function createMockService(opts: MockOptions = {}): FreshService {
         const item = state.shopping.find((s) => s.id === sid);
         if (!item) throw notFound("Shopping item");
         if (item.transferred_to_pantry) return item; // idempotent
-        if (!item.purchased) throw new ServiceError(409, "NOT_PURCHASED", "Mark the item as purchased first");
+        if (!item.purchased)
+          throw new ServiceError(409, "NOT_PURCHASED", "Mark the item as purchased first");
         if (!item.ingredient_id) throw bad("Only catalog ingredients can be added to the pantry");
-        if (!(input.quantity > 0)) throw bad("Quantity must be greater than zero");
+        if (!(Number.isFinite(input.quantity) && input.quantity > 0))
+          throw bad("Quantity must be greater than zero");
         if (!D.isValidDate(input.expiry_date)) throw bad("Enter a valid expiry date");
         const existing = state.pantry.find((p) => p.ingredient_id === item.ingredient_id);
         const q = D.round(input.quantity);
         if (existing) {
-          if (existing.expiry_date === input.expiry_date) existing.quantity = D.round(existing.quantity + q);
-          else if (D.expiryStatus(existing.expiry_date, today()) === "expired" || existing.quantity <= 0)
-            Object.assign(existing, { quantity: q, expiry_date: input.expiry_date });
+          if (existing.expiry_date === input.expiry_date)
+            existing.quantity = D.round(existing.quantity + q);
           else
             throw new ServiceError(
               409,
@@ -435,7 +491,12 @@ export function createMockService(opts: MockOptions = {}): FreshService {
               "Your pantry already has this ingredient with a different expiry date. Use the same date or edit the pantry entry first.",
             );
         } else {
-          state.pantry.push({ id: id("p"), ingredient_id: item.ingredient_id, quantity: q, expiry_date: input.expiry_date });
+          state.pantry.push({
+            id: id("p"),
+            ingredient_id: item.ingredient_id,
+            quantity: q,
+            expiry_date: input.expiry_date,
+          });
         }
         item.transferred_to_pantry = true;
         return item;
@@ -447,10 +508,16 @@ export function createMockService(opts: MockOptions = {}): FreshService {
       wrap(() => {
         const { recipe, agg, preview } = cookPreview(req);
         if (!preview.can_cook)
-          throw new ServiceError(409, "INSUFFICIENT_STOCK", "Not enough usable stock to cook this recipe. Nothing was changed.");
+          throw new ServiceError(
+            409,
+            "INSUFFICIENT_STOCK",
+            "Not enough usable stock to cook this recipe. Nothing was changed.",
+          );
         const t = today();
         for (const [ingId, qty] of agg) {
-          const p = state.pantry.find((x) => x.ingredient_id === ingId && D.expiryStatus(x.expiry_date, t) !== "expired")!;
+          const p = state.pantry.find(
+            (x) => x.ingredient_id === ingId && D.expiryStatus(x.expiry_date, t) !== "expired",
+          )!;
           p.quantity = D.round(p.quantity - qty);
           if (p.quantity <= 0) state.pantry = state.pantry.filter((x) => x.id !== p.id);
         }

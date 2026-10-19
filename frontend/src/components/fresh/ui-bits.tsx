@@ -5,7 +5,15 @@ import { Badge } from "@/components/ui/badge";
 import { errorMessage } from "@/hooks/use-fresh";
 import type { ExpiryStatus } from "@/services";
 
-export function PageHeader({ title, subtitle, action }: { title: string; subtitle?: string; action?: ReactNode }) {
+export function PageHeader({
+  title,
+  subtitle,
+  action,
+}: {
+  title: string;
+  subtitle?: string;
+  action?: ReactNode;
+}) {
   return (
     <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
       <div>
@@ -52,16 +60,35 @@ export function Empty({ title, children }: { title: string; children?: ReactNode
 export function ExpiryBadge({ status, days }: { status: ExpiryStatus; days: number }) {
   if (status === "expired") return <Badge variant="destructive">Expired</Badge>;
   if (status === "expiring")
-    return <Badge className="bg-warning text-warning-foreground hover:bg-warning">{days === 0 ? "Expires today" : `${days}d left`}</Badge>;
+    return (
+      <Badge className="bg-warning text-warning-foreground hover:bg-warning">
+        {days === 0 ? "Expires today" : `${days}d left`}
+      </Badge>
+    );
   return <Badge variant="secondary">{days}d left</Badge>;
 }
 
 export function MatchPill({ score }: { score: number }) {
-  const tone = score >= 80 ? "bg-primary text-primary-foreground" : score >= 50 ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground";
-  return <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${tone}`}>{score}% match</span>;
+  const tone =
+    score >= 80
+      ? "bg-primary text-primary-foreground"
+      : score >= 50
+        ? "bg-accent text-accent-foreground"
+        : "bg-muted text-muted-foreground";
+  return (
+    <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${tone}`}>{score}% match</span>
+  );
 }
 
-export function RecipeImage({ src, alt, className = "" }: { src: string; alt: string; className?: string }) {
+export function RecipeImage({
+  src,
+  alt,
+  className = "",
+}: {
+  src: string;
+  alt: string;
+  className?: string;
+}) {
   return (
     <div className={`relative overflow-hidden bg-hero ${className}`}>
       <span className="absolute inset-0 flex items-center justify-center font-display text-4xl text-primary-foreground/80">

@@ -28,11 +28,17 @@ const UNIT_FACTORS: Record<InputUnit, { canonical: CanonicalUnit; factor: number
 };
 
 export function compatibleUnits(canonical: CanonicalUnit): InputUnit[] {
-  return (Object.keys(UNIT_FACTORS) as InputUnit[]).filter((u) => UNIT_FACTORS[u].canonical === canonical);
+  return (Object.keys(UNIT_FACTORS) as InputUnit[]).filter(
+    (u) => UNIT_FACTORS[u].canonical === canonical,
+  );
 }
 
 /** Returns canonical quantity, or null when the unit is incompatible. Never guesses. */
-export function toCanonical(quantity: number, unit: InputUnit, canonical: CanonicalUnit): number | null {
+export function toCanonical(
+  quantity: number,
+  unit: InputUnit,
+  canonical: CanonicalUnit,
+): number | null {
   const f = UNIT_FACTORS[unit];
   if (!f || f.canonical !== canonical) return null;
   return round(quantity * f.factor);
@@ -73,7 +79,11 @@ export function daysUntil(expiry: string, today: string): number {
   return Math.round((b - a) / 86_400_000);
 }
 
-export function expiryStatus(expiry: string, today: string, threshold = EXPIRY_THRESHOLD_DAYS): ExpiryStatus {
+export function expiryStatus(
+  expiry: string,
+  today: string,
+  threshold = EXPIRY_THRESHOLD_DAYS,
+): ExpiryStatus {
   const d = daysUntil(expiry, today);
   if (d < 0) return "expired";
   if (d <= threshold) return "expiring";
@@ -121,9 +131,12 @@ export function recipeDemands(
 }
 
 /** Sum demands by ingredient (canonical units only, so no cross-dimension mixing). */
-export function aggregate(demands: { ingredient_id: string; quantity: number }[]): Map<string, number> {
+export function aggregate(
+  demands: { ingredient_id: string; quantity: number }[],
+): Map<string, number> {
   const m = new Map<string, number>();
-  for (const d of demands) m.set(d.ingredient_id, round((m.get(d.ingredient_id) ?? 0) + d.quantity));
+  for (const d of demands)
+    m.set(d.ingredient_id, round((m.get(d.ingredient_id) ?? 0) + d.quantity));
   return m;
 }
 
@@ -142,7 +155,7 @@ export function toLines(
       required: d.quantity,
       available,
       sufficient: available >= d.quantity,
-      substituted_from: d.substituted_from,
+      ...(d.substituted_from ? { substituted_from: d.substituted_from } : {}),
     };
   });
 }
@@ -164,7 +177,8 @@ export function computeMatch(
     if (have >= ri.quantity) covered++;
     else missing.push(name);
     const p = pantry.find((x) => x.ingredient_id === ri.ingredient_id);
-    if (p && have > 0 && expiryStatus(p.expiry_date, today) === "expiring") expiring_used.push(name);
+    if (p && have > 0 && expiryStatus(p.expiry_date, today) === "expiring")
+      expiring_used.push(name);
   }
   const total = recipe.ingredients.length;
   return {
@@ -216,7 +230,10 @@ export function suggestSubstitutions(
 }
 
 /** to_buy = max(0, total_required - total_usable_stock), stock deducted once across the basket. */
-export function computeShopping(totals: Map<string, number>, stock: Map<string, number>): Map<string, number> {
+export function computeShopping(
+  totals: Map<string, number>,
+  stock: Map<string, number>,
+): Map<string, number> {
   const out = new Map<string, number>();
   for (const [id, req] of totals) {
     const toBuy = round(Math.max(0, req - (stock.get(id) ?? 0)));
@@ -230,9 +247,12 @@ export function computeShopping(totals: Map<string, number>, stock: Map<string, 
  * Only exact, defined conversions are accepted; anything ambiguous returns null.
  */
 export function parseMeasure(measure: string, canonical: CanonicalUnit): number | null {
-  const m = measure.trim().toLowerCase().match(/^(\d+(?:\.\d+)?)(?:\s*)([a-z]*)$/);
+  const m = measure
+    .trim()
+    .toLowerCase()
+    .match(/^(\d+(?:\.\d+)?)(?:\s*)([a-z]*)$/);
   if (!m) return null;
-  const qty = parseFloat(m[1]);
+  const qty = parseFloat(m[1]!);
   if (!(qty > 0)) return null;
   const aliases: Record<string, InputUnit> = {
     "": "pcs",
@@ -248,7 +268,7 @@ export function parseMeasure(measure: string, canonical: CanonicalUnit): number 
     tbsp: "tbsp",
     tbs: "tbsp",
   };
-  const unit = aliases[m[2]];
+  const unit = aliases[m[2]!];
   if (!unit) return null;
   return toCanonical(qty, unit, canonical);
 }

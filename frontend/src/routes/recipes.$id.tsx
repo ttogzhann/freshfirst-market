@@ -15,7 +15,10 @@ export const Route = createFileRoute("/recipes/$id")({
       { title: "Recipe — FreshFirst" },
       { name: "description", content: "Recipe details, pantry availability and substitutions." },
       { property: "og:title", content: "Recipe — FreshFirst" },
-      { property: "og:description", content: "Recipe details, pantry availability and substitutions." },
+      {
+        property: "og:description",
+        content: "Recipe details, pantry availability and substitutions.",
+      },
     ],
   }),
   component: RecipePage,
@@ -31,11 +34,14 @@ function RecipePage() {
   const basket = useBasket();
   const inBasket = basket.data?.items.find((b) => b.recipe_id === id);
   const s = data?.servings ?? 2;
-  const add = useAction(async () => {
-    const item = await service().addToBasket(id, s);
-    if (subs.length) await service().updateBasketItem(item.id, { substitutions: subs });
-    return item;
-  }, inBasket ? "Basket updated" : "Added to basket");
+  const add = useAction(
+    async () => {
+      const item = await service().addToBasket(id, s);
+      await service().updateBasketItem(item.id, { substitutions: subs });
+      return item;
+    },
+    inBasket ? "Basket updated" : "Added to basket",
+  );
 
   if (isLoading) return <Loading />;
   if (error) return <ErrorState error={error} onRetry={refetch} />;
@@ -45,7 +51,10 @@ function RecipePage() {
 
   return (
     <>
-      <Link to="/recipes" className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+      <Link
+        to="/recipes"
+        className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+      >
         <ArrowLeft className="h-4 w-4" /> All recipes
       </Link>
       <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr]">
@@ -55,7 +64,9 @@ function RecipePage() {
         <div className="space-y-5">
           <div className="flex items-center gap-3">
             <MatchPill score={data.match.score} />
-            <span className="text-sm text-muted-foreground">{data.category} · serves {data.base_servings}</span>
+            <span className="text-sm text-muted-foreground">
+              {data.category} · serves {data.base_servings}
+            </span>
           </div>
           <h1 className="text-4xl font-semibold">{data.title}</h1>
           {data.match.expiring_used.length > 0 && (
@@ -65,14 +76,37 @@ function RecipePage() {
           )}
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center rounded-lg border bg-card">
-              <Button variant="ghost" size="icon" aria-label="Fewer servings" disabled={s <= MIN_SERVINGS} onClick={() => setServings(s - 1)}><Minus className="h-4 w-4" /></Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Fewer servings"
+                disabled={s <= MIN_SERVINGS}
+                onClick={() => setServings(s - 1)}
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
               <span className="w-24 text-center text-sm font-medium">{s} servings</span>
-              <Button variant="ghost" size="icon" aria-label="More servings" disabled={s >= MAX_SERVINGS} onClick={() => setServings(s + 1)}><Plus className="h-4 w-4" /></Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="More servings"
+                disabled={s >= MAX_SERVINGS}
+                onClick={() => setServings(s + 1)}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
             </div>
-            <Button variant="outline" disabled={add.isPending} onClick={() => add.mutate(undefined)}>
-              <ShoppingBasket className="h-4 w-4" /> {inBasket ? `Update basket (${inBasket.servings} → ${s})` : "Add to basket"}
+            <Button
+              variant="outline"
+              disabled={add.isPending}
+              onClick={() => add.mutate(undefined)}
+            >
+              <ShoppingBasket className="h-4 w-4" />{" "}
+              {inBasket ? `Update basket (${inBasket.servings} → ${s})` : "Add to basket"}
             </Button>
-            <Button onClick={() => setCooking(true)}><ChefHat className="h-4 w-4" /> I cooked this</Button>
+            <Button onClick={() => setCooking(true)}>
+              <ChefHat className="h-4 w-4" /> I cooked this
+            </Button>
           </div>
 
           <IngredientLines lines={data.lines} />
@@ -81,22 +115,51 @@ function RecipePage() {
             <div className="space-y-2">
               <h3 className="text-lg font-semibold">Suggested substitutions</h3>
               {suggestions.map((sg) => (
-                <div key={sg.rule.id} className="rounded-xl border border-accent bg-accent/30 p-3 text-sm">
+                <div
+                  key={sg.rule.id}
+                  className="rounded-xl border border-accent bg-accent/30 p-3 text-sm"
+                >
                   <p>
-                    Use <b>{formatQty(sg.required, sg.unit)} {sg.substitute_name}</b> instead of {sg.original_name}
+                    Use{" "}
+                    <b>
+                      {formatQty(sg.required, sg.unit)} {sg.substitute_name}
+                    </b>{" "}
+                    instead of {sg.original_name}
                     <span className="text-muted-foreground"> · {sg.rule.context}</span>
                   </p>
                   <p className="text-xs text-muted-foreground">{sg.rule.note}</p>
                   <div className="mt-2 flex gap-2">
-                    <Button size="sm" onClick={() => setSubs([...subs, { rule_id: sg.rule.id, original_ingredient_id: sg.rule.original_ingredient_id, substitute_ingredient_id: sg.rule.substitute_ingredient_id }])}>Use substitute</Button>
-                    <Button size="sm" variant="ghost" onClick={() => setRejected([...rejected, sg.rule.id])}>No thanks</Button>
+                    <Button
+                      size="sm"
+                      onClick={() =>
+                        setSubs([
+                          ...subs,
+                          {
+                            rule_id: sg.rule.id,
+                            original_ingredient_id: sg.rule.original_ingredient_id,
+                            substitute_ingredient_id: sg.rule.substitute_ingredient_id,
+                          },
+                        ])
+                      }
+                    >
+                      Use substitute
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setRejected([...rejected, sg.rule.id])}
+                    >
+                      No thanks
+                    </Button>
                   </div>
                 </div>
               ))}
             </div>
           )}
           {subs.length > 0 && (
-            <Button variant="ghost" size="sm" onClick={() => setSubs([])}><Undo2 className="h-4 w-4" /> Undo substitutions</Button>
+            <Button variant="ghost" size="sm" onClick={() => setSubs([])}>
+              <Undo2 className="h-4 w-4" /> Undo substitutions
+            </Button>
           )}
         </div>
       </div>
@@ -104,7 +167,12 @@ function RecipePage() {
         <h2 className="mb-3 text-2xl font-semibold">Method</h2>
         <p className="leading-relaxed text-muted-foreground">{data.instructions}</p>
       </section>
-      <CookDialog open={cooking} onOpenChange={setCooking} title={data.title} request={{ recipe_id: id, servings: s, substitutions: subs }} />
+      <CookDialog
+        open={cooking}
+        onOpenChange={setCooking}
+        title={data.title}
+        request={{ recipe_id: id, servings: s, substitutions: subs }}
+      />
     </>
   );
 }

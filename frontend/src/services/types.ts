@@ -179,8 +179,16 @@ export interface FreshService {
   updatePantryItem(id: string, input: PantryInput): Promise<PantryItem>;
   deletePantryItem(id: string): Promise<void>;
 
-  listRecipes(params?: { query?: string; category?: string }): Promise<RecipeSummary[]>;
-  getRecipe(id: string, servings?: number, substitutions?: ConfirmedSubstitution[]): Promise<RecipeDetail>;
+  listRecipes(params?: {
+    query?: string;
+    category?: string;
+    sort?: "match" | "title";
+  }): Promise<RecipeSummary[]>;
+  getRecipe(
+    id: string,
+    servings?: number,
+    substitutions?: ConfirmedSubstitution[],
+  ): Promise<RecipeDetail>;
   importRecipes(): Promise<ImportReport>;
 
   getBasket(): Promise<BasketView>;
@@ -194,10 +202,21 @@ export interface FreshService {
   getShoppingList(): Promise<ShoppingItem[]>;
   /** Throws 409 EDITS_WOULD_BE_LOST when edited generated lines exist and force is not set. */
   generateShoppingList(opts?: { resetAll?: boolean; force?: boolean }): Promise<ShoppingItem[]>;
-  addShoppingItem(input: { label: string; quantity: number; unit: string; ingredient_id?: string | null }): Promise<ShoppingItem>;
-  updateShoppingItem(id: string, patch: { quantity?: number; purchased?: boolean }): Promise<ShoppingItem>;
+  addShoppingItem(input: {
+    label: string;
+    quantity: number;
+    unit: string;
+    ingredient_id?: string | null;
+  }): Promise<ShoppingItem>;
+  updateShoppingItem(
+    id: string,
+    patch: { quantity?: number; purchased?: boolean },
+  ): Promise<ShoppingItem>;
   removeShoppingItem(id: string): Promise<void>;
-  transferToPantry(id: string, input: { quantity: number; expiry_date: string }): Promise<ShoppingItem>;
+  transferToPantry(
+    id: string,
+    input: { quantity: number; expiry_date: string },
+  ): Promise<ShoppingItem>;
 
   previewCook(req: CookRequest): Promise<CookPreview>;
   confirmCook(req: CookRequest): Promise<CookingRecord>;

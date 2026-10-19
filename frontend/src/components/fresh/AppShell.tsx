@@ -1,6 +1,15 @@
 import { useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { LayoutDashboard, Leaf, Menu, ShoppingBasket, ChefHat, Refrigerator, ListChecks, X } from "lucide-react";
+import {
+  LayoutDashboard,
+  Leaf,
+  Menu,
+  ShoppingBasket,
+  ChefHat,
+  Refrigerator,
+  ListChecks,
+  X,
+} from "lucide-react";
 
 const NAV = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -41,7 +50,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           ))}
         </nav>
       </aside>
-      <main className="mx-auto w-full max-w-6xl flex-1 px-5 py-8 md:px-10 md:py-12">{children}</main>
+      <main className="mx-auto w-full max-w-6xl flex-1 px-5 py-8 md:px-10 md:py-12">
+        {children}
+      </main>
     </div>
   );
 }

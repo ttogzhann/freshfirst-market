@@ -10,14 +10,21 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BasketRouteImport } from './routes/basket'
 import { Route as PantryRouteImport } from './routes/pantry'
 import { Route as RecipesRouteImport } from './routes/recipes'
+import { Route as ShoppingRouteImport } from './routes/shopping'
 import { Route as RecipesIndexRouteImport } from './routes/recipes.index'
 import { Route as RecipesIdRouteImport } from './routes/recipes.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BasketRoute = BasketRouteImport.update({
+  id: '/basket',
+  path: '/basket',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PantryRoute = PantryRouteImport.update({
@@ -28,6 +35,11 @@ const PantryRoute = PantryRouteImport.update({
 const RecipesRoute = RecipesRouteImport.update({
   id: '/recipes',
   path: '/recipes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShoppingRoute = ShoppingRouteImport.update({
+  id: '/shopping',
+  path: '/shopping',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecipesIndexRoute = RecipesIndexRouteImport.update({
@@ -43,37 +55,60 @@ const RecipesIdRoute = RecipesIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/basket': typeof BasketRoute
   '/pantry': typeof PantryRoute
   '/recipes': typeof RecipesRouteWithChildren
+  '/shopping': typeof ShoppingRoute
   '/recipes/$id': typeof RecipesIdRoute
   '/recipes/': typeof RecipesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/basket': typeof BasketRoute
   '/pantry': typeof PantryRoute
+  '/shopping': typeof ShoppingRoute
   '/recipes/$id': typeof RecipesIdRoute
   '/recipes': typeof RecipesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/basket': typeof BasketRoute
   '/pantry': typeof PantryRoute
   '/recipes': typeof RecipesRouteWithChildren
+  '/shopping': typeof ShoppingRoute
   '/recipes/$id': typeof RecipesIdRoute
   '/recipes/': typeof RecipesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/pantry' | '/recipes' | '/recipes/$id' | '/recipes/'
+  fullPaths:
+    | '/'
+    | '/basket'
+    | '/pantry'
+    | '/recipes'
+    | '/shopping'
+    | '/recipes/$id'
+    | '/recipes/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/pantry' | '/recipes/$id' | '/recipes'
-  id: '__root__' | '/' | '/pantry' | '/recipes' | '/recipes/$id' | '/recipes/'
+  to: '/' | '/basket' | '/pantry' | '/shopping' | '/recipes/$id' | '/recipes'
+  id:
+    | '__root__'
+    | '/'
+    | '/basket'
+    | '/pantry'
+    | '/recipes'
+    | '/shopping'
+    | '/recipes/$id'
+    | '/recipes/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BasketRoute: typeof BasketRoute
   PantryRoute: typeof PantryRoute
   RecipesRoute: typeof RecipesRouteWithChildren
+  ShoppingRoute: typeof ShoppingRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -83,6 +118,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/basket': {
+      id: '/basket'
+      path: '/basket'
+      fullPath: '/basket'
+      preLoaderRoute: typeof BasketRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pantry': {
@@ -97,6 +139,13 @@ declare module '@tanstack/react-router' {
       path: '/recipes'
       fullPath: '/recipes'
       preLoaderRoute: typeof RecipesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shopping': {
+      id: '/shopping'
+      path: '/shopping'
+      fullPath: '/shopping'
+      preLoaderRoute: typeof ShoppingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recipes/': {
@@ -131,8 +180,10 @@ const RecipesRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BasketRoute: BasketRoute,
   PantryRoute: PantryRoute,
   RecipesRoute: RecipesRouteWithChildren,
+  ShoppingRoute: ShoppingRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
