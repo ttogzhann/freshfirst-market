@@ -47,10 +47,30 @@ npm run validate:api
 
 The npm workflow uses the tracked `frontend/package-lock.json`; `npm ci` installs its exact dependency tree. The old Bun lockfile has been removed to avoid competing dependency resolutions.
 
-The frontend uses a centralized `FreshService` mock with browser localStorage persistence. `/basket` manages servings, confirmed substitutions and cooking; `/shopping` generates combined requirements, preserves manual lines, confirms overwriting edits and transfers confirmed purchases exactly once. Removing generated lines also requires confirmation on regeneration. Different pantry expiry dates require editing the existing entry before merging.
+The frontend uses the real FastAPI backend through the typed `FreshService` HTTP adapter. Browser localStorage mock data is not used or migrated; the mock remains available only for isolated tests. `/basket` manages servings, confirmed substitutions and cooking; `/shopping` generates combined requirements, preserves manual lines, confirms overwriting edits and transfers confirmed purchases exactly once. Removing generated lines also requires confirmation on regeneration. Different pantry expiry dates require editing the existing entry before merging.
 
-Root `openapi.yaml` defines 23 unauthenticated operations, request/response schemas, validation and conflict errors. `npm run validate:api` validates the OpenAPI document and checks one-to-one operation coverage against the typed service. A future HTTP adapter must map the documented error envelope to `ServiceError`.
+Root `openapi.yaml` defines 23 unauthenticated operations, request/response schemas, validation and conflict errors. `npm run validate:api` validates the OpenAPI document and checks one-to-one operation coverage against the typed service. The HTTP adapter maps the documented error envelope to `ServiceError`, including network and malformed-response failures.
 
 The FastAPI backend implements all 23 operations with a seeded in-memory store and a strict TheMealDB importer. See [backend startup, endpoint list and verification](backend/README.md). From `backend/`, run `uv sync --locked`, then `uv run uvicorn app.main:app --reload`. API docs are at `http://127.0.0.1:8000/docs`.
 
-The frontend remains connected to its mock. HTTP integration and SQLite/SQLAlchemy persistence are deferred. In-memory data resets on backend restart. The live import does not yet meet the 15–20 recipe target under the strict catalog/quantity rules; see the importer limitation in the backend README. TheMealDB has no serving yield, so imported `base_servings=1` denotes one complete source batch rather than an inferred human portion count.
+SQLite/SQLAlchemy persistence remains deferred. In-memory data resets on backend restart. The live import does not yet meet the 15–20 recipe target under the strict catalog/quantity rules; see the importer limitation in the backend README. TheMealDB has no serving yield, so imported `base_servings=1` denotes one complete source batch rather than an inferred human portion count.
+
+## Run the integrated app
+
+Start the backend from `backend/`:
+
+```sh
+uv sync --locked
+uv run uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+Then start the frontend from `frontend/`:
+
+```sh
+npm ci
+npm run dev -- --host 127.0.0.1
+```
+
+Open `http://127.0.0.1:5173`. Vite uses port 5173 with strict port checking; FastAPI allows CORS from `http://localhost:5173` and `http://127.0.0.1:5173`, including JSON mutation preflights. To change the API address, copy `frontend/.env.example` to `frontend/.env.local` and set `VITE_API_BASE_URL` to the complete API base URL (including `/api`), then restart Vite. There is no automatic mock fallback on backend failure. Startup imports recipes once; the Recipes import button explicitly retries importing.
+
+Run `npm test` after `uv sync --locked`: the frontend suite starts and stops an isolated FastAPI subprocess on a free local port and exercises the actual TypeScript HTTP adapter through all 23 operations. It uses a strictly normalized synthetic source only within tests and requires the backend `.venv` Python executable. Set `FRESHFIRST_TEST_PYTHON` to override that executable. Other frontend tests retain their injected mocks. Run `uv run pytest -q` from `backend/` for the backend suite. See [integration verification](docs/integration.md) for results and limitations.

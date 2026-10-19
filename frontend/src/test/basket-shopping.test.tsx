@@ -32,6 +32,32 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("basket and shopping journeys", () => {
+  it("keeps a pending purchase unconfirmed until the backend responds", async () => {
+    const item = await service.addShoppingItem({ label: "Eggs", quantity: 6, unit: "pcs" });
+    await service.updateShoppingItem(item.id, { purchased: true });
+    const original = service.transferToPantry.bind(service);
+    let release!: () => void;
+    const pending = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const transfer = vi.spyOn(service, "transferToPantry").mockImplementation(async (...args) => {
+      await pending;
+      return original(...args);
+    });
+    show(<ShoppingPage />);
+    fireEvent.change(await screen.findByLabelText("Expiry date"), {
+      target: { value: "2026-11-01" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Confirm transfer to pantry" }));
+    await waitFor(() => expect(transfer).toHaveBeenCalledOnce());
+    expect(screen.getByRole("button", { name: "Confirm transfer to pantry" })).toBeDisabled();
+    expect(screen.queryByText("Added to pantry")).not.toBeInTheDocument();
+    expect(await service.listPantry()).toEqual([]);
+    release();
+    expect(await screen.findByText("Added to pantry")).toBeInTheDocument();
+    expect((await service.listPantry())[0]?.quantity).toBe(6);
+  });
+
   it("updates basket servings and removes selections", async () => {
     await service.addToBasket("rec_52982", 2);
     show(<BasketPage />);

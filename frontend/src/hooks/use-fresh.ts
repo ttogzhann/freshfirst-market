@@ -28,7 +28,6 @@ export const useRecipe = (id: string, servings?: number, subs: ConfirmedSubstitu
   useQuery({
     queryKey: ["recipe", id, servings, subs],
     queryFn: () => svc().getRecipe(id, servings, subs),
-    placeholderData: (p) => p,
   });
 export const useBasket = () => useQuery({ queryKey: ["basket"], queryFn: () => svc().getBasket() });
 export const useShopping = () =>
@@ -49,8 +48,9 @@ export function useAction<TArgs, TOut>(
     mutationFn: fn,
     onSuccess: (out) => {
       if (success) toast.success(typeof success === "function" ? success(out) : success);
-      qc.invalidateQueries();
     },
+    // A failed multi-request action or lost response can still have changed server state.
+    onSettled: () => qc.invalidateQueries(),
     onError: (e) => {
       if (opts.silentErrors?.(e)) return;
       toast.error(errorMessage(e));

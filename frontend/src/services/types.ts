@@ -1,5 +1,5 @@
 // Domain types + the single service interface every screen talks to.
-// The mock implementation lives in ./mock; a future HTTP client implements the same interface.
+// The HTTP implementation and test mock implement the same interface.
 
 export type CanonicalUnit = "g" | "ml" | "pcs";
 export type InputUnit = "g" | "kg" | "ml" | "l" | "tsp" | "tbsp" | "pcs";

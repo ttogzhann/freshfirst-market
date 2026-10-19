@@ -8,6 +8,7 @@ from pathlib import Path
 import yaml
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.concurrency import run_in_threadpool
 from starlette.exceptions import HTTPException
@@ -46,6 +47,12 @@ def create_app(service: FreshService | None = None, startup_import: bool = True)
         yield
 
     app = FastAPI(title="FreshFirst API", version="1.0.0", lifespan=lifespan)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
+        allow_headers=["Content-Type", "Accept"],
+    )
     app.state.service = service
 
     @app.exception_handler(ServiceError)

@@ -77,7 +77,10 @@ function Pantry() {
         title="Pantry"
         subtitle="Expired items stay visible but don't count as available."
         action={
-          <Button onClick={() => setEditing("new")}>
+          <Button
+            disabled={ingredients.isLoading || !!ingredients.error}
+            onClick={() => setEditing("new")}
+          >
             <Plus className="h-4 w-4" /> Add item
           </Button>
         }
@@ -120,6 +123,7 @@ function Pantry() {
 
       {(pantry.isLoading || ingredients.isLoading) && <Loading />}
       {pantry.error && <ErrorState error={pantry.error} onRetry={pantry.refetch} />}
+      {ingredients.error && <ErrorState error={ingredients.error} onRetry={ingredients.refetch} />}
       {pantry.data && ingredients.data && rows.length === 0 && (
         <Empty title={pantry.data.length ? "No items match your filters" : "Your pantry is empty"}>
           Add what you have to get recipe suggestions.

@@ -44,7 +44,23 @@ function RecipePage() {
   );
 
   if (isLoading) return <Loading />;
-  if (error) return <ErrorState error={error} onRetry={refetch} />;
+  if (error)
+    return (
+      <>
+        <ErrorState error={error} onRetry={refetch} />
+        {(subs.length > 0 || servings !== undefined) && (
+          <Button
+            variant="outline"
+            onClick={() => {
+              setSubs([]);
+              setServings(undefined);
+            }}
+          >
+            Reset recipe choices
+          </Button>
+        )}
+      </>
+    );
   if (!data) return null;
 
   const suggestions = data.suggestions.filter((x) => !rejected.includes(x.rule.id));

@@ -34,12 +34,20 @@ export function CookDialog({
 
   useEffect(() => {
     if (!open) return;
+    let active = true;
     setPreview(null);
     setError(null);
     service()
       .previewCook(request)
-      .then(setPreview)
-      .catch((e) => setError(errorMessage(e)));
+      .then((value) => {
+        if (active) setPreview(value);
+      })
+      .catch((e) => {
+        if (active) setError(errorMessage(e));
+      });
+    return () => {
+      active = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, JSON.stringify(request)]);
 

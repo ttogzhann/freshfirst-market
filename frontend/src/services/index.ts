@@ -1,23 +1,12 @@
-// Single entry point for all backend calls. Swap the implementation here
-// (e.g. createHttpService()) when the real API exists.
-import { createMockService, memoryStorage } from "./mock/mockService";
+// Single entry point for backend calls; tests can inject a service explicitly.
+import { createHttpService } from "./httpService";
 import type { FreshService } from "./types";
 
 export * from "./types";
-
 let instance: FreshService | null = null;
-
 export function getService(): FreshService {
-  if (!instance) {
-    const browser = typeof window !== "undefined" && typeof window.localStorage !== "undefined";
-    instance = createMockService({
-      storage: browser ? window.localStorage : memoryStorage(),
-      latencyMs: browser ? 200 : 0,
-    });
-  }
-  return instance;
+  return (instance ??= createHttpService());
 }
-
 export function setService(s: FreshService) {
   instance = s;
 }
