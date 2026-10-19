@@ -55,13 +55,12 @@ export function createMockService(opts: MockOptions = {}): FreshService {
   const ingredients = new Map<string, Ingredient>(CATALOG.map((i) => [i.id, i]));
   const rules = SUBSTITUTION_RULES;
 
-  let state: State = load();
+  let state: State = { pantry: [], recipes: [], basket: [], shopping: [], history: [], seq: 1 };
+  state = load();
 
   function load(): State {
     const raw = storage.getItem(KEY);
     if (raw) return JSON.parse(raw) as State;
-    const s: State = { pantry: [], recipes: [], basket: [], shopping: [], history: [], seq: 1 };
-    state = s;
     runImport(); // idempotent startup seed
     if (opts.seedPantry !== false) seedPantry();
     persist();
