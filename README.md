@@ -43,7 +43,7 @@ npm run lint
 npm run validate:api
 ```
 
-`backend/` is reserved for the backend. Project instructions and specifications remain in `AGENTS.md` and `docs/` at the repository root.
+`backend/` contains the FastAPI server. Project instructions and specifications remain in `AGENTS.md` and `docs/` at the repository root.
 
 The npm workflow uses the tracked `frontend/package-lock.json`; `npm ci` installs its exact dependency tree. The old Bun lockfile has been removed to avoid competing dependency resolutions.
 
@@ -51,4 +51,6 @@ The frontend uses a centralized `FreshService` mock with browser localStorage pe
 
 Root `openapi.yaml` defines 23 unauthenticated operations, request/response schemas, validation and conflict errors. `npm run validate:api` validates the OpenAPI document and checks one-to-one operation coverage against the typed service. A future HTTP adapter must map the documented error envelope to `ServiceError`.
 
-Backend-phase requirements remain intentionally unimplemented: live TheMealDB import (the mock imports bundled fixtures), the HTTP adapter and server, transactional database persistence, and backend/restart acceptance tests. No backend or database code is included in this preparation. The current recipe fixtures and substitution rules are mock data; production normalization and context review remain necessary when implementing the importer.
+The FastAPI backend implements all 23 operations with a seeded in-memory store and a strict TheMealDB importer. See [backend startup, endpoint list and verification](backend/README.md). From `backend/`, run `uv sync --locked`, then `uv run uvicorn app.main:app --reload`. API docs are at `http://127.0.0.1:8000/docs`.
+
+The frontend remains connected to its mock. HTTP integration and SQLite/SQLAlchemy persistence are deferred. In-memory data resets on backend restart. The live import does not yet meet the 15–20 recipe target under the strict catalog/quantity rules; see the importer limitation in the backend README. TheMealDB has no serving yield, so imported `base_servings=1` denotes one complete source batch rather than an inferred human portion count.
