@@ -125,6 +125,8 @@ describe("mock service", () => {
 
   it("skips meals with unknown ingredients when importing", async () => {
     const s = createMockService({ storage: memoryStorage(), today: () => T, externalMeals: EXTERNAL_MEALS.slice(-4) });
-    expect(await s.listRecipes()).toHaveLength(1); // only Saffron... no: risotto has saffron → 0? see below
+    expect(await s.listRecipes()).toHaveLength(0);
+    const report = await s.importRecipes();
+    expect(report.skipped).toHaveLength(4);
   });
 });
