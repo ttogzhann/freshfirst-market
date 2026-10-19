@@ -1,5 +1,19 @@
 ﻿# Frontend / FastAPI integration verification
 
+## SQLite persistence verification - 2026-10-20
+
+The backend now uses SQLAlchemy and SQLite with `DATABASE_URL`. All 23 operations and response schemas are unchanged; no frontend design or production service changes were needed.
+
+- Backend: **99 tests passed**, including all 91 existing tests and eight file-backed persistence checks.
+- A new Python subprocess reopened the same SQLite file and returned identical pantry (including expired entries), imported recipes, basket servings/confirmed substitutions, edited/generated/manual shopping lines, completed transfer flags and cooking history snapshots. Removed-generated-line edit protection also survived restart.
+- Injected SQL failures after pantry writes rolled back both inventory and cooking history/transfer completion. Six independent engines serialized competing cooks and transfers: one successful cook per available batch, no negative stock and one pantry addition per purchased line.
+- Repeated import after restart updated the existing external recipe ID and retained basket references. Catalog/rule seeds remained at 40/10 rows; deleting all pantry entries did not cause sample stock to reappear.
+- Frontend: **47 tests passed**, including the production HTTP adapter journey through all 23 operations against SQLite-backed FastAPI. TypeScript, OpenAPI validation, ESLint and production build checks passed. Existing Fast Refresh/build/deprecation warnings remain.
+
+Setup and initial schema instructions are in `backend/README.md`. The pre-existing live-source 15-20 recipe count limitation remains; normalization rules were preserved. No new live-source audit or browser walkthrough was performed for this storage change.
+
+## Previous HTTP integration phase (historical)
+
 Verified on 2026-10-20. The default frontend service is now HTTP, with the existing `FreshService` signatures unchanged. FastAPI remains the source of truth for matching, scaling, substitutions, basket aggregation, shopping requirements, purchase transfer and cooking deductions. The browser keeps presentation formatting and form validation. No SQLite/SQLAlchemy changes were made.
 
 ## Automated checks

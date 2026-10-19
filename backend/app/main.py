@@ -22,6 +22,7 @@ CONTRACT = Path(__file__).resolve().parents[2] / "openapi.yaml"
 
 
 def create_app(service: FreshService | None = None, startup_import: bool = True):
+    owns_service = service is None
     service = (
         service
         if service is not None
@@ -44,7 +45,11 @@ def create_app(service: FreshService | None = None, startup_import: bool = True)
                 logger.warning(
                     "Startup import failed: %s. Retry POST /api/recipes/import.", exc.message
                 )
-        yield
+        try:
+            yield
+        finally:
+            if owns_service:
+                await run_in_threadpool(service.store.close)
 
     app = FastAPI(title="FreshFirst API", version="1.0.0", lifespan=lifespan)
     app.add_middleware(

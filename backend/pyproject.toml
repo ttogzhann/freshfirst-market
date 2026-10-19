@@ -1,9 +1,10 @@
 [project]
 name = "freshfirst-backend"
 version = "1.0.0"
-description = "FreshFirst v1.0 FastAPI API with transactional in-memory storage"
+description = "FreshFirst v1.0 FastAPI API with transactional SQLite storage"
 requires-python = ">=3.12"
 dependencies = [
+  "sqlalchemy>=2.0,<3",
   "fastapi>=0.115,<1",
   "httpx>=0.28,<1",
   "pydantic>=2.10,<3",

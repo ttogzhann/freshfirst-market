@@ -51,9 +51,9 @@ The frontend uses the real FastAPI backend through the typed `FreshService` HTTP
 
 Root `openapi.yaml` defines 23 unauthenticated operations, request/response schemas, validation and conflict errors. `npm run validate:api` validates the OpenAPI document and checks one-to-one operation coverage against the typed service. The HTTP adapter maps the documented error envelope to `ServiceError`, including network and malformed-response failures.
 
-The FastAPI backend implements all 23 operations with a seeded in-memory store and a strict TheMealDB importer. See [backend startup, endpoint list and verification](backend/README.md). From `backend/`, run `uv sync --locked`, then `uv run uvicorn app.main:app --reload`. API docs are at `http://127.0.0.1:8000/docs`.
+The FastAPI backend implements all 23 operations with SQLAlchemy/SQLite persistence and a strict TheMealDB importer. See [backend startup, endpoint list and verification](backend/README.md). From `backend/`, run `uv sync --locked`, then `uv run uvicorn app.main:app --reload`. API docs are at `http://127.0.0.1:8000/docs`.
 
-SQLite/SQLAlchemy persistence remains deferred. In-memory data resets on backend restart. The live import does not yet meet the 15–20 recipe target under the strict catalog/quantity rules; see the importer limitation in the backend README. TheMealDB has no serving yield, so imported `base_servings=1` denotes one complete source batch rather than an inferred human portion count.
+SQLite persists pantry, recipes, basket substitutions, shopping and cooking history across backend restarts. Set `DATABASE_URL` before startup (default `sqlite:///./freshfirst.db`, relative to the backend working directory). Tables and duplicate-safe catalog/rule seeds are created automatically; the previous in-memory state cannot be recovered after its process stops. See the backend README for setup and backups. The live import does not yet meet the 15–20 recipe target under the strict catalog/quantity rules; see the importer limitation in the backend README. TheMealDB has no serving yield, so imported `base_servings=1` denotes one complete source batch rather than an inferred human portion count.
 
 ## Run the integrated app
 

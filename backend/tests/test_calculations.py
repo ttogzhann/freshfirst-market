@@ -174,7 +174,8 @@ def test_urgency_reorders_equal_match_scores(client, service):
         ),
     ]:
         recipe = normalize_meal(raw)
-        service.state.recipes[recipe.id] = recipe
+        with service.store.transaction():
+            service.state.recipes[recipe.id] = recipe
     pantry(client, "pasta", 100, expiry="2026-11-01")
     pantry(client, "butter", 10, expiry="2026-11-01")
     pantry(client, "parmesan", 30, expiry="2026-10-22")
@@ -189,7 +190,8 @@ def test_shared_substitute_demand_cannot_exceed_stock(client, service):
             "shared", "Shared substitute", "Pasta", [("Cheddar cheese", "40g"), ("Parmesan", "30g")]
         )
     )
-    service.state.recipes[recipe.id] = recipe
+    with service.store.transaction():
+        service.state.recipes[recipe.id] = recipe
     pantry(client, "parmesan", 40)
     # Cheese substitution needs 30g, but Parmesan already needs 30g itself.
     assert client.get("/api/recipes/rec_shared").json()["suggestions"] == []
@@ -212,7 +214,8 @@ def test_shared_substitute_demand_cannot_exceed_stock(client, service):
 
 
 def test_scaling_uses_recipe_base_servings(client, service):
-    service.state.recipes["rec_test1"].base_servings = 2
+    with service.store.transaction():
+        service.state.recipes["rec_test1"].base_servings = 2
     detail = client.get("/api/recipes/rec_test1?servings=3").json()
     assert detail["base_servings"] == 2
     assert {line["ingredient_id"]: line["required"] for line in detail["lines"]} == {

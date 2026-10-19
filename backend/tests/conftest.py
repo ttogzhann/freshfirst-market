@@ -1,6 +1,8 @@
+import os
 import re
 from datetime import date
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 import yaml
@@ -9,8 +11,11 @@ from openapi_schema_validator import OAS30Validator
 from referencing import Registry, Resource
 from referencing.jsonschema import DRAFT4
 
-from app.main import create_app
-from app.services.fresh import FreshService
+# Importing app.main constructs its default app. Keep collection isolated from
+# any developer database before per-test DATABASE_URL fixtures are available.
+with patch.dict(os.environ, {"DATABASE_URL": "sqlite:///:memory:"}):
+    from app.main import create_app
+    from app.services.fresh import FreshService
 
 TODAY = date(2026, 10, 20)
 CONTRACT = yaml.safe_load(
@@ -19,6 +24,11 @@ CONTRACT = yaml.safe_load(
 REGISTRY = Registry().with_resource(
     "urn:freshfirst", Resource.from_contents(CONTRACT, default_specification=DRAFT4)
 )
+
+
+@pytest.fixture(autouse=True)
+def isolated_database(monkeypatch, tmp_path):
+    monkeypatch.setenv("DATABASE_URL", f"sqlite:///{tmp_path / 'test.db'}")
 
 
 def contract_refs(schema):

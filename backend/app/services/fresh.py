@@ -26,7 +26,7 @@ from ..models import (
     ShoppingItem,
     SubstitutionSuggestion,
 )
-from ..store import MemoryStore
+from ..store import SQLiteStore
 from .importer import TheMealDBSource, normalize_meal
 from .quantities import decimal, normalize, positive_rounded, rounded, scale
 
@@ -43,7 +43,7 @@ def atomic(method):
 
 class FreshService:
     def __init__(self, store=None, source=None, today=date.today, seed=True, expiry_days=3):
-        self.store = store if store is not None else MemoryStore()
+        self.store = store if store is not None else SQLiteStore()
         self.source = source if source is not None else TheMealDBSource()
         self.today = today
         self.expiry_days = expiry_days
@@ -57,6 +57,9 @@ class FreshService:
 
     def seed_pantry(self):
         with self.store.transaction():
+            if self.state.pantry_seeded:
+                return
+            self.state.pantry_seeded = True
             if self.state.pantry:
                 return
             for ingredient_id, quantity, days in [

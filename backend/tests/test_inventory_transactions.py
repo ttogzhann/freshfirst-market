@@ -61,8 +61,9 @@ def test_cook_preview_then_revalidate_without_partial_deductions(client, service
     before = deepcopy(service.state)
     assert client.post("/api/cooking/preview", json=req).json()["can_cook"]
     assert service.state == before
-    milk = next(p for p in service.state.pantry.values() if p.ingredient_id == "milk")
-    milk.expiry_date = service.today().replace(day=19)
+    with service.store.transaction():
+        milk = next(p for p in service.state.pantry.values() if p.ingredient_id == "milk")
+        milk.expiry_date = service.today().replace(day=19)
     before = deepcopy(service.state)
     assert not client.post("/api/cooking/preview", json=req).json()["can_cook"]
     assert client.post("/api/cooking/confirm", json=req).json()["code"] == "INSUFFICIENT_STOCK"
