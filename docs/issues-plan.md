@@ -1,39 +1,46 @@
-# FreshFirst v1.0 GitHub Issues plan - MVP classification
+# FreshFirst MVP v1.0 - 12-hour delivery backlog
 
-MVP classification revision for review, 2026-10-20. Original backlog: documentation commit `9a89f63`. Reviewed application commit: `b54a99a4cd4b647fdca6c1f2f7b72570a2e4a94e` on local `main`. FF identifiers below are local planning references, not GitHub issue numbers. No GitHub issues or milestones have been created. This document changes no application behavior.
+Planning revision, 2026-10-20. Application reviewed: `b54a99a4cd4b647fdca6c1f2f7b72570a2e4a94e`. Earlier 48-issue plans are preserved at `9a89f63` and `18d4955`. This revision implements the user's request to change the specification boundary, not application behavior. FF identifiers are local references; no GitHub issues/milestones or implementation worktrees have been created.
 
-## Summary
+## Operative boundary and counts
 
-**48 proposed issues: 33 MVP — Completed, 15 MVP — Remaining, 0 Post-MVP.** The count follows independently reviewable project outcomes, rather than one issue per endpoint, recipe, ingredient, component or test. Every existing issue has been reviewed against the unchanged v1.0 specification. All 48 bounded outcomes are required implementation or acceptance evidence; none is an optional enhancement. No mandatory item was deferred and no extra issue was invented to populate Post-MVP. Completed entries reconstruct delivery history; they are not new work to execute. If issue creation is later authorized, attach evidence and close those entries; keep remaining entries open until their acceptance criteria are met.
+**48 meaningful issues: 33 MVP Completed, 13 MVP Remaining, 2 Post-MVP.** Existing working features and all 23 API operations remain intact. No critical bug or data-integrity requirement is deferred. The explicit scope changes are in `docs/spec.md` section 9 and the change log below; the former assertion that every original item remained mandatory is historical, not the operative boundary.
 
-Most infrastructure and inventory workflows are delivered. **FreshFirst v1.0 is not fully accepted:** the required 15-20 real, fully quantified TheMealDB recipes have not been demonstrated. Remaining work also includes serving semantics, focused frontend corrections and final browser acceptance with real recipes and SQLite restart.
+Smallest complete MVP: pantry CRUD/search/filters and expiry-aware stock; at least **two distinct fully quantified real TheMealDB recipes with a shared ingredient**; recipe search/ranking/details; honest whole-recipe batch scaling 1-8; reviewed explicitly confirmed substitutions; persistent unique basket; shared shopping aggregation, manual edits and overwrite confirmation; actual-quantity/date purchase transfer exactly once; revalidated atomic cooking/history; recent-history Dashboard; SQLite restart/offline recovery; basic responsive usable forms and truthful errors.
 
-| Milestone | Issue range | MVP — Completed | MVP — Remaining | Post-MVP | Completion condition |
-| --- | --- | ---: | ---: | ---: | --- |
-| M0 - Specification and architecture | FF-01 to FF-05 | 5 | 0 | 0 | Preserve delivered baseline |
-| M1 - Pantry and application shell | FF-06 to FF-11 | 6 | 0 | 0 | Implementation delivered; responsive verification in M5 |
-| M2 - Recipes and supported live import | FF-12 to FF-21 | 6 | 4 | 0 | 15-20 valid real recipes with provenance and strict normalization |
-| M3 - Basket, shopping and cooking | FF-22 to FF-31 | 10 | 0 | 0 | Core delivered; specific UX corrections in M5 |
-| M4 - Durable storage and integration | FF-32 to FF-37 | 6 | 0 | 0 | Preserve persistence/integration evidence |
-| M5 - MVP acceptance gaps and sign-off | FF-38 to FF-48 | 0 | 11 | 0 | Mandatory corrections and final evidence complete |
-| Total | 48 | 33 | 15 | 0 | M2 and M5 remain open |
+The real production seed must not be synthetic. Two records is a revised minimum, not evidence that a second valid record currently exists. The historical audit accepted one. A one-recipe demo does not close the revised MVP. No normalization rule, quantity, yield or safety invariant may be invented to meet the deadline.
 
-### Status and priorities
+| Milestone | Issue range | MVP Completed | MVP Remaining | Post-MVP |
+| --- | --- | ---: | ---: | ---: |
+| M0 - Specification and architecture | FF-01 to FF-05 | 5 | 0 | 0 |
+| M1 - Pantry and application shell | FF-06 to FF-11 | 6 | 0 | 0 |
+| M2 - Source baseline and recipe discovery | FF-12 to FF-21 | 6 | 3 | 1 |
+| M3 - Basket, shopping and cooking | FF-22 to FF-31 | 10 | 0 | 0 |
+| M4 - Persistence and integration | FF-32 to FF-37 | 6 | 0 | 0 |
+| M5 - Completion and focused acceptance | FF-38 to FF-48 | 0 | 10 | 1 |
+| Total | 48 | 33 | 13 | 2 |
 
-- **MVP — Completed:** mandatory implementation/evidence is present at the reviewed application commit. Preserve its commits and tests. This does not assert automated component coverage for every interaction or close a separately identified gap.
-- **MVP — Remaining:** required implementation, correction or acceptance evidence is not complete. Readiness is tracked separately as ready or blocked. Verification-only issues do not assert an undiscovered defect exists.
-- **Post-MVP:** optional enhancement beyond the current specification. **No existing issue qualifies** after limiting each to its stated v1.0 outcome. Zero is deliberate, not an instruction to invent future work.
-- **P0:** blocks v1.0 acceptance or protects inventory correctness. Completed priorities record importance, not work to reopen.
-- **P1:** mandatory user-facing correctness, responsive/recoverable UX, documentation or verification needed before MVP sign-off. The former P2 remaining items FF-42, FF-46 and FF-47 are P1 because their bounded outcomes are required, even though they can follow the main implementation work.
-- Dependencies use FF identifiers; completed dependencies are already satisfied. Milestone numbers group work, not a mandatory serial order. Transitive prerequisites remain mandatory even where final gate metadata lists only its immediate predecessor.
+### Classification and priority
 
-### Classification boundaries
+- **MVP Completed:** implemented at the recorded application commit with preserved evidence. Zero remaining implementation effort; keep these features/tests. A separate remaining issue can still correct a specific gap.
+- **MVP Remaining:** mandatory correctness, baseline data, configuration, UX or acceptance evidence under the revised spec. Ready/blocked describes prerequisites, not a weaker requirement.
+- **Post-MVP:** optional breadth/depth beyond the revised complete journey. Only FF-20 (expand to 15-20 strict real recipes with corpus coverage) and FF-43 (browse all older history in UI) qualify. Neither is implemented or silently accepted.
+- **P0:** data integrity or release-blocking MVP acceptance. **P1:** remaining required configuration/UX/evidence. **P2:** genuine v1.1+ enhancement; no P2 issue is a release dependency.
+- Budgets below are small task timeboxes for the reduced solution, not evidence of completed fixes. Stop and escalate on an overrun; do not keep expanding scope. Completed dependencies are satisfied; keep transitive prerequisites.
 
-FF-38 resolves truthful base-serving/scaling semantics under sections 3.2-3.3; speculative yield estimation is not its acceptance criterion. FF-39 fixes an existing configured-threshold inconsistency required by section 3.1, without adding a settings UI. FF-40/FF-41 protect stored selections and recovery from partial or uncertain outcomes under sections 3.3-3.6 and 4. FF-42 supplies required inline validation. FF-43 makes the section 3.6 simple history list reachable, without analytics. FF-44/FF-45/FF-46 verify required journeys, offline data retention and usable responsive controls. FF-47/FF-48 supply the documentation and acceptance evidence required by sections 2 and 7.
+### Scope preservation
 
-These issues are not permission for a redesign, an unrestricted recipe catalog, a new settings product, a broad accessibility certification program or a new browser-testing platform. Those additions are unnecessary for their MVP acceptance criteria and are not added as Post-MVP issues. Explicit non-goals remain excluded rather than silently becoming future commitments.
+Do not remove existing filters, import capacity, valid stored recipes, catalog/rules, backend expiry configurability, basket/shopping features, full history API or SQLite safeguards. Retain default three-day expiry plus coordinated existing configuration. No redesign or new API/schema, auth, Docker, PostgreSQL, deployment, CI/CD project, unrestricted import, analytics or extra integrations. Whole-batch labels correct a promise; they do not guess human portions. Full older history stays stored and available through the existing API even when its extra UI is Post-MVP.
 
-Retain the 23-operation contract, existing response schemas, single-user scope and frontend design. No authentication, deployment, Docker, PostgreSQL, CI/CD project, new integrations, nutrition, calendar or charts. Keep approximately 25-40 supported ingredient identities. Never omit ingredient lines, invent recipes, guess densities or interpret ambiguous packages to reach a count.
+## Smallest reliable TheMealDB solution
+
+1. Timebox FF-18 to **30 minutes**: inspect raw current/captured source responses for two distinct recipes that the strict normalizer can fully quantify with the existing catalog and shared stock. Existing fixture ID `53137` is accepted; the other captured record is not a second accepted recipe. Do not claim feasibility before checking every line.
+2. FF-19 may use narrowly proven identity aliases, but no guessed density, count-to-mass, cups, packages, missing amounts, omitted ingredients or yield conversion. If canonical-unit changes or a broad catalog expansion would be required, stop rather than hiding a migration under the deadline.
+3. Package only the two reviewed **unaltered raw TheMealDB responses**, with source ID/URL/capture date. Reuse the existing `MealSource`/`normalize_meal` and external-ID transaction path to seed missing records. Do not copy synthetic HTTP-test recipes or hand-author normalized production recipes. Add focused raw-to-expected-quantity, rejection, repeated-seed and offline tests in FF-19/FF-21; these tests do not wait for Post-MVP FF-20.
+4. Never replace a newer stored source record with an older baseline snapshot; seed only missing IDs. No duplicate ingredients, recipes, choices or user pantry additions. An initialized database must not wait for a whole-alphabet network traversal to become usable. Live explicit import remains available, retains existing reports/errors and cannot replace failed network calls with fake success. Preserve imported data on failure.
+5. Use **one complete source batch** as the exact baseline (`base_servings=1`); UI explicitly labels selected batches 1-8. API field names and arithmetic remain unchanged. No human serving yield needs to be researched or guessed for this boundary.
+
+Fresh local installation can seed the reviewed source snapshots offline; obtaining/provenance-checking the snapshots requires real connectivity during preparation. This is a deliberate initial-connectivity change, not a claim that handwritten data is TheMealDB data. The live API's response contract is unchanged. If two qualifying records cannot be found in the timebox, report the blocker and remaining alternatives before spending reserve. Do not substitute a broken core or a fictional recipe. Neither a second valid source record nor this bootstrap is implemented by these documentation edits.
 
 ## Review evidence and boundaries
 
@@ -49,7 +56,7 @@ Read `AGENTS.md`, `docs/spec.md`, `openapi.yaml`, `docs/integration.md`, READMEs
 | `a507929` | Connected HTTP service, CORS, real HTTP tests and recorded browser integration |
 | `b54a99a` | Added SQLAlchemy/SQLite and durable rollback, restart and independent-connection tests |
 
-Preserved verification from the original backlog review at application commit `b54a99a` (recorded in `9a89f63`); no application tests were rerun for this classification-only edit:
+Preserved verification from the original backlog review at application commit `b54a99a` (recorded in `9a89f63`); no application tests were rerun for this scope-planning-only edit:
 
 - Backend `uv run --locked pytest -q`: **99 passed**. Ruff check/format check passed for 25 Python files. Existing Starlette TestClient/httpx deprecation warning remains.
 - Frontend `npm test`: **47 passed in six files**. Typecheck and API validation passed; validation reports **23 operations** with no authentication.
@@ -58,13 +65,14 @@ Preserved verification from the original backlog review at application commit `b
 - `backend/README.md` records a historical live audit: **790 fetched, one accepted**. This is not a live count rechecked today. Two real raw fixtures do not prove 15 supported recipes.
 - Mock tests accepting 15-20 bundled records and synthetic backend tests accepting 20 establish mechanics only, not production source sufficiency.
 
-No live TheMealDB fetch was made during the original planning or this classification review. Proposed live audit and source-dependent work remain open. Python commands below run from `backend/`; npm commands from `frontend/`. Completed-issue testing steps explain reproduction, not additional backlog tasks.
+No live TheMealDB fetch was made during the original planning or this scope revision. Proposed live audit and source-dependent work remain open. Python commands below run from `backend/`; npm commands from `frontend/`. Completed-issue testing steps explain reproduction, not additional backlog tasks.
+
 
 ## M0 - Specification and architecture
 
 ### FF-01 - Establish v1.0 scope and the acceptance matrix
 
-**MVP — Completed | P1 | Dependencies: none**
+**MVP Completed | P1 | Dependencies: none**
 
 MVP scope basis: Sections 1-2 and 7-8: scope, workflow and explicit acceptance matrix.
 
@@ -78,7 +86,7 @@ Evidence: `13508ba`; `docs/spec.md`, `AGENTS.md`. The historical 12-hour aspirat
 
 ### FF-02 - Organize reproducible frontend and backend environments
 
-**MVP — Completed | P1 | Dependencies: FF-01**
+**MVP Completed | P1 | Dependencies: FF-01**
 
 MVP scope basis: Section 2: repository layout, uv/npm setup and reproducible local workflow.
 
@@ -92,7 +100,7 @@ Evidence: `16ec563`, `a053f16`, `1bf7f6e`; READMEs, `frontend/package-lock.json`
 
 ### FF-03 - Provide one typed frontend service boundary and injectable mock
 
-**MVP — Completed | P1 | Dependencies: FF-01**
+**MVP Completed | P1 | Dependencies: FF-01**
 
 MVP scope basis: Sections 1-2: centralized frontend service interface and tested mock phase.
 
@@ -106,7 +114,7 @@ Evidence: Existing frontend retained by `16ec563`, refined by `a053f16` and `a50
 
 ### FF-04 - Author and validate all 23 public OpenAPI operations
 
-**MVP — Completed | P0 | Dependencies: FF-03**
+**MVP Completed | P0 | Dependencies: FF-03**
 
 MVP scope basis: Sections 2 and 6: authored OpenAPI operations, schemas and errors.
 
@@ -120,7 +128,7 @@ Evidence: `5153960`, `a053f16`, `1bf7f6e`; OpenAPI 3.0.3 and actual response-sch
 
 ### FF-05 - Implement modular FastAPI routing and shared error handling
 
-**MVP — Completed | P1 | Dependencies: FF-04**
+**MVP Completed | P1 | Dependencies: FF-04**
 
 MVP scope basis: Sections 2, 4 and 6: modular FastAPI implementation and consistent API validation.
 
@@ -136,7 +144,7 @@ Evidence: `1bf7f6e`; `app/main.py`, routers, `models.py`, `errors.py`; current b
 
 ### FF-06 - Define the supported canonical ingredient catalog
 
-**MVP — Completed | P1 | Dependencies: FF-01, FF-05**
+**MVP Completed | P1 | Dependencies: FF-01, FF-05**
 
 MVP scope basis: Sections 3.1, 3.2 and 5: predefined supported identities and canonical units.
 
@@ -146,11 +154,11 @@ Acceptance criteria: Forty identities have stable IDs and g/ml/pcs units; API li
 
 Testing steps: List ingredients; inspect `app/catalog.py`; run importer identity cases and persistence seed-count assertions.
 
-Evidence: `1bf7f6e`, `b54a99a`; catalog/schema tests. Whether this catalog supports 15 real recipes remains FF-18/FF-19.
+Evidence: `1bf7f6e`, `b54a99a`; catalog/schema tests. The two-recipe baseline remains FF-18/FF-19; 15-20 recipe breadth is Post-MVP FF-20.
 
 ### FF-07 - Implement pantry CRUD and one entry per ingredient
 
-**MVP — Completed | P0 | Dependencies: FF-06**
+**MVP Completed | P0 | Dependencies: FF-06**
 
 MVP scope basis: Section 3.1 and acceptance criteria 1-2: pantry CRUD and one expiry batch per ingredient.
 
@@ -164,7 +172,7 @@ Evidence: `1bf7f6e`; pantry router, `merge_pantry`, validation tests; database u
 
 ### FF-08 - Validate quantities, calendar dates and compatible units
 
-**MVP — Completed | P0 | Dependencies: FF-05, FF-06**
+**MVP Completed | P0 | Dependencies: FF-05, FF-06**
 
 MVP scope basis: Sections 3.1-3.2 and 4: positive canonical quantities, valid dates and compatible units.
 
@@ -178,7 +186,7 @@ Evidence: `1bf7f6e`; models and `services/quantities.py`. This does not authoriz
 
 ### FF-09 - Exclude expired stock from calculations and handle expiry urgency
 
-**MVP — Completed | P0 | Dependencies: FF-07, FF-08**
+**MVP Completed | P0 | Dependencies: FF-07, FF-08**
 
 MVP scope basis: Sections 3.1-3.2 and acceptance criteria 2-3: expired-stock exclusion and urgency.
 
@@ -192,7 +200,7 @@ Evidence: `1bf7f6e`, `b54a99a`; `stock`, `summary`, dashboard tests. Non-default
 
 ### FF-10 - Deliver pantry cards, search, filters and edit forms
 
-**MVP — Completed | P1 | Dependencies: FF-03, FF-07, FF-08, FF-09**
+**MVP Completed | P1 | Dependencies: FF-03, FF-07, FF-08, FF-09**
 
 MVP scope basis: Section 3.1 and section 4: pantry browsing/filtering, forms and basic states.
 
@@ -206,7 +214,7 @@ Evidence: `a053f16`, `a507929`, `docs/integration.md`. Filters are code-reviewed
 
 ### FF-11 - Deliver desktop navigation and responsive application shell
 
-**MVP — Completed | P1 | Dependencies: FF-01, FF-03**
+**MVP Completed | P1 | Dependencies: FF-01, FF-03**
 
 MVP scope basis: Sections 1 and 4: five destinations, desktop sidebar and responsive collapse.
 
@@ -218,11 +226,11 @@ Testing steps: Run `src/test/app-routing.test.tsx`; inspect `AppShell.tsx` respo
 
 Evidence: Existing frontend retained in `16ec563`, navigation completed in `a053f16`. Narrow-screen/keyboard acceptance is still FF-46; routing tests do not prove mobile interaction.
 
-## M2 - Recipes and supported live import
+## M2 - Source baseline and recipe discovery
 
 ### FF-12 - Fetch real TheMealDB candidates through the backend
 
-**MVP — Completed | P1 | Dependencies: FF-05**
+**MVP Completed | P1 | Dependencies: FF-05**
 
 MVP scope basis: Section 3.2: real backend TheMealDB discovery and source error handling.
 
@@ -236,7 +244,7 @@ Evidence: `1bf7f6e`; `TheMealDBSource`. Adapter mechanics are separate from sour
 
 ### FF-13 - Reject unquantified recipes and normalize exact supported measures
 
-**MVP — Completed | P0 | Dependencies: FF-06, FF-08, FF-12**
+**MVP Completed | P0 | Dependencies: FF-06, FF-08, FF-12**
 
 MVP scope basis: Section 3.2 and acceptance criterion 5: quantified supported recipes with no guessed measures.
 
@@ -250,7 +258,7 @@ Evidence: `1bf7f6e`; `normalize_meal`, `parse_measure`, two real captured respon
 
 ### FF-14 - Upsert source recipes idempotently and report import outcomes
 
-**MVP — Completed | P0 | Dependencies: FF-12, FF-13**
+**MVP Completed | P0 | Dependencies: FF-12, FF-13**
 
 MVP scope basis: Section 3.2 and acceptance criterion 4: idempotent import, rejection reports and preserved prior data.
 
@@ -264,7 +272,7 @@ Evidence: `1bf7f6e`, `b54a99a`; unique `external_id` and import transaction. Syn
 
 ### FF-15 - Search, filter and rank backend recipe discovery
 
-**MVP — Completed | P1 | Dependencies: FF-09, FF-14**
+**MVP Completed | P1 | Dependencies: FF-09, FF-14**
 
 MVP scope basis: Section 3.2 and acceptance criterion 3: discovery/search, match percentage and ranking.
 
@@ -278,7 +286,7 @@ Evidence: `1bf7f6e`, `a053f16`, `a507929`. Real recipe variety remains dependent
 
 ### FF-16 - Show recipe details and scale canonical demands consistently
 
-**MVP — Completed | P0 | Dependencies: FF-08, FF-15**
+**MVP Completed | P0 | Dependencies: FF-08, FF-15**
 
 MVP scope basis: Section 3.3 and acceptance criterion 6: detail and consistent requested/base scaling.
 
@@ -292,7 +300,7 @@ Evidence: `1bf7f6e`, `a053f16`, `a507929`; `demands` and recipe detail UI. Numer
 
 ### FF-17 - Suggest eligible substitutions and require explicit confirmation
 
-**MVP — Completed | P0 | Dependencies: FF-06, FF-09, FF-16**
+**MVP Completed | P0 | Dependencies: FF-06, FF-09, FF-16**
 
 MVP scope basis: Section 3.3 and acceptance criterion 6: reviewed eligible substitutions with explicit confirmation.
 
@@ -304,67 +312,68 @@ Testing steps: Run substitution calculations and frontend domain/mock tests; rep
 
 Evidence: `1bf7f6e`, `a053f16`, `a507929`; rules/category eligibility and choice validation. Restoring saved choices in recipe detail remains FF-40.
 
-### FF-18 - Audit live candidate feasibility for 15-20 strictly supported recipes
+### FF-18 - Find and validate the minimum two-real-recipe baseline
 
-**MVP — Remaining | Readiness: ready | P0 | Dependencies: FF-12, FF-13 | Parallel lane A | Estimate: 2-4 hours**
+**MVP Remaining | P0 | Ready | Dependencies: FF-12, FF-13 | Source worktree | Budget: 0.5 hour**
 
-MVP scope basis: Section 3.2 and acceptance criteria 4-5: evidence needed to resolve the mandatory real-source count without relaxing normalization.
+MVP scope basis: Revised spec 3.2 / criterion 4; original 15-20 breadth is preserved in Post-MVP FF-20.
 
-Description: Replace the historical one-of-790 result with a reproducible current candidate/rejection audit. Inspect every line of promising recipes, not just the first rejection, before choosing a mapping strategy.
+Description: Inspect promising real TheMealDB payloads for a second fully quantified source recipe, with an ingredient shared with the first. Review every line rather than only the first rejection. Current evidence proves only one accepted raw record (`53137`).
 
-Acceptance criteria: Record fetch date, real source IDs and rejection categories. Produce a candidate matrix showing how at least 15 distinct recipes could qualify using exact existing or evidence-backed mappings. Identify genuinely unavailable conversions and yields. If fewer than 15 are supportable, document the shortfall and source/spec decision needed; the production requirement stays blocked, not waived.
+Acceptance criteria: Two distinct source IDs, complete raw responses, provenance and manually checked exact quantities are identified. No synthetic records, silently dropped ingredients, guessed measures/yields or mass/count reinterpretation. If not feasible after 30 minutes, return a concrete blocking report and protect the integration budget; the issue stays open.
 
-Testing steps: Fetch through the existing adapter without changing the production pantry/database; retain raw audit payloads; run the strict normalizer and independently inspect proposed candidates. Distinguish source failure from normalization rejection.
+Testing steps: Run both raw records through the real normalizer, compare ingredient/quantity expectations independently, and record all rejection reasons. A failed source request is not normalization evidence.
 
-Evidence/gap: No committed 15-recipe valid real corpus exists. Synthetic import tests are not a replacement. Parallel opportunity: independent of all frontend corrections and offline startup checks.
+Parallel opportunity: independent of UI work. Output is the reviewed baseline for FF-19; no broad source audit or 15-record inventory is needed for MVP.
 
-### FF-19 - Implement reviewed identities and exact measures for the supported subset
+### FF-19 - Seed reviewed raw source snapshots through the strict importer
 
-**MVP — Remaining | Readiness: blocked by FF-18 | P0 | Dependencies: FF-18 | Parallel lane A | Estimate: 4-10 hours, conditional on feasibility**
+**MVP Remaining | P0 | Blocked by FF-18 | Dependencies: FF-18, FF-14, FF-32, FF-33 | Source worktree | Budget: 1.5 hours**
 
-MVP scope basis: Section 3.2 and acceptance criteria 4-5: exact reviewed mappings needed for the supported subset.
+MVP scope basis: Revised spec 3.2 / criteria 4-5; deterministic baseline without relaxing conversion rules.
 
-Description: Support the smallest real-source subset that reaches the target through documented identity equivalence and exact conversion rules, preserving strict rejection.
+Description: Package the reviewed unaltered source responses with provenance; reuse `MealSource`, strict normalization and external-ID upsert to seed only missing baseline IDs without waiting for a whole-alphabet network scan. Keep explicit real live import and its existing error/report contract.
 
-Acceptance criteria: Each mapping has an explicit basis and applicability; every accepted recipe line is accounted for. No guessed density, portion mass, package size, omitted garnish or hand-entered recipe. Maintain the small catalog and stable IDs/units; do not reinterpret saved inventory. Any necessary canonical-unit/schema change needs an explicit migration design before implementation. If exact mappings cannot deliver 15 recipes, leave the target blocked and escalate the source/spec conflict.
+Acceptance criteria: Fresh SQLite starts with at least two valid real recipes offline; repeated initialization adds no duplicates or pantry stock; old snapshots never overwrite newer live records. Only necessary proven aliases are allowed. Existing saved units/IDs/features and strict rejection survive. No new schema, general cache platform, speculative densities, source editing or synthetic production fallback.
 
-Testing steps: Add positive and near-miss rejection cases per mapping, including different identities and incompatible dimensions. Run importer/inventory/persistence tests against fresh and existing SQLite data.
+Testing steps: Add focused tests for both raw records and explicit expected amounts, ambiguous near-miss rejection, repeat seed, preservation of updated records and malformed baseline rollback; run existing importer/persistence tests. Production bootstrap must not depend on Post-MVP FF-20.
 
-Parallel opportunity: isolate catalog/importer changes from frontend work. This is one coherent mapping implementation issue, not one issue per recipe or ingredient.
+Parallel opportunity: source/catalog/bootstrap code only. Do not edit shared frontend files; coordinate `main.py` and importer tests with QA worktree FF-45.
 
-### FF-20 - Establish a provenance-backed regression corpus of 15-20 real recipes
+### FF-20 - Expand source support and regression coverage to 15-20 real recipes
 
-**MVP — Remaining | Readiness: blocked by FF-19 | P0 | Dependencies: FF-18, FF-19 | Lane A; fixture review can overlap | Estimate: 2-4 hours**
+**Post-MVP | P2 | Not scheduled in 12-hour budget | Dependencies: FF-21, FF-48 | v1.1 - Source breadth | Estimate: 6-16 hours after feasibility review**
 
-MVP scope basis: Sections 3.2 and 7 (criteria 4-6, 8, 11, 13): source-backed normalization and arithmetic regression evidence.
+Post-MVP scope basis: Spec section 9 explicitly moves the original 15-20 count beyond the two-record functional MVP. Strict normalization and all-line completeness remain mandatory; only breadth is deferred.
 
-Description: Make the support claim reproducible offline with unaltered TheMealDB payloads passed through the actual normalizer.
+Description: Broaden the useful real recipe selection and its provenance-backed regression corpus once the complete two-recipe workflow ships. This preserves the original target rather than declaring it accomplished.
 
-Acceptance criteria: Preserve IDs, capture dates and provenance for 15-20 accepted recipes; assert metadata and normalized identities/amounts. Include representative rejected records to prevent permissive regressions. Fixtures are source evidence, not synthetic production fallback seeds. Exercise at least one supported-source recipe through shopping and cooking arithmetic.
+Acceptance criteria: 15-20 distinct valid real records, complete metadata, source capture provenance, reviewed identities/amounts and deterministic offline regression expectations. Extend only exact mappings; preserve existing data/units, repeat-import IDs, rejection reports and the API. Include representative supported categories and rejection cases; never guarantee a category unsupported by available data.
 
-Testing steps: Normalize/import the full corpus offline, repeat import, compare counts/stable IDs, and independently check expected amounts against raw measures rather than computing expectations with the same parser.
+Testing steps: Independently inspect raw quantities, normalize/import the full corpus, repeat import and restart, run shared-shopping/cooking cases and record actual live import totals. Synthetic mock counts do not satisfy this issue. Re-estimate if source evidence is insufficient.
 
-Evidence/gap: Only two real raw fixtures are currently committed; the frontend's larger mock seed is not evidence of live support. Parallel opportunity: a reviewer can prepare captured fixtures after candidate selection, before implementation finishes.
+Parallel opportunity: optional after MVP acceptance; never a prerequisite for FF-19, FF-21, FF-44 or FF-48.
 
-### FF-21 - Verify production startup imports 15-20 real recipes and re-imports safely
+### FF-21 - Verify baseline startup, real import and restart without duplicates
 
-**MVP — Remaining | Readiness: blocked by FF-20 | P0 | Dependencies: FF-14, FF-20, FF-32, FF-33 | Lane A | Estimate: 1-2 hours**
+**MVP Remaining | P0 | Blocked by FF-19 | Dependencies: FF-19, FF-35 | Source worktree | Budget: 0.5 hour**
 
-MVP scope basis: Sections 2, 3.2 and acceptance criterion 4: automatic real-source seed, 15-20 recipes and stable repeat import.
+MVP scope basis: Revised spec 3.2 / criteria 1, 4 and 7; original larger count is Post-MVP FF-20.
 
-Description: Prove the normal startup/import path reaches the target in a fresh SQLite database with real connectivity.
+Description: Verify normal app startup from a fresh file using the reviewed baseline, live explicit import when available, and reopening the same database.
 
-Acceptance criteria: Record startup and explicit import reports with 15-20 unique valid source IDs and complete instructions/category/image/ingredients. Re-import creates no duplicates. Restart at the same URL retains records/references. Report upstream changes/failures honestly; do not satisfy the count with manually composed or synthetic records.
+Acceptance criteria: At least two real records with shared stock are usable with complete metadata; repeated seed/import keeps stable external IDs and references; offline startup does not hang on a full network scan. Live failure preserves data and returns the unchanged failure envelope. Startup diagnostics reflect the revised two-record minimum rather than falsely warning that MVP requires fifteen. Any extra existing valid recipes remain available. Record real source IDs and actual observations, not an invented count.
 
-Testing steps: Run the normal app using a temporary file-backed `DATABASE_URL`; query recipes, re-import, inspect SQLite counts/foreign keys, restart and compare normalized records. Retain evidence for FF-44/FF-47.
+Testing steps: Start normal FastAPI with a temporary file URL, inspect records, restart, compare IDs/quantities and retry explicit import. Validate offline behavior deterministically; live connectivity failure is recorded honestly while snapshots remain independently source-backed. No 15-record corpus is an MVP dependency.
 
-Parallel opportunity: execute after corpus verification; other work should not wait on live connectivity.
+Parallel opportunity: source owner runs this focused smoke immediately after bootstrap; provide evidence/database instructions to integration owner FF-44.
 
 ## M3 - Basket, shopping and cooking
 
+
 ### FF-22 - Implement duplicate-free basket selections with stored choices
 
-**MVP — Completed | P0 | Dependencies: FF-16, FF-17**
+**MVP Completed | P0 | Dependencies: FF-16, FF-17**
 
 MVP scope basis: Section 3.4 and acceptance criteria 6-7: unique basket selections and stored choices.
 
@@ -378,7 +387,7 @@ Evidence: `1bf7f6e`, `b54a99a`; basket router/service, unique recipe constraint,
 
 ### FF-23 - Deliver basket selection editing and cumulative requirements
 
-**MVP — Completed | P1 | Dependencies: FF-11, FF-22**
+**MVP Completed | P1 | Dependencies: FF-11, FF-22**
 
 MVP scope basis: Section 3.4: editable selections and cumulative ingredient requirements.
 
@@ -392,7 +401,7 @@ Evidence: `a053f16`, `a507929`; `routes/basket.tsx` and recorded browser journey
 
 ### FF-24 - Aggregate grocery requirements and subtract pantry stock once
 
-**MVP — Completed | P0 | Dependencies: FF-09, FF-22**
+**MVP Completed | P0 | Dependencies: FF-09, FF-22**
 
 MVP scope basis: Section 3.5 and acceptance criterion 8: aggregate requirements and subtract pantry once.
 
@@ -406,7 +415,7 @@ Evidence: `1bf7f6e`, `a053f16`; `aggregate`, `basket_demands`, `generate_shoppin
 
 ### FF-25 - Preserve shopping edits and require confirmation before regeneration
 
-**MVP — Completed | P0 | Dependencies: FF-24**
+**MVP Completed | P0 | Dependencies: FF-24**
 
 MVP scope basis: Section 3.5 and acceptance criterion 9: preserve manual edits and confirm destructive regeneration.
 
@@ -420,7 +429,7 @@ Evidence: `1bf7f6e`, `a053f16`, `b54a99a`; saved `edited` and `removed_generated
 
 ### FF-26 - Deliver shopping forms and explicit received-purchase confirmation
 
-**MVP — Completed | P1 | Dependencies: FF-23, FF-25**
+**MVP Completed | P1 | Dependencies: FF-23, FF-25**
 
 MVP scope basis: Sections 3.5 and 4: explicit received quantity/date and confirmed purchase feedback.
 
@@ -434,7 +443,7 @@ Evidence: `a053f16`, `a507929`; `routes/shopping.tsx`. Feedback improvements in 
 
 ### FF-27 - Transfer purchases atomically and exactly once
 
-**MVP — Completed | P0 | Dependencies: FF-07, FF-25**
+**MVP Completed | P0 | Dependencies: FF-07, FF-25**
 
 MVP scope basis: Section 3.5 and acceptance criterion 10: atomic exactly-once transfer.
 
@@ -448,7 +457,7 @@ Evidence: `1bf7f6e`, `b54a99a`; marker and pantry merge share a SQLite transacti
 
 ### FF-28 - Revalidate cooking and atomically deduct stock with history
 
-**MVP — Completed | P0 | Dependencies: FF-09, FF-16, FF-17**
+**MVP Completed | P0 | Dependencies: FF-09, FF-16, FF-17**
 
 MVP scope basis: Section 3.6 and acceptance criterion 11: preview, shortage blocking and atomic deductions/history.
 
@@ -462,7 +471,7 @@ Evidence: `1bf7f6e`, `b54a99a`; `preview`, `confirm_cook`, inventory/persistence
 
 ### FF-29 - Deliver cooking preview and confirmation from detail and basket
 
-**MVP — Completed | P1 | Dependencies: FF-23, FF-28**
+**MVP Completed | P1 | Dependencies: FF-23, FF-28**
 
 MVP scope basis: Section 3.6 and section 4: cooking entry points, deduction preview and truthful success feedback.
 
@@ -476,7 +485,7 @@ Evidence: Component refined in `a053f16` and `a507929`; historical browser evide
 
 ### FF-30 - Provide persisted history and dashboard recommendations through the API
 
-**MVP — Completed | P1 | Dependencies: FF-15, FF-28**
+**MVP Completed | P1 | Dependencies: FF-15, FF-28**
 
 MVP scope basis: Sections 3.6-3.7 and 5: stored history, dashboard counts/recommendations/recent records.
 
@@ -490,7 +499,7 @@ Evidence: `1bf7f6e`, `a053f16`, `b54a99a`. API returns full history, Dashboard o
 
 ### FF-31 - Connect production services to HTTP with recoverable transport errors
 
-**MVP — Completed | P1 | Dependencies: FF-03, FF-04, FF-05**
+**MVP Completed | P1 | Dependencies: FF-03, FF-04, FF-05**
 
 MVP scope basis: Sections 1-2 and 4: real centralized HTTP service, CORS and recoverable failures.
 
@@ -502,11 +511,11 @@ Testing steps: Run HTTP unit/integration suites, typecheck and API validation; t
 
 Evidence: `a507929`; adapter/hooks, `frontend/.env.example`, backend CORS. This is transport implementation; FF-36 accounts for integration evidence.
 
-## M4 - Durable storage and integration
+## M4 - Persistence and integration
 
 ### FF-32 - Persist the specification model with SQLAlchemy and SQLite
 
-**MVP — Completed | P0 | Dependencies: FF-05, FF-06, FF-14, FF-22, FF-25, FF-30**
+**MVP Completed | P0 | Dependencies: FF-05, FF-06, FF-14, FF-22, FF-25, FF-30**
 
 MVP scope basis: Sections 2 and 5: SQLAlchemy/SQLite schema, configurable URL and persisted entities.
 
@@ -520,7 +529,7 @@ Evidence: `b54a99a`; SQLAlchemy Core tables in `app/store.py` and transaction-lo
 
 ### FF-33 - Initialize database and sample seeds without duplicates
 
-**MVP — Completed | P1 | Dependencies: FF-32**
+**MVP Completed | P1 | Dependencies: FF-32**
 
 MVP scope basis: Sections 2, 3.2 and 5: repeat-safe initialization and seeds that preserve user data.
 
@@ -530,11 +539,11 @@ Acceptance criteria: Repeated starts retain 40 ingredient/10 rule rows; recipe e
 
 Testing steps: Run `test_seed_is_unique_and_deleted_pantry_stays_deleted` and import restart cases; inspect counts after repeated store creation.
 
-Evidence: `b54a99a`; conflict-safe inserts and persistent `pantry_seeded` marker. Seed mechanism is complete, while 15 supported real recipe seeds remain FF-21.
+Evidence: `b54a99a`; conflict-safe inserts and persistent `pantry_seeded` marker. Seed mechanism is complete; verifying the revised two-real-recipe baseline remains FF-21 and expansion is Post-MVP FF-20.
 
 ### FF-34 - Prove durable rollback and serialize competing inventory operations
 
-**MVP — Completed | P0 | Dependencies: FF-27, FF-28, FF-32**
+**MVP Completed | P0 | Dependencies: FF-27, FF-28, FF-32**
 
 MVP scope basis: Sections 3.5-3.6, 5 and acceptance criteria 10-11, 13: durable transaction/inventory evidence.
 
@@ -548,7 +557,7 @@ Evidence: `b54a99a`; `BEGIN IMMEDIATE`, transaction context, explicit SQL failur
 
 ### FF-35 - Prove state survives a new Python process opening the same database
 
-**MVP — Completed | P0 | Dependencies: FF-32, FF-33, FF-34**
+**MVP Completed | P0 | Dependencies: FF-32, FF-33, FF-34**
 
 MVP scope basis: Section 2 and acceptance criteria 1, 7, 10-11: process-restart persistence evidence.
 
@@ -562,7 +571,7 @@ Evidence: `b54a99a`; subprocess persistence tests. Synthetic source and service-
 
 ### FF-36 - Verify every service operation through the actual HTTP adapter
 
-**MVP — Completed | P0 | Dependencies: FF-31, FF-32, FF-34**
+**MVP Completed | P0 | Dependencies: FF-31, FF-32, FF-34**
 
 MVP scope basis: Section 2 and acceptance criteria 12-13: real frontend/API integration verification.
 
@@ -576,7 +585,7 @@ Evidence: `a507929`, `b54a99a`; both integration cases passed in the original ba
 
 ### FF-37 - Document local startup, API configuration and initial SQLite setup
 
-**MVP — Completed | P1 | Dependencies: FF-02, FF-31, FF-32, FF-35**
+**MVP Completed | P1 | Dependencies: FF-02, FF-31, FF-32, FF-35**
 
 MVP scope basis: Section 2 step 7: local startup, setup and verification documentation.
 
@@ -588,246 +597,264 @@ Testing steps: Compare README commands with scripts/env reads; reproduce startup
 
 Evidence: `1bf7f6e`, `a507929`, `b54a99a`; READMEs/integration notes. Final acceptance results and stale explanatory prose are FF-47.
 
-## M5 - MVP acceptance gaps and sign-off
+## M5 - Completion and focused acceptance
 
-### FF-38 - Resolve recipe yield semantics and misleading serving labels
+### FF-38 - Label exact recipe-batch scaling without invented servings
 
-**MVP — Remaining | Readiness: ready; source evidence may block closure | P1 | Dependencies: FF-16; coordinate FF-18 | Parallel lane B | Estimate: 1-3 hours, excluding unavailable source evidence**
+**MVP Remaining | P1 | Ready | Dependencies: FF-16 | Frontend worktree | Budget: 0.5 hour**
 
-MVP scope basis: Section 3.3 and acceptance criterion 6: accurate base-serving meaning and consistent scaling; guessing yield is prohibited.
+MVP scope basis: Revised spec 3.3 / criterion 6; batch interpretation is now explicit rather than an unresolved human-yield dependency.
 
-Description: Import assigns `base_servings=1` to a whole source batch because TheMealDB lacks yield data, while detail/basket/dialog/history call it a human serving. README disclosure alone does not correct the in-app promise.
+Description: Keep numeric API `servings`/`base_servings` and scaling unchanged. Describe unyielded TheMealDB records as whole-source batches in detail, basket, cook preview and recent history.
 
-Acceptance criteria: Establish a consistent, evidence-backed meaning of base/requested servings. Prefer verified yields when available; never infer portions. If whole-batch scaling stays, label it clearly throughout and record that accepting this interpretation of the spec's serving requirement needs an explicit product decision. Text changes alone do not establish literal yield compliance. Preserve numeric API shapes and 1-8 constraints.
+Acceptance criteria: One batch uses all source quantities; selection 1-8 scales by the exact existing ratio; no UI claims how many people it serves. Existing layout/API is preserved. No yield scraping, inference, human-portion conversion or new metadata system is needed.
 
-Testing steps: Compare raw quantities/yield evidence with detail, basket, shopping, preview and history at two scales; add copy tests and retain scaling tests. Record unresolved interpretation as a release exception, not completion.
+Testing steps: Check labels and quantities at one and two batches across detail/basket/shopping/preview/history; retain scale tests and add one focused label assertion. Confirm stored historical numeric values are not reinterpreted or rewritten.
 
-Parallel opportunity: investigate copy independently of mappings; final meaning must agree with the supported corpus. No speculative yield-collection feature is requested.
+Parallel opportunity: frontend owner also handles FF-40 to avoid conflicting detail edits; no need to wait for a source-yield study.
 
-### FF-39 - Align configurable expiry thresholds in backend and frontend
+### FF-39 - Keep expiry configuration and visible statuses consistent
 
-**MVP — Remaining | Readiness: ready | P1 | Dependencies: FF-09, FF-10, FF-30 | Lane B | Estimate: 1-2 hours**
+**MVP Remaining | P1 | Ready | Dependencies: FF-09, FF-10, FF-30 | Frontend worktree | Budget: 0.5 hour**
 
-MVP scope basis: Section 3.1 and acceptance criteria 2-3: configurable expiry highlighting consistent with backend calculations.
+MVP scope basis: Spec 3.1 / criteria 2-3; existing backend configurability is preserved, not removed for time.
 
-Description: Backend reads `FRESHFIRST_EXPIRY_DAYS`, but frontend `EXPIRY_THRESHOLD_DAYS`, dashboard labels and detail notes hardcode three. Non-default configuration can show contradictory states and recommendations.
+Description: Coordinate the existing server threshold with a documented frontend launch/build value and replace misleading hardcoded numeric notes as needed. Default remains three days.
 
-Acceptance criteria: Use/document coordinated launch/build configuration with default three and valid nonnegative integers. Pantry status/filtering, counts and numeric notes agree. Avoid a new API endpoint/schema or settings product just to carry this configuration; remove misleading fixed numeric prose where appropriate.
+Acceptance criteria: Pantry filters/badges, recipe notes and dashboard agree at default and one non-default setting; invalid threshold values fail clearly. No settings screen, extra API or backend feature removal.
 
-Testing steps: Run with thresholds three and five using day-four/five/six items; compare pantry filters, dashboard and recipe notes/ranking. Test invalid/negative configuration and expiry boundaries.
+Testing steps: Test thresholds three/five with boundary stock and compare backend counts with UI labels/status. Check documented paired configuration and default behavior.
 
-Parallel opportunity: independent of importer; coordinate recipe-detail copy with FF-38.
+Parallel opportunity: frontend owner can share copy edits with FF-38; source work is independent.
 
-### FF-40 - Preserve saved basket choices when editing through recipe details
+### FF-40 - Preserve basket selections and recover from partial detail updates
 
-**MVP — Remaining | Readiness: ready | P1 | Dependencies: FF-17, FF-22, FF-23 | Lane B | Estimate: 1-3 hours**
+**MVP Remaining | P0 | Ready | Dependencies: FF-17, FF-22, FF-23 | Frontend worktree | Budget: 1 hour**
 
-MVP scope basis: Sections 3.3-3.4 and acceptance criteria 6-7, 12: preserve confirmed selection state and recover from partial actions.
+MVP scope basis: Spec 3.3-3.4 and 4 / criteria 6-7, 12; saved choices and truthful updates are core functionality.
 
-Description: Detail initializes local scale/choices from defaults, uses the saved item mainly for its update label, and performs add/upsert followed by a substitution patch. Reopening can clear prior choices; failure of the second call can leave the first mutation saved.
+Description: Recipe detail currently starts from defaults and performs add/upsert followed by a substitution patch. Restore an existing selection before editing and prevent silent clearing or misleading success after a partial action.
 
-Acceptance criteria: Load saved choices explicitly when editing a selection, and do not overwrite them without user action. Existing items use the existing patch for coordinated changes. Handle any unavoidable new-item multi-call partial failure visibly and reconcile server state; do not claim contract-level atomicity. Changing recipe identity cannot retain another recipe's local choices.
+Acceptance criteria: Existing choices/scale are shown and preserved unless changed; existing selections use the existing patch for coordinated edits. A new-item second-call failure is visible and reconciled with actual server state, without pretending the contract provides atomic multi-request updates. Route changes clear unrelated local choices. No new endpoint or UI redesign.
 
-Testing steps: Save nondefault scale/substitutions, reopen, change only scale, simulate patch failure after add, navigate to another recipe and reload. Assert correct feedback, choices and totals with focused UI/service tests.
+Testing steps: Reopen a saved nondefault selection, change only scale, inject patch failure after add, then reload/navigate. Assert correct totals, preserved choices, recovery feedback and no false success.
 
-Parallel opportunity: independent of source work; one owner should coordinate FF-38 and this issue's `recipes.$id.tsx` edits.
+Parallel opportunity: same frontend owner as FF-38; independent from source/bootstrap work.
 
-### FF-41 - Recover cooking UI after stale stock or uncertain confirmation outcome
+### FF-41 - Reconcile cooking failures without retrying uncertain deductions
 
-**MVP — Remaining | Readiness: ready | P1 | Dependencies: FF-28, FF-29, FF-31 | Lane B | Estimate: 1-2 hours**
+**MVP Remaining | P0 | Ready | Dependencies: FF-28, FF-29, FF-31 | Frontend worktree | Budget: 1 hour**
 
-MVP scope basis: Sections 3.6 and 4 and acceptance criteria 11-12: recoverable truthful cooking outcomes without automatic duplicate deductions.
+MVP scope basis: Spec 3.6 and 4 / criteria 11-12; stale or uncertain outcomes cannot be Post-MVP.
 
-Description: `CookDialog.confirm` invalidates queries after success only; its catch path merely toasts. A 409 or lost response can leave stale preview/inventory/history. Cooking is explicitly non-idempotent.
+Description: CookDialog failure currently toasts without reconciling preview/pantry/history. Preserve server atomicity while making the client recover safely.
 
-Acceptance criteria: Failed confirmation reconciles affected views and invalidates/reloads preview; preview failure offers a useful retry. A transport failure after submission explains that the outcome may require checking; never automatically retry a non-idempotent cook. Pending/error UI cannot imply an unconfirmed deduction.
+Acceptance criteria: A rejected confirmation invalidates/reloads affected data and preview; preview errors offer retry. After a lost confirmation response, check history/current state before another deliberate action; never automatically repeat non-idempotent cooking or claim failure proves nothing committed. Success remains backend-confirmed only.
 
-Testing steps: Change inventory after preview and return 409; fail/retry preview; commit server-side then drop confirmation response. Verify refreshed history, no automatic duplicate confirmation and preserved successful flow.
+Testing steps: Inject stale-stock 409, preview failure/retry, and a server commit with dropped response. Verify reconciliation, no automatic duplicate cook, no negative inventory and preserved normal success behavior.
 
-Parallel opportunity: isolated component work can overlap importer or pantry/shopping forms; coordinate any shared hook edits.
+Parallel opportunity: isolated component, but frontend owner coordinates any shared hooks. Do not add a new cooking-idempotency API under the deadline.
 
-### FF-42 - Complete inline validation and recoverable form mutation feedback
+### FF-42 - Finish actionable inline feedback in existing pantry/shopping forms
 
-**MVP — Remaining | Readiness: ready | P1 | Dependencies: FF-10, FF-26, FF-31 | Lane B | Estimate: 1-2 hours**
+**MVP Remaining | P1 | Ready | Dependencies: FF-10, FF-26, FF-31 | Frontend worktree | Budget: 0.5 hour**
 
-MVP scope basis: Section 4 and acceptance criterion 12: inline validation and recoverable errors are required UX, not polish.
+MVP scope basis: Spec 4 / criterion 12; validation and recoverable rejected mutations remain required.
 
-Description: Pantry has local field errors, but API save conflicts are toast-only; shopping overrides similarly rely on native constraints/toasts. Spec section 4 asks for inline validation and recoverable errors too.
+Description: Reuse current validation and service errors to keep forms recoverable; avoid a form-framework rewrite.
 
-Acceptance criteria: Pantry and shopping forms retain input on backend rejection and show actionable inline quantity/date/expiry-conflict messages. Keep notifications and existing design. Blank/nonfinite values cannot produce false success; pending actions are disabled appropriately.
+Acceptance criteria: Backend rejection leaves inputs intact and displays actionable inline quantity/date/expiry-conflict feedback as well as existing notifications. Pending actions cannot show premature success. Keep current visual design and validation rules.
 
-Testing steps: Use deferred/rejected services, submit invalid values and `EXPIRY_CONFLICT`, correct in place and resubmit. Assert visible errors, retained values, unchanged stock on failure and exactly one confirmed success.
+Testing steps: Reject a pantry save and shopping quantity edit, correct in place and resubmit. Assert retained values, visible error and one confirmed success; keep deferred purchase tests passing.
 
-Parallel opportunity: independent of Lane A/CookDialog. This is one bounded feedback improvement, not a separate issue for every field.
+Parallel opportunity: frontend owner can batch these small form changes, independent of source/QA worktrees.
 
-### FF-43 - Make the complete persisted cooking history reachable in the UI
+### FF-43 - Add a complete older-history browser within the existing UI
 
-**MVP — Remaining | Readiness: ready | P1 | Dependencies: FF-30, FF-31, FF-35 | Lane B | Estimate: 1-2 hours**
+**Post-MVP | P2 | Not scheduled in 12-hour budget | Dependencies: FF-30, FF-35, FF-38, FF-48 | v1.1 - History depth | Estimate: 1-2 hours**
 
-MVP scope basis: Section 3.6: reachable simple cooking history; section 3.7 recent history alone does not expose older records.
+Post-MVP scope basis: Spec section 9 explicitly narrows MVP presentation to existing recent history. Every record and the full history API remain working MVP features; no data or API access is deferred or removed.
 
-Description: `listHistory` and `useHistory` exist, but no rendered view uses them; Dashboard receives only five recent records. Older saved records have no user-facing entry point despite the simple history requirement.
+Description: Add an expansion or equivalent simple view for older records after the complete MVP ships. This is extra presentation depth, not a fix for lost cooking history.
 
-Acceptance criteria: Provide a simple complete list, for example an expansion within Dashboard, using the existing service and design. Show recipe/date/selected scale with correct order and loading/empty/error states. No analytics, new sidebar section or API is needed.
+Acceptance criteria: More than five stored records can be browsed newest-first with recipe/date/batch count; loading/empty/error states work. Reuse `listHistory`; no new analytics, schema or sidebar redesign. If actual storage/history API loss is found, treat that defect as MVP instead of hiding it here.
 
-Testing steps: Create six or more records, reach the sixth after refresh/backend restart, and verify newest-first ordering and error/empty behavior. Do not redo already implemented history storage/API.
+Testing steps: Create six-plus records, verify older rows across reload/restart and error handling, and confirm Dashboard remains unchanged by default.
 
-Parallel opportunity: largely Dashboard-local; agree serving labels with FF-38.
+Parallel opportunity: optional and isolated to Dashboard/history presentation after FF-48; not a release dependency.
 
-### FF-44 - Execute the live-recipe browser journey through SQLite restart
+### FF-44 - Verify the complete two-real-recipe workflow through SQLite restart
 
-**MVP — Remaining | Readiness: blocked by corpus and required UX fixes | P0 | Dependencies: FF-21, FF-35, FF-36, FF-38 to FF-43 | Parallel lane C | Estimate: 2-3 hours**
+**MVP Remaining | P0 | Blocked on source and core UI fixes | Dependencies: FF-21, FF-35, FF-36, FF-38, FF-39, FF-40, FF-41, FF-42 | Integration worktree | Budget: 1 hour**
 
-MVP scope basis: Section 7 criterion 13, supported by criteria 1-12: full user-flow and restart acceptance.
+MVP scope basis: Revised spec criterion 13 and criteria 1-12; final evidence is mandatory, not optional polish.
 
-Description: Close spec acceptance criterion 13 with real supported recipes, browser interaction and durable backend restart. Existing evidence covers synthetic browser integration plus separate automated persistence, not this combined run.
+Description: Run the established UI through Pantry -> Recipes -> Basket -> Shopping -> Purchase -> Cook -> Restart with the real reviewed baseline. Prepare the checklist while implementation runs.
 
-Acceptance criteria: Record Pantry -> Recipes -> Basket -> Shopping -> Purchase -> Cook -> Restart. Include two recipes with shared stock, scaling, explicit substitution where supported context permits, expired-stock exclusion, manual edit protection and exact deductions/history. Browser reload/backend restart retain choices/transfer flags/history. Capture source IDs and dates. If a real subset cannot exercise a reviewed rule, identify a strict-fixture supplement separately rather than claiming a live substitution check occurred.
+Acceptance criteria: Two real records demonstrate shared-stock subtraction once, exact batch scaling, expired-stock exclusion, edit protection, actual purchase quantity/expiry, idempotent transfer and atomic history/deductions. Reload/restart preserves selections/data. Exercise substitution with a compatible real recipe if available; otherwise document a separately labeled strict deterministic test supplement, never a fictional production recipe. No failed core path is accepted to meet the clock.
 
-Testing steps: Drive existing UI against normal FastAPI and a temporary SQLite file with real import. Retain before/after API/database snapshots, restart the same URL, retry completed transfer and prove no double addition. Document actual failures before declaring pass.
+Testing steps: Record source IDs plus before/after inventory/history snapshots; restart the same file; retry completed transfer; reproduce blocked cooking and accurate error recovery. Use existing browser tooling rather than building a new platform.
 
-Parallel opportunity: prepare checklist and snapshots now; final execution waits for dependencies. A new permanent browser-test platform is unnecessary.
+Parallel opportunity: prepare early; execute only against merged work. Post-MVP FF-20 and FF-43 are explicitly not prerequisites.
 
-### FF-45 - Verify offline restart and failed startup import preserve saved data
+### FF-45 - Verify offline startup and failed live import retain durable data
 
-**MVP — Remaining | Readiness: ready, verification only | P1 | Dependencies: FF-14, FF-32, FF-35 | Lane C | Estimate: 1-2 hours**
+**MVP Remaining | P0 | Ready to prepare; run after bootstrap integration | Dependencies: FF-14, FF-19, FF-32, FF-35 | QA worktree | Budget: 0.5 hour**
 
-MVP scope basis: Section 3.2: previously imported data must remain usable when the external source is unavailable.
+MVP scope basis: Revised spec 3.2 and persistence criteria; offline baseline usability and retained user data are required.
 
-Description: Source-failure and process-persistence tests pass separately; production lifespan with an existing file plus unavailable upstream lacks explicit combined acceptance evidence.
+Description: Reuse current persistence/failure test patterns for the new baseline source; no broad resilience platform.
 
-Acceptance criteria: Reopening an existing file with injected startup timeout/malformed source preserves and serves recipes, pantry, basket, shopping and history. Failure is logged without data replacement/reseeding. An initially empty offline database remains honest about absent recipes and recovers through explicit import later.
+Acceptance criteria: Fresh offline startup has the real baseline; an existing database with user data opens without waiting for live traversal. A failed explicit live import preserves recipes, basket, shopping, pantry/history and returns the existing error. Seeds never overwrite newer source records or refill empty pantry.
 
-Testing steps: Start another app/lifespan on a saved file with a deterministic failing source, query and compare snapshots; repeat on an empty file followed by successful retry. Inject bounded failure instead of depending on a live outage.
+Testing steps: Inject bounded offline/malformed upstream failures against fresh and saved file-backed apps; compare snapshots and repeated seed counts. Keep previous source-failure tests rather than weakening their guarantees.
 
-Parallel opportunity: independent of corpus and frontend changes; perform while FF-18 investigates feasibility. This issue verifies a claimed behavior, not a confirmed data-loss bug.
+Parallel opportunity: QA owner prepares an isolated new test file; run final cases after cherry-picking source commit. Source owner owns `main.py` and existing importer tests to avoid edit conflicts.
 
-### FF-46 - Verify mobile navigation, keyboard forms and confirmation usability
+### FF-46 - Smoke-test responsive navigation and critical forms/confirmations
 
-**MVP — Remaining | Readiness: ready, verification and reproduced fixes only | P1 | Dependencies: FF-11, FF-23, FF-26, FF-29; final rerun after FF-38 to FF-43 | Lane C | Estimate: 1-2 hours**
+**MVP Remaining | P1 | Ready to prepare | Dependencies: FF-11, FF-23, FF-26, FF-29, FF-38, FF-39, FF-40, FF-41, FF-42 (prepare early) | QA worktree | Budget: 0.5 hour**
 
-MVP scope basis: Sections 1 and 4: functional responsive navigation/forms/confirmations; no broad certification requirement.
+MVP scope basis: Spec 1 and 4; usable responsive core controls remain mandatory.
 
-Description: Responsive implementation exists, but current evidence does not cover narrow-screen interaction, keyboard focus or long import reports.
+Description: Verify existing layout on desktop and a narrow viewport with simple keyboard interaction. No redesign or accessibility-certification project.
 
-Acceptance criteria: At desktop and representative 375px width, all destinations are reachable; key forms and overwrite/cook confirmations work by keyboard; content stays readable; a long skip report remains usable in the viewport. Fix only reproduced failures; preserve design and avoid expanding into a broad accessibility certification project.
+Acceptance criteria: All five destinations, ingredient/batch controls, purchase date/quantity and cook/overwrite confirmations are usable, including cancel/error states. Long report content remains reachable. Any reproduced blocker stays MVP and uses reserve; cosmetic enhancements are not created to consume the budget.
 
-Testing steps: Tab through navigation, pantry fields, substitutions, actual purchase/date, regeneration and cooking. Check cancellation/focus return, overflow and slow/error states; record browser/viewport/results.
+Testing steps: At desktop and 375px width navigate, tab, submit/cancel and recover from one error; record browser/viewport/results and rerun affected controls after merged fixes.
 
-Parallel opportunity: inspect stable screens now; coordinate dialog/form fixes with FF-41/FF-42 and rerun affected interactions afterward.
+Parallel opportunity: inspect stable paths early; final smoke uses integrated frontend commits, not an isolated stale branch.
 
-### FF-47 - Update repository docs with accurate final setup and acceptance evidence
+### FF-47 - Record final setup, batch/source boundary and acceptance evidence
 
-**MVP — Remaining | Readiness: blocked on acceptance results | P1 | Dependencies: FF-44, FF-45, FF-46 | Lane C | Estimate: 0.5-1 hour**
+**MVP Remaining | P1 | Blocked on acceptance evidence | Dependencies: FF-44, FF-45, FF-46 | Integration owner | Budget: 0.5 hour**
 
-MVP scope basis: Section 2 step 7 and section 7: accurate startup documentation and recorded final verification.
+MVP scope basis: Spec 2 and 7; accurate setup/results required for the working deliverable.
 
-Description: Finalize current-state documentation without erasing history. OpenAPI prose still says no HTTP client/backend exists; historical integration sections describe restart data loss.
+Description: Update final READMEs/integration evidence and explanatory stale API prose during implementation, without changing API structure. Only the two requested planning documents are changed in the present task.
 
-Acceptance criteria: Include actual source count/IDs, configuration/serving meaning, browser-restart results, warnings and unresolved exceptions. Update misleading OpenAPI explanatory prose only, preserving paths, IDs, schemas, response codes and security. Clearly label historical sections and never claim unrun tests passed.
+Acceptance criteria: Explain snapshot provenance/missing-ID seeding, real live import errors, batch labels, database/configuration/restart behavior, revised two-record minimum and deferred breadth/history UI. Preserve earlier evidence as historical and record actual final results/warnings/blockers. Never claim the original 15-20 target is done.
 
-Testing steps: Follow startup in a clean checkout; validate API coverage; compare structural contract fields before/after prose edits; trace completion claims to captured evidence.
+Testing steps: Follow documented local startup against a clean file, compare structural OpenAPI fields and map every acceptance statement to real evidence. Do not spend this time on unrelated documentation rewrites.
 
-Parallel opportunity: draft corrections early, finalize results after acceptance checks. This updates final release evidence, distinct from the already delivered initial setup instructions in FF-37.
+Parallel opportunity: integration owner drafts while tests run; fill results only after gates complete.
 
-### FF-48 - Run the final regression gate and decide v1.0 acceptance
+### FF-48 - Run final regression and enforce the 12-hour delivery gate
 
-**MVP — Remaining | Readiness: blocked on remaining issue closure | P0 | Dependencies: FF-47 (transitively all remaining MVP gates) | Integration owner | Estimate: 0.5-1 hour**
+**MVP Remaining | P0 | Blocked on required gates | Dependencies: FF-47 (transitively all remaining MVP work) | Integration owner | Budget: 0.5 hour**
 
-MVP scope basis: Section 7: evidence-backed MVP acceptance across every required criterion.
+MVP scope basis: Revised spec 7-9; correctness is never traded for the deadline.
 
-Description: Decide readiness using all spec acceptance criteria rather than the issue count or a single green command.
+Description: Check the integrated changes and stop at the aggregate time cap with an honest accepted/blocked decision.
 
-Acceptance criteria: Every acceptance criterion has evidence; every remaining MVP issue meets its acceptance criteria, including a documented serving interpretation consistent with the specification. A waiver or reduction of a mandatory requirement is not MVP completion under this unchanged specification. The 15-20 real-recipe target is met or v1.0 stays blocked. No invented records, permissive conversions or extra features appear. Preserve the API and stored data; commit final changes without rewriting history.
+Acceptance criteria: All revised MVP criteria have evidence; all existing operations/features/data-integrity tests survive. Two real baseline recipes are proven and batch semantics are truthful. Every MVP Remaining item meets its criteria; Post-MVP FF-20/FF-43 are not falsely marked done. Record actual combined worktree effort and reserve consumed. If a core blocker remains or time expires, report incomplete MVP instead of shipping a broken core.
 
-Testing steps: Run locked dependency setup, backend pytest/Ruff/format, frontend tests/typecheck/API validation/lint/build; review FF-44 to FF-46 evidence and final diff. Record actual results/warnings. This verification does not authorize issue creation, publishing, deployment or release tagging.
+Testing steps: Run backend pytest/Ruff/format plus frontend tests/typecheck/API validation/lint/build once against merged changes; inspect baseline/restart/browser evidence and final diff. Record actual counts rather than assuming earlier 99/47 results still apply. No GitHub creation, deployment, publishing or release tagging is authorized by this issue.
 
-Parallel opportunity: this is the join point; run the final gate after the changes it validates.
+Parallel opportunity: final join only; execute after source, frontend and QA commits are integrated. Existing test tools make this a verification timebox, not an invitation to build infrastructure.
 
-## Specification acceptance coverage
 
-| Spec section 7 criterion | Implemented evidence | Remaining acceptance work |
+## Revised MVP acceptance coverage
+
+| Criterion / preserved feature | Delivered foundation | Required closure under this boundary |
 | --- | --- | --- |
-| 1. Pantry survives refresh/restart | FF-07, FF-35, FF-36 | FF-44 combines browser/backend restart |
-| 2. Expired stock excluded everywhere | FF-09, FF-24, FF-28 | FF-39 non-default UI; FF-44 live journey |
-| 3. Meaningful matching and urgency | FF-15 | FF-39, FF-44 |
-| 4. 15-20 normalized unique real recipes | FF-12 to FF-14 mechanics only | **FF-18 to FF-21 remain blocking** |
-| 5. Ambiguous measures rejected | FF-08, FF-13 | FF-19/FF-20 must preserve rejection |
-| 6. Scaling and explicit substitution | FF-16, FF-17, FF-22 | FF-38 meaning; FF-40 saved detail choices |
-| 7. Persistent basket | FF-22, FF-35 | FF-40, FF-44 |
-| 8. Shared groceries / compatible units | FF-08, FF-24 | FF-20 real-source arithmetic; FF-44 |
-| 9. Manual shopping edits retained | FF-25, FF-35 | FF-42 feedback; FF-44 |
-| 10. Exactly-once purchase transfer | FF-27, FF-34, FF-35 | FF-44 browser restart |
-| 11. Atomic cooking/history | FF-28, FF-34 | FF-41 reconciliation; FF-44 |
-| 12. Recoverable errors/no false success | FF-05, FF-26, FF-31, FF-36 | FF-40, FF-41, FF-42, FF-45 |
-| 13. Tests plus complete manual journey | FF-34 to FF-36; historical synthetic browser run | FF-44, FF-45, FF-46, FF-48 |
+| Pantry CRUD, compatible units, filters, visible expired items | FF-06 to FF-10 | FF-39 configuration, FF-42 feedback, FF-44 end-to-end |
+| Strict real-source recipes and metadata | FF-12 to FF-16 | FF-18/FF-19/FF-21 prove two distinct real records with shared stock; FF-20 is optional corpus breadth |
+| Exact scaling and explicit eligible substitutions | FF-16/FF-17/FF-22 | FF-38 batch labels, FF-40 saved choices, FF-44 real journey plus clearly labeled substitution supplement if necessary |
+| Persistent basket/shared groceries | FF-22 to FF-25, FF-35 | FF-40 partial-update recovery and FF-44 exact shared-stock test |
+| Manual shopping edits and exactly-once received purchase | FF-25 to FF-27, FF-34/FF-35 | FF-42 and FF-44; never defer a duplicate-transfer bug |
+| Atomic revalidated cooking and durable history | FF-28/FF-30, FF-34/FF-35 | FF-41 uncertain-outcome recovery, FF-44/FF-45; all records/full API retained |
+| Recent Dashboard history and recommendations | FF-15/FF-30 | Batch/threshold labels; FF-43 adds optional older-history UI, not storage |
+| SQLite URL, seeds, restart and upstream failure | FF-32 to FF-37 | FF-19 missing-only source baseline, FF-21 repeat startup, FF-45 offline data retention |
+| Standard API/transport, inline errors and responsive UI | FF-04/FF-05/FF-11/FF-31/FF-36 | FF-39 to FF-42, FF-46; no structural contract change |
+| Full journey, tests and truthful documentation | Existing 99 backend / 47 frontend historical evidence | FF-44 to FF-48 must record new integrated results; no automatic reuse of old pass counts |
 
-Additional section 3/4 coverage: FF-43 exposes full simple history; FF-46 completes responsive/keyboard validation. Neither introduces a feature outside the specified scope.
+No issue classified Post-MVP is reachable as a release prerequisite. Conversely, an inventory/history/choice-loss bug discovered while implementing a Post-MVP enhancement is core MVP work and must be reported/fixed under the appropriate integrity gate.
 
-## Critical blockers and fastest execution order
+## Dependency order and minimum critical path
 
-### Minimum release dependency chain
+1. **Immediately: FF-18, with a 30-minute stop/go gate.** If two strict real records cannot be established, report that result before expanding the investigation. Do not run open-ended discovery, add a different source, reinterpret quantities or claim a seed exists.
+2. **Source branch: FF-18 -> FF-19 -> FF-21**, nominal 2.5 engineering hours. Baseline fixtures/rejection/idempotency tests are in these MVP tasks, not deferred with the larger FF-20 corpus.
+3. **Frontend branch: FF-38/FF-39/FF-40/FF-41/FF-42**, nominal 3.5 engineering hours for one owner. Do detail labels and saved-selection edits together; CookDialog and form feedback remain core. Batch semantics now remove the human-yield research dependency.
+4. **QA branch:** prepare FF-45 after the source interface is agreed, run it after FF-19; prepare FF-46 early, finish affected control checks after frontend merge. Neither depends on optional features.
+5. **Join:** FF-21 and all frontend fixes -> FF-44. FF-44/FF-45/FF-46 -> FF-47 -> FF-48. Preserve completed milestones; do not rebuild them.
 
-**FF-18 -> FF-19 -> FF-20 -> FF-21 -> FF-44 -> FF-47 -> FF-48** is the expected longest serial branch. Existing completed milestones are prerequisites already delivered, not work to redo.
+The source dependency chain **FF-18 -> FF-19 -> FF-21 -> FF-44 -> FF-47 -> FF-48** is **4.5 nominal serial engineering hours**. With one frontend owner the 3.5-hour frontend branch can dominate the join, making the illustrative resource-constrained elapsed path **5.5 hours before handoffs/overruns**. These figures assume source feasibility and ready tooling, not proof that tasks will fit. Plan roughly **6-9 elapsed working hours with parallel worktrees**, while enforcing the separate **12 aggregate engineering-hour** cap. Waiting for data or decisions can still miss the deadline; elapsed estimates are conditional.
 
-| Serial segment | Required outcome | Base effort |
+With one contributor, nine planned engineering hours plus up to three reserve gives a conditional 9-12-hour completion attempt. Parallelism changes handoffs and elapsed time, not the sum of actual effort. Source feasibility and undiscovered core defects can invalidate that attempt; there is no guaranteed twelve-hour solution if the stop/go gate fails.
+
+## Strict budget ledger
+
+| Issue | Priority | Immediate prerequisite | Nominal engineering hours |
+| --- | --- | --- | ---: |
+| FF-18 | P0 | Existing strict importer | 0.5 |
+| FF-19 | P0 | FF-18 | 1.5 |
+| FF-21 | P0 | FF-19 | 0.5 |
+| FF-38 | P1 | Existing scaled detail | 0.5 |
+| FF-39 | P1 | Existing expiry behavior | 0.5 |
+| FF-40 | P0 | Existing persisted basket | 1.0 |
+| FF-41 | P0 | Existing atomic cooking | 1.0 |
+| FF-42 | P1 | Existing forms/service errors | 0.5 |
+| FF-44 | P0 | Source/UI merge | 1.0 |
+| FF-45 | P0 | FF-19; prepare independently | 0.5 |
+| FF-46 | P1 | Integrated affected UI | 0.5 |
+| FF-47 | P1 | FF-44/FF-45/FF-46 | 0.5 |
+| FF-48 | P0 | FF-47 | 0.5 |
+| Planned remaining work | 13 issues | Includes focused tests and final verification | **9.0** |
+| Shared reserve | No added feature | Planning/setup time not already counted, worktree integration, defects/rechecks | **3.0** |
+| Hard aggregate cap | All contributors combined | Not twelve hours per agent | **12.0** |
+
+Record actual time once per task/contributor; debit planning/setup/coordination and the final merge/test work too. The repository has no trustworthy prior effort ledger; this table is a forward allocation, not an assertion that a measured twelve hours remain after all earlier work. Deduct already consumed time before implementation starts. Do not reset the cap after a failed audit. The original full-scope estimate (20-43 base / 25-55 with contingency) is preserved as history below; nine hours is a smaller-scope, timeboxed attempt rather than a retrospective proof that the old work was faster.
+
+At the nominal six aggregate engineering hours used by source/frontend changes, freeze optional edits and move to integrated acceptance. Protect the planned three hours of QA/docs/final verification. Reserve is for correctness only. At aggregate hour twelve stop, record actual state and report accepted or blocked; never skip a critical failing check or recategorize a broken core to fit.
+
+## Safe parallel agents in separate Git worktrees
+
+This is a future execution design only. No agents or worktrees are started by this documentation task. A coordinator plus up to three agents is enough; more concurrency adds unnecessary handoffs for this small change.
+
+| Owner / suggested branch and worktree | Issues and exclusive edits | Safe parallel work / constraints |
 | --- | --- | --- |
-| FF-18 | Current source feasibility evidence | 2-4 hours |
-| FF-19 | Only necessary exact identity/measure support | 4-10 hours |
-| FF-20 | Real-source corpus and regression evidence | 2-4 hours |
-| FF-21 | Normal production startup/re-import count and persistence | 1-2 hours |
-| FF-44 | Complete browser journey and backend restart acceptance | 2-3 hours |
-| FF-47 | Accurate final documentation | 0.5-1 hour |
-| FF-48 | Final regression and sign-off | 0.5-1 hour |
-| Expected serial critical path | Seven existing issues | **12-25 hours before contingency** |
+| Source agent: `mvp/source`, sibling `freshfirst-source` | FF-18/FF-19/FF-21; `backend/app/services/importer.py`, minimal catalog aliases, source snapshot data, `backend/app/main.py` bootstrap, related existing importer/seed tests | Independent of frontend. Preserve store transaction design and API; no schema/canonical-unit changes. Own existing importer tests and startup file so QA does not edit them concurrently |
+| Frontend agent: `mvp/frontend`, sibling `freshfirst-frontend` | FF-38/FF-39/FF-40/FF-41/FF-42; detail/basket/history labels, CookDialog, forms, hooks and focused frontend tests; paired frontend env example if needed | Same owner for shared detail/hooks files. Source owner coordinates server threshold validation without simultaneous edits. No design changes, new service signatures, package updates or lockfile churn |
+| QA agent: `mvp/acceptance`, sibling `freshfirst-acceptance` | FF-45/FF-46 preparation; new isolated startup acceptance test file and evidence supplied to coordinator | Start from reviewed base; cherry-pick source/frontend commits before dependent final checks. Do not edit source-owned `main.py`, existing seed fixtures or frontend-owned components; report reproduced bugs to their owner |
+| Coordinator: integration branch/worktree | Merge/cherry-pick reviewed commits, FF-44/FF-47/FF-48, both planning documents and final README/integration evidence | Final acceptance runs on the combined commit, not independent branch passes. Sole owner of shared release docs and final decisions. No force pushes, rebases or amend of published history |
 
-The figure is sequential engineering time, not the total effort for all remaining MVP work or a guaranteed delivery date. Budget approximately **15-32 hours with critical-path contingency**, assuming exact mappings are feasible and parallel required branches are ready at the joins. With one contributor doing all tasks, use the full 20-43-hour base / 25-55-hour planning estimate below instead.
+Create each worktree from the same reviewed base, with its own branch and absolute worktree-local SQLite `DATABASE_URL`. Use its own uv environment/frontend install and unique free server ports. Test fixtures must never point to a user's database or another agent's file. Do not share `.venv`, `node_modules`, generated build directories or running servers across worktrees; immutable package download caches may be shared. Keep active databases local rather than concurrently editing cloud-synced copies.
 
-The following work is **mandatory off the expected source critical path**, not Post-MVP:
+Integrate source and frontend first, run the QA test on that combined state, then the browser journey and full checks. QA bug fixes return to the owning worktree and consume reserve; do not have two agents patch the same component in parallel. Stop agents when their bounded deliverables are complete. Time spent by each agent counts toward the same ledger.
 
-- **Frontend branch FF-38 to FF-43:** 6-14 hours of effort; start immediately. These issues join before FF-44. Resolve source-dependent serving semantics while FF-18/FF-19 run; coordinate shared detail/history edits. If this branch or its yield decision finishes later, it becomes the actual limiting branch and delays the join.
-- **Offline startup FF-45:** 1-2 hours, independent of live data; complete before FF-47.
-- **Responsive/usability FF-46:** 1-2 hours; inspect stable views now and finish affected reruns after frontend changes. It joins at FF-47, not after FF-44.
+## Genuine Post-MVP v1.1+ backlog
 
-Do not inflate the minimum path with optional redesigns, a new testing platform, unrelated warning cleanup or a new schema-migration framework when no incompatible schema change is required. Conversely, off-path means parallel scheduling, not permission to skip required behavior or evidence. FF-19 must preserve existing saved data if any mapping change affects units.
+- **FF-20, P2:** expand from the complete two-real-recipe workflow to 15-20 strictly supported real recipes, with reviewed mappings and a larger provenance/regression corpus. The original count remains unfulfilled until this issue actually passes.
+- **FF-43, P2:** expose all older saved cooking records in a simple UI browser using the already available full history API. Dashboard recent history, all durable records and API access remain MVP features.
 
-### Execution sequence
+No artificial additional issues are added. Verified human-portion metadata could be a later independently specified enhancement, but this plan does not invent an estimation feature or duplicate FF-38. Existing explicit non-goals remain excluded; they are not promises for v1.1. The two Post-MVP issues wait for FF-48 and are not scheduled within twelve hours.
 
-1. **Start FF-18 first.** Source data is the limiting factor, not SQLite or missing CRUD. Timebox feasibility before broad parser changes. If 15 fully quantified records cannot fit the allowed catalog/exact mappings, surface the evidence and obtain a source/spec decision. The requirement stays open; a bigger synthetic corpus is not a resolution.
-2. **Source critical path: FF-18 -> FF-19 -> FF-20 -> FF-21.** Keep one mapping owner to avoid contradictory identities/units. A reviewer may prepare fixtures for selected candidates concurrently, but corpus acceptance waits for the real normalizer.
-3. **In parallel, finish FF-38 to FF-43.** Resolve yield semantics early. FF-38/FF-40 share detail files and FF-38/FF-43 share history labels: sequence those edits or use one frontend owner. CookDialog and pantry/shopping form corrections can be separate component workstreams.
-4. **Start FF-45 and prepare FF-44/FF-46 now.** Offline startup verification needs no real corpus. Inspect stable mobile/keyboard paths early, then rerun affected interactions after UI fixes.
-5. **Finish FF-44 while the independent FF-45/FF-46 acceptance branch closes, then FF-47 -> FF-48.** FF-46 does not need to wait for the real-source browser run: its final UI rerun can finish as soon as the relevant frontend changes land. Final docs wait for all three acceptance results. Do not repeat completed milestones or clean unrelated warnings before the blocker is addressed.
+## Scope-decision change log - original decisions preserved
 
-Serving-yield semantics (FF-38) are a second unresolved source/product question. A whole batch is not evidence of one human portion. Correct labels can prevent misleading UI, but literal spec compliance still needs trustworthy yield evidence or an explicit accepted interpretation.
+Original scope/specification is preserved in Git at `13508ba` / `18d4955`. Original backlog is `9a89f63`; the strict unchanged-spec classification (33 completed / 15 remaining / 0 Post-MVP) is `18d4955`. This revision is requested scope planning, not implementation or source evidence.
 
-### Parallel ownership proposal
-
-| Lane | Work | Ready now | Coordination / join |
-| --- | --- | --- | --- |
-| A - Source/normalization | FF-18 to FF-21 | FF-18 | Own catalog/importer; independently review amounts before corpus closure |
-| B - Frontend completion | FF-38 to FF-43 | Yes, subject to yield evidence | Coordinate detail/history edits; separate component work may overlap |
-| C - Acceptance/docs | FF-45; prepare FF-44/FF-46/FF-47 | Independent checks/preparation | Final checks wait for corpus and required UI changes |
-| Integration owner | FF-48 | No | Join after required work/evidence; preserve contract/design |
-
-These are suggested contributor workstreams, not agents spawned or assignments made during this review. Do not add an issue per lane or per recipe: the 48 issue bodies are the backlog.
-
-## Total remaining MVP effort (distinct from critical-path time)
-
-Engineering effort is not guaranteed elapsed time. Completed issues have **zero remaining implementation effort**. Source changes, connectivity and a necessary source/spec decision can add unbounded waiting time.
-
-| Group | Issues | Base effort |
+| Decision | Original / preceding plan | Revised decision and issue impact |
 | --- | --- | --- |
-| Real supported corpus | FF-18 to FF-21 | 9-20 hours |
-| Focused frontend/semantic completion | FF-38 to FF-43 | 6-14 hours |
-| Browser/startup/mobile/docs/sign-off | FF-44 to FF-48 | 5-9 hours |
-| Total before contingency | 15 remaining issues | **20-43 hours** |
-| With integration/review contingency | Same scope | **25-55 hours**, approximately 3-7 full working days for one contributor |
+| Production recipe count | 15-20 supported real recipes mandatory; FF-18 to FF-21 serial source branch | Two distinct real recipes with shared stock are the functional MVP floor; FF-18/FF-19/FF-21 remain P0. FF-20 retains 15-20 expansion as Post-MVP P2. Original count is explicitly not marked done |
+| Source regression tests | FF-20 held the large 15-20 raw-source corpus and related evidence | Mandatory two-record expected-quantity/rejection/idempotent seed tests now belong to FF-19/FF-21; none are deferred with the larger corpus |
+| Startup connectivity | Initial import required network; previous data stayed usable offline | Source acquisition/review still real; reviewed raw snapshots may seed missing IDs offline. Preserve real explicit live import/failure semantics and all stored records; no fake fallback success |
+| Human servings | Batch-versus-human-yield interpretation blocked FF-38 closure | Whole-source-batch 1-8 is the explicit MVP meaning when yield is absent. Correct UI labels remain MVP; no guessed human yield or extra schema |
+| History browser | Previous unchanged-spec plan required older-history UI in FF-43 | Recent Dashboard list is sufficient MVP UI; all persisted records and full API stay intact. Only added older-history presentation becomes Post-MVP FF-43 |
+| Existing functionality / data integrity | Complete working APIs/features and strict normalization mandatory | Unchanged. FF-40/FF-41 are elevated P0; form feedback, threshold consistency and responsive checks stay mandatory. No broken core is moved to Post-MVP |
+| Estimated effort | Prior unchanged-scope estimate 20-43 base / 25-55 with contingency; serial path 12-25 | Reduced, bounded attempt: nine planned aggregate engineering hours + three reserve. Source serial path 4.5 nominal hours; one frontend owner may make elapsed join 5.5 before overhead. Feasibility can still fail |
+| Issue count | 48 issues, 33 MVP Completed / 15 MVP Remaining / 0 Post-MVP | Same stable 48 IDs: 33 / 13 / 2. No manufactured tasks, duplicate endpoint issues or claim that deferred goals are complete |
 
-With suitable parallel contributors and feasible mappings, the expected 12-25-hour serial branch (15-32 hours with contingency) may govern elapsed work; availability, review handoffs and independent branches can extend it. This is not a promise that total effort shrinks when work is parallelized. Re-estimate after FF-18. There is no honest fixed finish date if 15 recipes or trustworthy yields cannot be obtained without relaxing requirements. The original 12-hour whole-project aspiration is not a remaining-work commitment.
+No application changes, current source fetches, new test executions, worktree creation or GitHub issue creation are performed by this document change. Completed commit/test evidence remains historical and unchanged. The operative acceptance criteria are the revised `docs/spec.md`, not an assertion that the original larger scope has been delivered.
 
-## Review and future GitHub handling
+## Risks and stop conditions
 
-Review issue boundaries, especially FF-18/FF-19 feasibility and FF-38 interpretation. Approval of this document alone does not waive acceptance criteria or authorize fabricated conversions. No fixes are performed by this planning change.
+1. **Second real source record is unproven.** Historical accepted record `53137` is not two records; another captured fixture is rejected. If a second record needs guessed units or absent identities beyond bounded exact aliases, the source gate fails. Reserve is not permission for an open-ended search or a synthetic production recipe.
+2. **Raw snapshot bootstrap is a proposed change, not existing functionality.** It must preserve live imports, missing-only seeds, later source updates, transactional rollback and offline startup. A duplicate/overwrite regression is P0.
+3. **Partial/uncertain actions need real recovery tests.** Two-request basket edits and a lost cooking response cannot be deemed safe from a toast alone; discovering larger fixes can exceed one-hour timeboxes.
+4. **Worktree setup/merges and local browser/runtime availability cost time.** Keep one owner per file area, reuse installed tooling appropriately per worktree and protect the final verification allocation. Parallel agents do not multiply the budget.
+5. **Deadline does not imply correctness.** Stop and report a blocked/incomplete MVP if any core criterion remains unmet or the cap expires. Do not count optional issue deferral as evidence that the two-recipe minimum, exact batch scaling or durable workflows already work.
 
-If later explicitly authorized to create GitHub issues: use these six milestones, translate FF dependencies into real issue links, label each issue with its exact classification plus priority/area/readiness, attach completed commit/test evidence, and close only the 33 MVP-completed entries. Keep all 15 MVP-remaining entries open until their criteria are met. No Post-MVP issue is proposed; do not create optional tasks to fill a category. Do not rewrite history, push repository changes or publish as part of issue bookkeeping without authorization.
+## Future GitHub handling
+
+This remains a local draft. If later explicitly authorized, create the six grouping milestones plus a v1.1 milestone for FF-20/FF-43, map local references to real issue links, preserve completed evidence and close only the 33 genuinely completed issues. Keep all 13 MVP Remaining and both Post-MVP issues open until their criteria are met. No publishing, GitHub writes, release tags or history rewriting are authorized by this planning task.
