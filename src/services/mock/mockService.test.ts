@@ -124,7 +124,7 @@ describe("mock service", () => {
   });
 
   it("skips meals with unknown ingredients when importing", async () => {
-    const s = createMockService({ storage: memoryStorage(), today: () => T, externalMeals: EXTERNAL_MEALS.slice(-4) });
+    const s = createMockService({ storage: memoryStorage(), today: () => T, externalMeals: EXTERNAL_MEALS.slice(0, 4) });
     expect(await s.listRecipes()).toHaveLength(0);
     const report = await s.importRecipes();
     expect(report.skipped).toHaveLength(4);

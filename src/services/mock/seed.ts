@@ -78,7 +78,7 @@ export interface RawMeal {
 /** Raw recipes as they would arrive from TheMealDB (names + free-text measures). */
 const img = (slug: string) => `https://www.themealdb.com/images/media/meals/${slug}.jpg`;
 
-export const EXTERNAL_MEALS: RawMeal[] = [
+const RAW_MEALS: RawMeal[] = [
   { idMeal: "52982", strMeal: "Spaghetti Carbonara", strCategory: "Pasta", strMealThumb: img("llcbn01574260722"), servings: 2,
     strInstructions: "Boil the pasta. Fry the bacon until crisp. Whisk eggs with grated parmesan. Toss hot pasta with bacon off the heat, then stir in the egg mixture until creamy.",
     ingredients: [["Pasta", "200g"], ["Bacon", "100g"], ["Eggs", "2"], ["Parmesan", "50g"], ["Garlic clove", "1"]] },
@@ -143,5 +143,8 @@ export const EXTERNAL_MEALS: RawMeal[] = [
   { idMeal: "52908", strMeal: "Saffron Risotto", strCategory: "Vegetarian", strMealThumb: img("1550441280"), servings: 2,
     strInstructions: "Stir rice with stock.", ingredients: [["Rice", "200g"], ["Saffron", "1 pinch"]] },
 ];
+
+// Unsupported meals arrive first in the feed so every import run produces a skip report.
+export const EXTERNAL_MEALS: RawMeal[] = [...RAW_MEALS.slice(-4), ...RAW_MEALS.slice(0, -4)];
 
 export const IMPORT_TARGET = 18;
