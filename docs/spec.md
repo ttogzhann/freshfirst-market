@@ -1,7 +1,7 @@
-# FreshRescue v1.0 — Product Specification
+# FreshFirst v1.0 — Product Specification
 
 ## 1. Purpose and constraints
-FreshRescue is a local, single-user full-stack application that helps people use food before it expires, discover suitable recipes, make ingredient substitutions, calculate consolidated groceries for several recipes, and update pantry inventory after cooking or shopping.
+FreshFirst is a local, single-user full-stack application that helps people use food before it expires, discover suitable recipes, make ingredient substitutions, calculate consolidated groceries for several recipes, and update pantry inventory after cooking or shopping.
 
 **Development time target:** 12 hours with a coding assistant; a target, not a guarantee. **Non-goals:** authentication, deployment, weekly calendar, AI-generated recipes, receipt scanning, nutrition/calorie tracking, price tracking, push notifications, multiple households, complex charts.
 
