@@ -28,7 +28,16 @@ Prefer working locally? You need Node.js and npm — [install with nvm](https://
 
 ```sh
 git clone <this-repository-url>
-cd <repository-name>
+cd <repository-name>/frontend
 npm i
 npm run dev
 ```
+
+The frontend application and its configuration live in `frontend/`. Run all npm commands from that directory.
+
+```sh
+npm run build
+npm test
+```
+
+`backend/` is reserved for the backend. Project instructions and specifications remain in `AGENTS.md` and `docs/` at the repository root.
