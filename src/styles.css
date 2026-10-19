@@ -45,8 +45,8 @@
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
   --color-success: var(--success);
-  --font-display: var(--font-display);
-  --font-sans: var(--font-body);
+  --font-display: var(--display-font);
+  --font-sans: var(--body-font);
   --shadow-card: var(--shadow-card);
   --color-border: var(--border);
   --color-input: var(--input);
@@ -106,8 +106,8 @@
   --sidebar-ring: oklch(0.86 0.13 125);
   --gradient-hero: linear-gradient(135deg, oklch(0.45 0.11 150), oklch(0.62 0.14 135));
   --shadow-card: 0 1px 2px oklch(0.3 0.05 150 / 6%), 0 8px 24px -12px oklch(0.3 0.05 150 / 18%);
-  --font-display: "Fraunces", Georgia, serif;
-  --font-body: "Manrope", system-ui, sans-serif;
+  --display-font: "Fraunces", Georgia, serif;
+  --body-font: "Manrope", system-ui, sans-serif;
 }
 
 @layer base {
@@ -118,10 +118,10 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-family: var(--font-body);
+    font-family: var(--body-font);
   }
   h1, h2, h3 {
-    font-family: var(--font-display);
+    font-family: var(--display-font);
     letter-spacing: -0.01em;
   }
 }
