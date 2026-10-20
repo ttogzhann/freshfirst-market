@@ -135,7 +135,7 @@ def test_seed_is_unique_and_deleted_pantry_stays_deleted():
     assert restarted.list_pantry() == []
     assert report.imported == 0 and report.updated == 1
     with restarted.store.engine.connect() as connection:
-        for table, count in [(ingredients, 40), (rules, 10), (recipes, 1), (recipe_ingredients, 3)]:
+        for table, count in [(ingredients, 41), (rules, 10), (recipes, 1), (recipe_ingredients, 3)]:
             assert connection.scalar(select(func.count()).select_from(table)) == count
 
 

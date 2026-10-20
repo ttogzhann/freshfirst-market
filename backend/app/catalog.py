@@ -46,6 +46,7 @@ _INGREDIENTS = [
     ("vanilla", "Vanilla extract", "Pantry staples", "ml"),
     ("cocoa", "Cocoa powder", "Pantry staples", "g"),
     ("honey", "Honey", "Pantry staples", "ml"),
+    ("plain_chocolate", "Plain chocolate", "Pantry staples", "g"),
 ]
 CATALOG = {
     i[0]: Ingredient(id=i[0], name=i[1], category=i[2], canonical_unit=i[3]) for i in _INGREDIENTS
