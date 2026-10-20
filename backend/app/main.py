@@ -14,6 +14,7 @@ from starlette.concurrency import run_in_threadpool
 from starlette.exceptions import HTTPException
 
 from .errors import ServiceError
+from .config import expiry_days
 from .routers import basket, catalog, cooking, pantry, shopping
 from .services.fresh import FreshService
 
@@ -26,7 +27,7 @@ def create_app(service: FreshService | None = None, startup_import: bool = True)
     service = (
         service
         if service is not None
-        else FreshService(expiry_days=int(os.getenv("FRESHFIRST_EXPIRY_DAYS", "3")))
+        else FreshService(expiry_days=expiry_days(os.getenv("FRESHFIRST_EXPIRY_DAYS")))
     )
 
     @asynccontextmanager

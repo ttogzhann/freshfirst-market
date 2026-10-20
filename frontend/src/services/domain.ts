@@ -13,7 +13,8 @@ import type {
   SubstitutionSuggestion,
 } from "./types";
 
-export const EXPIRY_THRESHOLD_DAYS = 3;
+import { EXPIRY_THRESHOLD_DAYS } from "../config";
+export { EXPIRY_THRESHOLD_DAYS };
 export const MIN_SERVINGS = 1;
 export const MAX_SERVINGS = 8;
 
@@ -177,7 +178,7 @@ export function computeMatch(
     if (have >= ri.quantity) covered++;
     else missing.push(name);
     const p = pantry.find((x) => x.ingredient_id === ri.ingredient_id);
-    if (p && have > 0 && expiryStatus(p.expiry_date, today) === "expiring")
+    if (p && have >= ri.quantity && expiryStatus(p.expiry_date, today) === "expiring")
       expiring_used.push(name);
   }
   const total = recipe.ingredients.length;

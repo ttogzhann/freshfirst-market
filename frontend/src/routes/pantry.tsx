@@ -43,7 +43,7 @@ export const Route = createFileRoute("/pantry")({
   component: Pantry,
 });
 
-function Pantry() {
+export function Pantry() {
   const pantry = usePantry();
   const ingredients = useIngredients();
   const [q, setQ] = useState("");
@@ -109,7 +109,7 @@ function Pantry() {
           </SelectContent>
         </Select>
         <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="w-44">
+          <SelectTrigger className="w-44" aria-label="Expiry status">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

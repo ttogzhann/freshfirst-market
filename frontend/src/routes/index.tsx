@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { AlertTriangle, Clock, Package } from "lucide-react";
 import { useDashboard } from "@/hooks/use-fresh";
 import { recipeQuantity } from "@/components/fresh/recipe-quantity";
+import { EXPIRY_THRESHOLD_DAYS } from "@/config";
 import {
   Empty,
   ErrorState,
@@ -39,7 +40,7 @@ export function Dashboard() {
             <Stat icon={Package} label="Pantry items" value={data.total_items} to="/pantry" />
             <Stat
               icon={Clock}
-              label="Expiring in 3 days"
+              label={`Expiring in ${EXPIRY_THRESHOLD_DAYS} days`}
               value={data.expiring_soon}
               tone="warning"
               to="/pantry"

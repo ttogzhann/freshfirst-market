@@ -9,6 +9,7 @@ import { ErrorState, Loading, MatchPill, RecipeImage } from "@/components/fresh/
 import { IngredientLines } from "@/components/fresh/IngredientLines";
 import { CookDialog } from "@/components/fresh/CookDialog";
 import { quantityControlLabel, recipeQuantity } from "@/components/fresh/recipe-quantity";
+import { EXPIRY_THRESHOLD_DAYS } from "@/config";
 
 export const Route = createFileRoute("/recipes/$id")({
   head: () => ({
@@ -93,7 +94,8 @@ export function RecipePage() {
           </p>
           {data.match.expiring_used.length > 0 && (
             <p className="rounded-lg bg-warning/25 px-3 py-2 text-sm text-warning-foreground">
-              Uses {data.match.expiring_used.join(", ")}, which expire within 3 days.
+              Uses {data.match.expiring_used.join(", ")}, which expire within{" "}
+              {EXPIRY_THRESHOLD_DAYS} days.
             </p>
           )}
           <div className="flex flex-wrap items-center gap-3">

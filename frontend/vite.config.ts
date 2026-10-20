@@ -5,9 +5,20 @@
 //     React/TanStack dedupe, error logger plugins, and sandbox detection (port/host/strictPort).
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { parseExpiryDays } from "./src/expiry-config";
 
 export default defineConfig({
-  vite: { server: { port: 5173, strictPort: true } },
+  vite: {
+    server: { port: 5173, strictPort: true },
+    plugins: [
+      {
+        name: "freshfirst-expiry-config",
+        configResolved(config) {
+          parseExpiryDays(config.env["VITE_FRESHFIRST_EXPIRY_DAYS"]);
+        },
+      },
+    ],
+  },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this

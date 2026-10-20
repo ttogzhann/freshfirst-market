@@ -7,6 +7,7 @@ from functools import wraps
 from threading import Lock
 
 from ..catalog import CATALOG, RULE_CATEGORIES, RULES
+from ..config import expiry_days as validate_expiry_days
 from ..errors import ServiceError, invalid, missing
 from ..models import (
     BasketItem,
@@ -43,10 +44,10 @@ def atomic(method):
 
 class FreshService:
     def __init__(self, store=None, source=None, today=date.today, seed=True, expiry_days=3):
+        self.expiry_days = validate_expiry_days(expiry_days)
         self.store = store if store is not None else SQLiteStore()
         self.source = source if source is not None else TheMealDBSource()
         self.today = today
-        self.expiry_days = expiry_days
         self.import_lock = Lock()
         if seed:
             self.seed_pantry()
@@ -178,9 +179,9 @@ class FreshService:
                 covered += 1
             else:
                 missing_names.append(name)
-            if available > 0 and any(
+            if available >= decimal(line.quantity) and any(
                 p.ingredient_id == line.ingredient_id
-                and self.today() <= p.expiry_date <= self.today() + timedelta(days=self.expiry_days)
+                and 0 <= (p.expiry_date - self.today()).days <= self.expiry_days
                 for p in self.state.pantry.values()
             ):
                 expiring.append(name)
@@ -594,7 +595,7 @@ class FreshService:
         return Dashboard(
             total_items=len(self.state.pantry),
             expiring_soon=sum(
-                self.today() <= p.expiry_date <= self.today() + timedelta(days=self.expiry_days)
+                0 <= (p.expiry_date - self.today()).days <= self.expiry_days
                 for p in self.state.pantry.values()
             ),
             expired=sum(p.expiry_date < self.today() for p in self.state.pantry.values()),
