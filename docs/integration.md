@@ -45,11 +45,13 @@ For these imported recipes `base_servings=1` is one complete source-recipe batch
 person or serving count. The 15–20 recipe breadth was an internal planning target and
 optional FF-20 expansion; it is not a university requirement and is not claimed complete.
 
-The authentic brainstorming transcript was not found in the repository or the accessible
-session records. The available checkpoint/session summaries and issue records are
-summaries, not the original conversation. This scope and evidence note is reconstructed
-from the checked-in source records and linked issue reports; it is not a transcript.
-No dialogue or undocumented decisions are attributed to that missing conversation.
+At the earlier 2026-10-20 documentation checkpoint, the authentic brainstorming transcript
+had not been available in the repository or accessible session records. The scope and
+evidence note above was reconstructed from checked-in records and linked issue reports;
+it was not a transcript. Later on 2026-10-20 the owner supplied a partial original excerpt,
+now preserved in [brainstorming history](brainstorming.md). Repetitions and gaps remain
+as supplied; no missing dialogue or undocumented decisions have been invented. This
+historical record does not change the open acceptance gates or claim final QA PASS.
 
 ## Historical integration evidence
 
