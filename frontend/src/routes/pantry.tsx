@@ -18,7 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { service, useAction, useIngredients, usePantry } from "@/hooks/use-fresh";
+import { errorMessage, service, useAction, useIngredients, usePantry } from "@/hooks/use-fresh";
 import {
   addDays,
   compatibleUnits,
@@ -28,7 +28,7 @@ import {
   isValidDate,
   todayISO,
 } from "@/services/domain";
-import type { InputUnit, PantryItem } from "@/services";
+import { ServiceError, type InputUnit, type PantryItem } from "@/services";
 import { Empty, ErrorState, ExpiryBadge, Loading, PageHeader } from "@/components/fresh/ui-bits";
 
 export const Route = createFileRoute("/pantry")({
@@ -199,13 +199,37 @@ function PantryForm({ item, onClose }: { item: PantryItem | null; onClose: () =>
     },
     item ? "Pantry item updated" : "Added to pantry",
   );
+  const mutationError = save.error;
+  const mutationMessage = mutationError ? errorMessage(mutationError) : "";
+  const expiryConflict =
+    mutationError instanceof ServiceError && mutationError.code === "EXPIRY_CONFLICT";
+  const actionableMutationMessage =
+    expiryConflict && !/edit|same expiry|match/i.test(mutationMessage)
+      ? `${mutationMessage} Use the same expiry date as the existing pantry entry or edit that entry first.`
+      : mutationMessage;
+  const serviceQuantityError =
+    mutationError instanceof ServiceError &&
+    mutationError.code === "VALIDATION_ERROR" &&
+    /quantity/i.test(mutationMessage)
+      ? mutationMessage
+      : "";
+  const serviceExpiryError =
+    expiryConflict ||
+    (mutationError instanceof ServiceError &&
+      mutationError.code === "VALIDATION_ERROR" &&
+      /date|expiry/i.test(mutationMessage))
+      ? actionableMutationMessage
+      : "";
+  const generalMutationError =
+    mutationError && !serviceQuantityError && !serviceExpiryError ? actionableMutationMessage : "";
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
     const errs: Record<string, string> = {};
     if (!ingredientId) errs["ingredient"] = "Choose an ingredient";
-    if (!(Number(qty) > 0)) errs["qty"] = "Enter a quantity above zero";
-    if (!isValidDate(expiry)) errs["expiry"] = "Enter a valid date";
+    if (!Number.isFinite(Number(qty)) || !(Number(qty) > 0))
+      errs["qty"] = "Enter a finite quantity above zero";
+    if (!isValidDate(expiry)) errs["expiry"] = "Enter a valid calendar date";
     setErrors(errs);
     if (Object.keys(errs).length) return;
     save.mutate(undefined, { onSuccess: onClose });
@@ -256,7 +280,11 @@ function PantryForm({ item, onClose }: { item: PantryItem | null; onClose: () =>
                 value={qty}
                 onChange={(e) => setQty(e.target.value)}
               />
-              {errors["qty"] && <p className="text-xs text-destructive">{errors["qty"]}</p>}
+              {(errors["qty"] || serviceQuantityError) && (
+                <p role="alert" className="text-xs text-destructive">
+                  {errors["qty"] || serviceQuantityError}
+                </p>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label>Unit</Label>
@@ -284,8 +312,17 @@ function PantryForm({ item, onClose }: { item: PantryItem | null; onClose: () =>
               value={expiry}
               onChange={(e) => setExpiry(e.target.value)}
             />
-            {errors["expiry"] && <p className="text-xs text-destructive">{errors["expiry"]}</p>}
+            {(errors["expiry"] || serviceExpiryError) && (
+              <p role="alert" className="text-xs text-destructive">
+                {errors["expiry"] || serviceExpiryError}
+              </p>
+            )}
           </div>
+          {generalMutationError && (
+            <p role="alert" className="text-xs text-destructive">
+              {generalMutationError}
+            </p>
+          )}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel

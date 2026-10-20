@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Empty, ErrorState, Loading, PageHeader } from "@/components/fresh/ui-bits";
 import { errorMessage, service, useAction, useIngredients, useShopping } from "@/hooks/use-fresh";
+import { isValidDate } from "@/services/domain";
 import { ServiceError, type ShoppingItem } from "@/services";
 
 export const Route = createFileRoute("/shopping")({ component: ShoppingPage });
@@ -11,6 +12,10 @@ function ShoppingLine({ item }: { item: ShoppingItem }) {
   const [quantity, setQuantity] = useState(String(item.quantity));
   const [actual, setActual] = useState(String(item.quantity));
   const [expiry, setExpiry] = useState("");
+  const [quantityValidationError, setQuantityValidationError] = useState("");
+  const [transferValidationErrors, setTransferValidationErrors] = useState<Record<string, string>>(
+    {},
+  );
   const update = useAction(
     (patch: { quantity?: number; purchased?: boolean }) =>
       service().updateShoppingItem(item.id, patch),
@@ -21,6 +26,39 @@ function ShoppingLine({ item }: { item: ShoppingItem }) {
     () => service().transferToPantry(item.id, { quantity: Number(actual), expiry_date: expiry }),
     "Purchase added to pantry",
   );
+  const quantityServiceError =
+    update.error && update.variables?.quantity !== undefined ? errorMessage(update.error) : "";
+  const transferMessage = transfer.error ? errorMessage(transfer.error) : "";
+  const transferConflict =
+    transfer.error instanceof ServiceError && transfer.error.code === "EXPIRY_CONFLICT";
+  const actionableTransferMessage =
+    transferConflict && !/edit|same expiry|match/i.test(transferMessage)
+      ? `${transferMessage} Use the same expiry date as the existing pantry entry or edit that entry first.`
+      : transferMessage;
+  const transferQuantityServiceError =
+    transfer.error instanceof ServiceError &&
+    transfer.error.code === "VALIDATION_ERROR" &&
+    /quantity/i.test(transferMessage)
+      ? transferMessage
+      : "";
+  const transferExpiryServiceError =
+    transferConflict ||
+    (transfer.error instanceof ServiceError &&
+      transfer.error.code === "VALIDATION_ERROR" &&
+      /date|expiry/i.test(transferMessage))
+      ? actionableTransferMessage
+      : "";
+  const transferGeneralError =
+    transfer.error && !transferQuantityServiceError && !transferExpiryServiceError
+      ? actionableTransferMessage
+      : "";
+
+  function validateQuantity(value: string) {
+    return Number.isFinite(Number(value)) && Number(value) > 0
+      ? ""
+      : "Enter a finite quantity above zero.";
+  }
+
   return (
     <li className="space-y-3 rounded-xl border bg-card p-4">
       <label className="flex gap-2">
@@ -34,8 +72,12 @@ function ShoppingLine({ item }: { item: ShoppingItem }) {
       </label>
       <form
         className="flex flex-wrap items-center gap-3"
+        noValidate
         onSubmit={(e) => {
           e.preventDefault();
+          const validationError = validateQuantity(quantity);
+          setQuantityValidationError(validationError);
+          if (validationError) return;
           update.mutate({ quantity: Number(quantity) });
         }}
       >
@@ -49,7 +91,11 @@ function ShoppingLine({ item }: { item: ShoppingItem }) {
             step="0.01"
             required
             value={quantity}
-            onChange={(e) => setQuantity(e.target.value)}
+            aria-invalid={!!(quantityValidationError || quantityServiceError)}
+            onChange={(e) => {
+              setQuantity(e.target.value);
+              setQuantityValidationError("");
+            }}
           />
         </label>
         <span>{item.unit}</span>
@@ -64,6 +110,11 @@ function ShoppingLine({ item }: { item: ShoppingItem }) {
         >
           Remove
         </Button>
+        {(quantityValidationError || quantityServiceError) && (
+          <p role="alert" className="text-xs text-destructive">
+            {quantityValidationError || quantityServiceError}
+          </p>
+        )}
       </form>
       {item.transferred_to_pantry ? (
         <p>Added to pantry</p>
@@ -72,8 +123,15 @@ function ShoppingLine({ item }: { item: ShoppingItem }) {
         (item.ingredient_id ? (
           <form
             className="flex flex-wrap items-center gap-3"
+            noValidate
             onSubmit={(e) => {
               e.preventDefault();
+              const errors: Record<string, string> = {};
+              const quantityError = validateQuantity(actual);
+              if (quantityError) errors["quantity"] = quantityError;
+              if (!isValidDate(expiry)) errors["expiry"] = "Enter a valid calendar date.";
+              setTransferValidationErrors(errors);
+              if (Object.keys(errors).length) return;
               transfer.mutate(undefined);
             }}
           >
@@ -86,20 +144,45 @@ function ShoppingLine({ item }: { item: ShoppingItem }) {
                 step="0.01"
                 required
                 value={actual}
-                onChange={(e) => setActual(e.target.value)}
+                aria-invalid={
+                  !!(transferValidationErrors["quantity"] || transferQuantityServiceError)
+                }
+                onChange={(e) => {
+                  setActual(e.target.value);
+                  setTransferValidationErrors((current) => ({ ...current, ["quantity"]: "" }));
+                }}
               />
             </label>
+            {(transferValidationErrors["quantity"] || transferQuantityServiceError) && (
+              <p role="alert" className="text-xs text-destructive">
+                {transferValidationErrors["quantity"] || transferQuantityServiceError}
+              </p>
+            )}
             <label>
               Expiry date{" "}
               <input
+                aria-label="Expiry date"
                 type="date"
                 required
                 value={expiry}
-                onChange={(e) => setExpiry(e.target.value)}
+                aria-invalid={!!(transferValidationErrors["expiry"] || transferExpiryServiceError)}
+                onChange={(e) => {
+                  setExpiry(e.target.value);
+                  setTransferValidationErrors((current) => ({ ...current, ["expiry"]: "" }));
+                }}
               />
             </label>
+            {(transferValidationErrors["expiry"] || transferExpiryServiceError) && (
+              <p role="alert" className="text-xs text-destructive">
+                {transferValidationErrors["expiry"] || transferExpiryServiceError}
+              </p>
+            )}
             <Button disabled={transfer.isPending}>Confirm transfer to pantry</Button>
-            {transfer.error && <p role="alert">{errorMessage(transfer.error)}</p>}
+            {transferGeneralError && (
+              <p role="alert" className="text-xs text-destructive">
+                {transferGeneralError}
+              </p>
+            )}
           </form>
         ) : (
           <p>Only catalog ingredients can be transferred to pantry.</p>
