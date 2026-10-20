@@ -171,7 +171,7 @@ def test_source_failure_returns_502_and_preserves_everything(client, service, fa
     assert service.state == before
 
 
-def test_startup_seeds_import_once_not_on_page_reads():
+def test_startup_seeds_offline_baseline_without_live_import_or_page_read_fetches():
     class CountingSource(Source):
         calls = 0
 
@@ -184,5 +184,5 @@ def test_startup_seeds_import_once_not_on_page_reads():
     with ContractClient(create_app(service)) as client:
         assert len(client.get("/api/pantry").json()) == 12
         for _ in range(3):
-            assert len(client.get("/api/recipes").json()) == 1
-    assert source.calls == 1
+            assert len(client.get("/api/recipes").json()) == 2
+    assert source.calls == 0

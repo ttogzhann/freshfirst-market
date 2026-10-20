@@ -1,8 +1,12 @@
 """TheMealDB adapter. External text is data; only explicit catalog identities are accepted."""
 
+import hashlib
+import json
 import ssl
 import string
 from collections.abc import Iterable
+from datetime import datetime
+from pathlib import Path
 from typing import Protocol
 
 import httpx
@@ -16,6 +20,43 @@ from .quantities import decimal, parse_measure, rounded
 
 class MealSource(Protocol):
     def meals(self) -> Iterable[dict]: ...
+
+
+class PackagedMealSource:
+    """Reviewed FF-18 raw responses; corruption is a startup failure, never a skip."""
+
+    DIRECTORY = Path(__file__).resolve().parents[1] / "data" / "mealdb-source"
+
+    def meals(self):
+        try:
+            manifest = json.loads((self.DIRECTORY / "provenance.json").read_bytes())
+            records = manifest["records"]
+            if {r["external_id"] for r in records} != {"53137", "52776"} or len(records) != 2:
+                raise ValueError("Invalid baseline IDs")
+            for record in records:
+                external_id = record["external_id"]
+                if (
+                    record["raw_file"] != f"{external_id}.json"
+                    or record["lookup_url"]
+                    != f"https://www.themealdb.com/api/json/v1/1/lookup.php?i={external_id}"
+                    or datetime.fromisoformat(record["captured_at_utc"]).tzinfo is None
+                ):
+                    raise ValueError("Invalid baseline provenance")
+                raw = (self.DIRECTORY / record["raw_file"]).read_bytes()
+                if hashlib.sha256(raw).hexdigest() != record["sha256"]:
+                    raise ValueError("Baseline hash mismatch")
+                payload = json.loads(raw)
+                meals = payload["meals"]
+                if (
+                    not isinstance(meals, list)
+                    or len(meals) != 1
+                    or not isinstance(meals[0], dict)
+                    or meals[0].get("idMeal") != external_id
+                ):
+                    raise ValueError("Invalid baseline payload")
+                yield meals[0]
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            raise RuntimeError("Packaged recipe baseline is invalid") from exc
 
 
 class TheMealDBSource:

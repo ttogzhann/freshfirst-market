@@ -27,7 +27,7 @@ from ..models import (
     SubstitutionSuggestion,
 )
 from ..store import SQLiteStore
-from .importer import TheMealDBSource, normalize_meal
+from .importer import PackagedMealSource, TheMealDBSource, normalize_meal
 from .quantities import decimal, normalize, positive_rounded, rounded, scale
 
 
@@ -327,6 +327,28 @@ class FreshService:
             suggestions=suggestions,
         )
 
+    def seed_recipes(self):
+        # Validate the complete package before writing anything. Unlike live import,
+        # unsupported baseline records are fatal and existing records are never replaced.
+        accepted = [normalize_meal(raw) for raw in PackagedMealSource().meals()]
+        with self.store.transaction():
+            for recipe in accepted:
+                self._upsert_recipe(recipe, missing_only=True)
+
+    def _upsert_recipe(self, recipe, missing_only=False):
+        existing = next(
+            (r for r in self.state.recipes.values() if r.external_id == recipe.external_id),
+            None,
+        )
+        if existing:
+            if missing_only:
+                return None
+            recipe.id = existing.id
+        elif not missing_only and len(self.state.recipes) >= 20:
+            return None
+        self.state.recipes[recipe.id] = recipe
+        return "updated" if existing else "imported"
+
     def import_recipes(self):
         # Network I/O outside inventory lock; serialize importers and commit only after
         # a successful source traversal. A failed fetch cannot partially replace recipes.
@@ -349,22 +371,11 @@ class FreshService:
                     break
             with self.store.transaction():
                 for recipe in accepted.values():
-                    existing = next(
-                        (
-                            r
-                            for r in self.state.recipes.values()
-                            if r.external_id == recipe.external_id
-                        ),
-                        None,
-                    )
-                    if existing:
-                        recipe.id = existing.id
+                    result = self._upsert_recipe(recipe)
+                    if result == "updated":
                         report.updated += 1
-                    elif len(self.state.recipes) >= 20:
-                        continue
-                    else:
+                    elif result == "imported":
                         report.imported += 1
-                    self.state.recipes[recipe.id] = recipe
                 report.total_recipes = len(self.state.recipes)
                 return report
 

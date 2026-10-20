@@ -1,0 +1,19 @@
+{
+  "source": "https://www.themealdb.com/api/json/v1/1/",
+  "records": [
+    {
+      "external_id": "53137",
+      "lookup_url": "https://www.themealdb.com/api/json/v1/1/lookup.php?i=53137",
+      "raw_file": "53137.json",
+      "sha256": "2d032ad24e25a2ca8137a3019fd7a6878e8835214ceff9dbdf61255488fd402c",
+      "captured_at_utc": "2026-10-20T02:09:37.641283+00:00"
+    },
+    {
+      "external_id": "52776",
+      "lookup_url": "https://www.themealdb.com/api/json/v1/1/lookup.php?i=52776",
+      "raw_file": "52776.json",
+      "sha256": "718fa6ad455236d5a81de755ca4190725025e510041182e55f68a1124a049814",
+      "captured_at_utc": "2026-10-20T02:09:37.788460+00:00"
+    }
+  ]
+}

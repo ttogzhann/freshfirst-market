@@ -31,21 +31,9 @@ def create_app(service: FreshService | None = None, startup_import: bool = True)
 
     @asynccontextmanager
     async def lifespan(app):
-        if startup_import:
-            try:
-                report = await run_in_threadpool(service.import_recipes)
-                logger.info("Startup import: %s", report.model_dump())
-                if report.total_recipes < 15:
-                    logger.warning(
-                        "Only %s supported recipes found; target is 15-20. "
-                        "Unsupported quantities were not guessed.",
-                        report.total_recipes,
-                    )
-            except ServiceError as exc:
-                logger.warning(
-                    "Startup import failed: %s. Retry POST /api/recipes/import.", exc.message
-                )
         try:
+            if startup_import:
+                await run_in_threadpool(service.seed_recipes)
             yield
         finally:
             if owns_service:

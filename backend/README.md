@@ -16,9 +16,9 @@ Swagger UI: <http://127.0.0.1:8000/docs>. Contract: <http://127.0.0.1:8000/opena
 
 For environments that require the operating system's certificate store, set `UV_SYSTEM_CERTS=true` before `uv sync` (PowerShell: `$env:UV_SYSTEM_CERTS = "true"`). The external recipe client uses Python's system trust configuration and never disables TLS verification.
 
-The catalog contains 40 ingredient identities and ten context-limited substitution rules. Twelve sample pantry entries are seeded once per database relative to the initial local date, including an expired entry. Deleting all pantry entries does not re-seed them on restart. `FRESHFIRST_EXPIRY_DAYS` sets the near-expiry threshold before startup; default is three days. Expired items remain visible but supply zero usable stock.
+The catalog contains 41 ingredient identities and ten context-limited substitution rules. Twelve sample pantry entries are seeded once per database relative to the initial local date, including an expired entry. Deleting all pantry entries does not re-seed them on restart. `FRESHFIRST_EXPIRY_DAYS` sets the near-expiry threshold before startup; default is three days. Expired items remain visible but supply zero usable stock.
 
-Startup performs one TheMealDB import. Initial recipe import requires connectivity; there is no hand-entered production recipe seed or fallback to the frontend fixtures. On source failure the server remains available, logs the failure and keeps any recipes already stored in SQLite. Retry explicitly:
+Startup seeds only missing recipe IDs from two complete reviewed real TheMealDB responses packaged in `app/data/mealdb-source/` (53137 and 52776). The provenance manifest records source URLs, capture timestamps and SHA-256 hashes; raw bytes match FF-18 captures in `tests/fixtures/mealdb-source/`. The same strict normalizer used for live import validates the entire package before any recipe is committed. Startup works offline without network traversal, never overwrites existing recipes, and fails visibly if packaged data is malformed. Recipe seeding creates no inventory. Explicit live import requires connectivity:
 
 ```sh
 curl -X POST http://127.0.0.1:8000/api/recipes/import
@@ -26,31 +26,31 @@ curl -X POST http://127.0.0.1:8000/api/recipes/import
 
 ## Implemented operations
 
-| Method | Path (after `/api`) | Operation ID |
-| --- | --- | --- |
-| GET | `/ingredients` | `listIngredients` |
-| GET | `/substitution-rules` | `listSubstitutionRules` |
-| GET | `/pantry` | `listPantry` |
-| POST | `/pantry` | `createPantryItem` |
-| PUT | `/pantry/{id}` | `updatePantryItem` |
-| DELETE | `/pantry/{id}` | `deletePantryItem` |
-| GET | `/recipes` | `listRecipes` |
-| GET | `/recipes/{id}` | `getRecipe` |
-| POST | `/recipes/import` | `importRecipes` |
-| GET | `/basket` | `getBasket` |
-| POST | `/basket/items` | `addToBasket` |
-| PATCH | `/basket/items/{id}` | `updateBasketItem` |
-| DELETE | `/basket/items/{id}` | `removeBasketItem` |
-| GET | `/shopping-list` | `getShoppingList` |
-| POST | `/shopping-list/generate` | `generateShoppingList` |
-| POST | `/shopping-list/items` | `addShoppingItem` |
-| PATCH | `/shopping-list/items/{id}` | `updateShoppingItem` |
-| DELETE | `/shopping-list/items/{id}` | `removeShoppingItem` |
-| POST | `/shopping-list/items/{id}/transfer-to-pantry` | `transferToPantry` |
-| POST | `/cooking/preview` | `previewCook` |
-| POST | `/cooking/confirm` | `confirmCook` |
-| GET | `/cooking/history` | `listHistory` |
-| GET | `/dashboard` | `getDashboard` |
+| Method | Path (after `/api`)                            | Operation ID            |
+| ------ | ---------------------------------------------- | ----------------------- |
+| GET    | `/ingredients`                                 | `listIngredients`       |
+| GET    | `/substitution-rules`                          | `listSubstitutionRules` |
+| GET    | `/pantry`                                      | `listPantry`            |
+| POST   | `/pantry`                                      | `createPantryItem`      |
+| PUT    | `/pantry/{id}`                                 | `updatePantryItem`      |
+| DELETE | `/pantry/{id}`                                 | `deletePantryItem`      |
+| GET    | `/recipes`                                     | `listRecipes`           |
+| GET    | `/recipes/{id}`                                | `getRecipe`             |
+| POST   | `/recipes/import`                              | `importRecipes`         |
+| GET    | `/basket`                                      | `getBasket`             |
+| POST   | `/basket/items`                                | `addToBasket`           |
+| PATCH  | `/basket/items/{id}`                           | `updateBasketItem`      |
+| DELETE | `/basket/items/{id}`                           | `removeBasketItem`      |
+| GET    | `/shopping-list`                               | `getShoppingList`       |
+| POST   | `/shopping-list/generate`                      | `generateShoppingList`  |
+| POST   | `/shopping-list/items`                         | `addShoppingItem`       |
+| PATCH  | `/shopping-list/items/{id}`                    | `updateShoppingItem`    |
+| DELETE | `/shopping-list/items/{id}`                    | `removeShoppingItem`    |
+| POST   | `/shopping-list/items/{id}/transfer-to-pantry` | `transferToPantry`      |
+| POST   | `/cooking/preview`                             | `previewCook`           |
+| POST   | `/cooking/confirm`                             | `confirmCook`           |
+| GET    | `/cooking/history`                             | `listHistory`           |
+| GET    | `/dashboard`                                   | `getDashboard`          |
 
 Create/merge pantry and basket operations return 200; manual shopping creation and confirmed cooking return 201; deletes return an empty 204. Errors use `{status, code, message}` for 404, 409, 422, 500 and source-failure 502 responses as specified. Recipe detail accepts a URL-encoded JSON `substitutions` array and optional servings 1–8. `GET /recipes` supports query, category and match/title sorting.
 
@@ -70,7 +70,7 @@ The adapter uses the [official TheMealDB V1 first-letter search API](https://www
 
 TheMealDB does not supply serving yields. `base_servings=1` explicitly means **one complete source-recipe batch**, not an inferred number of human portions. Requested servings multiply that batch consistently. A verified per-source yield mapping is needed before promising portion counts.
 
-**The 15–20 supported-recipe acceptance target is not currently met by the live data with this catalog and strict normalization.** The initial audit fetched 790 source recipes and accepted one; unsupported identities, quantities and dimensions were reported instead of guessed. Cups without an exact supported definition, mass measured as tablespoons without a verified density, counts for mass-only ingredients, ranges, pinches, handfuls, package sizes and “to taste” are rejected. Reaching the target requires reviewed source-specific identity/quantity mappings or a different supported source subset; the implementation does not invent conversions or recipe records to satisfy the count.
+The MVP baseline is two verified real recipes sharing milk and sugar. Expansion to 15-20 supported recipes is Post-MVP FF-20. Cups without an exact supported definition, mass measured as tablespoons without a verified density, counts for mass-only ingredients, ranges, pinches, handfuls, package sizes and to-taste quantities remain unsupported. Quantities and human yields are never guessed.
 
 Two unaltered TheMealDB responses captured during verification are stored in `tests/fixtures/mealdb.json` for offline import tests (source IDs 53137 and 52768, retrieved 2026-10-20). Synthetic test payloads are isolated to tests and are never used as production recipes.
 
@@ -96,10 +96,12 @@ uv run uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 
 The default is `sqlite:///./freshfirst.db`, relative to the process working directory. Use the same URL and working directory after restart; changing them selects a different database. The parent directory must exist and be writable. SQLite files and journals are ignored by Git. `sqlite:///:memory:` is available for isolated tests only; omit it for durable storage. No `.env` loader is added: set the actual environment variable in your shell/process manager.
 
-This is the initial SQLite schema: SQLAlchemy creates the tables automatically on startup. No separate migration command is required. The model includes the eight specification tables plus `store_settings` for durable ID allocation, the one-time pantry seed marker, and removed-generated-line edit protection. Quantities use canonical-unit numeric columns; basket substitutions and history consumption snapshots use JSON. API field names remain unchanged. Catalog and reviewed substitution rules are seeded with conflict-safe inserts. Supported recipes use the existing strict TheMealDB startup importer and upsert by unique external ID; no synthetic production recipes are added. Offline restarts retain previously imported recipes even when startup import fails.
+This is the initial SQLite schema: SQLAlchemy creates the tables automatically on startup. No separate migration command is required. The model includes the eight specification tables plus `store_settings` for durable ID allocation, the one-time pantry seed marker, and removed-generated-line edit protection. Quantities use canonical-unit numeric columns; basket substitutions and history consumption snapshots use JSON. API field names remain unchanged. Catalog and reviewed substitution rules are seeded with conflict-safe inserts. Startup initializes the packaged missing-only baseline through the strict TheMealDB normalizer; explicit live import upserts by unique external ID. No synthetic production recipes are added. Offline restarts preserve all existing recipes and saved state.
 
 The former in-memory store has no disk data to migrate. Existing browser mock/localStorage data is also not migrated. Back up an existing SQLite database with the application stopped before changing schema or moving the file; restore it by pointing `DATABASE_URL` at the copied file. `create_all` initializes missing tables but is not an upgrade engine for future schema changes. Future incompatible schema changes require an explicit versioned migration; do not delete an existing file to upgrade it.
 
 SQLite serializes operations with a 30-second lock timeout. This is appropriate for the local single-user application. Keep the active database on a local disk; avoid simultaneous access to cloud-synced copies from different machines.
 
 Persistence verification: `uv run pytest -q tests/test_persistence.py` checks a new Python process reading the same file, every persisted entity and shopping edit marker, repeated imports and transfer retries after restart, one-time seeds even after pantry deletion, rollback after SQL writes have already modified inventory, and concurrent cooks/transfers through six independent SQLAlchemy engines. The full suite also checks expired-stock exclusion, all 23 API operations and unchanged response schemas.
+
+Baseline verification: `uv run --locked pytest -q tests/test_offline_baseline.py` checks production bytes/provenance, exact quantities and metadata, offline default startup, separate-process restart, duplicate prevention, newer/extra recipes and user-state preservation, malformed-package rollback and explicit live-import failure. Existing strict negative tests remain in `tests/test_real_recipe_baseline.py`.
