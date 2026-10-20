@@ -26,7 +26,11 @@ def test_normal_app_reads_environment(tmp_path, raw, expected):
         [
             sys.executable,
             "-c",
-            "from app.main import app; print(app.state.service.expiry_days); app.state.service.store.close()",
+            (
+                "from app.main import app; "
+                "print(app.state.service.expiry_days); "
+                "app.state.service.store.close()"
+            ),
         ],
         env=environment,
         capture_output=True,

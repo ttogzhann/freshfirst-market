@@ -13,8 +13,8 @@ from fastapi.responses import JSONResponse
 from starlette.concurrency import run_in_threadpool
 from starlette.exceptions import HTTPException
 
-from .errors import ServiceError
 from .config import expiry_days
+from .errors import ServiceError
 from .routers import basket, catalog, cooking, pantry, shopping
 from .services.fresh import FreshService
 
