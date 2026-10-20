@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ChefHat, Minus, Plus, ShoppingBasket, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { service, useAction, useBasket, useRecipe } from "@/hooks/use-fresh";
@@ -28,24 +29,69 @@ export const Route = createFileRoute("/recipes/$id")({
 
 export function RecipePage() {
   const { id } = Route.useParams();
-  const [servings, setServings] = useState<number | undefined>();
-  const [subs, setSubs] = useState<ConfirmedSubstitution[]>([]);
-  const [rejected, setRejected] = useState<string[]>([]);
+  const [choices, setChoices] = useState<{
+    recipeId: string;
+    servings: number | undefined;
+    substitutions: ConfirmedSubstitution[];
+  } | null>(null);
+  const [rejections, setRejections] = useState<{ recipeId: string; ruleIds: string[] } | null>(
+    null,
+  );
   const [cooking, setCooking] = useState(false);
-  const { data, isLoading, error, refetch } = useRecipe(id, servings, subs);
+  const queryClient = useQueryClient();
   const basket = useBasket();
   const inBasket = basket.data?.items.find((b) => b.recipe_id === id);
+  const activeChoices = choices?.recipeId === id ? choices : null;
+  const servings = activeChoices ? activeChoices.servings : inBasket?.servings;
+  const subs = activeChoices ? activeChoices.substitutions : (inBasket?.substitutions ?? []);
+  const rejected = rejections?.recipeId === id ? rejections.ruleIds : [];
+  const { data, isLoading, error, refetch } = useRecipe(id, servings, subs);
+
+  useEffect(() => {
+    setChoices(null);
+    setRejections(null);
+  }, [id]);
+
   const s = data?.servings ?? 2;
   const add = useAction(
     async () => {
-      const item = await service().addToBasket(id, s);
-      await service().updateBasketItem(item.id, { substitutions: subs });
+      let item = await service().addToBasket(id, s);
+      const savedSubs = inBasket?.substitutions ?? [];
+      if (!sameSubstitutions(subs, savedSubs)) {
+        try {
+          item = await service().updateBasketItem(item.id, { substitutions: subs });
+        } catch (error) {
+          try {
+            const persisted = await service().getBasket();
+            queryClient.setQueryData(["basket"], persisted);
+            const actual = persisted.items.find((selection) => selection.recipe_id === id);
+            setChoices(
+              actual
+                ? {
+                    recipeId: id,
+                    servings: actual.servings,
+                    substitutions: actual.substitutions,
+                  }
+                : null,
+            );
+          } catch {
+            setChoices(null);
+          }
+          throw error;
+        }
+      }
+      setChoices({
+        recipeId: id,
+        servings: item.servings,
+        substitutions: item.substitutions,
+      });
       return item;
     },
     inBasket ? "Basket updated" : "Added to basket",
   );
 
-  if (isLoading) return <Loading />;
+  if (basket.isLoading || isLoading) return <Loading />;
+  if (basket.error) return <ErrorState error={basket.error} onRetry={basket.refetch} />;
   if (error)
     return (
       <>
@@ -54,8 +100,7 @@ export function RecipePage() {
           <Button
             variant="outline"
             onClick={() => {
-              setSubs([]);
-              setServings(undefined);
+              setChoices({ recipeId: id, servings: undefined, substitutions: [] });
             }}
           >
             Reset recipe choices
@@ -105,7 +150,7 @@ export function RecipePage() {
                 size="icon"
                 aria-label={`Decrease ${quantityControlLabel(data.base_servings).toLowerCase()}`}
                 disabled={s <= MIN_SERVINGS}
-                onClick={() => setServings(s - 1)}
+                onClick={() => setChoices({ recipeId: id, servings: s - 1, substitutions: subs })}
               >
                 <Minus className="h-4 w-4" />
               </Button>
@@ -117,7 +162,7 @@ export function RecipePage() {
                 size="icon"
                 aria-label={`Increase ${quantityControlLabel(data.base_servings).toLowerCase()}`}
                 disabled={s >= MAX_SERVINGS}
-                onClick={() => setServings(s + 1)}
+                onClick={() => setChoices({ recipeId: id, servings: s + 1, substitutions: subs })}
               >
                 <Plus className="h-4 w-4" />
               </Button>
@@ -158,14 +203,18 @@ export function RecipePage() {
                     <Button
                       size="sm"
                       onClick={() =>
-                        setSubs([
-                          ...subs,
-                          {
-                            rule_id: sg.rule.id,
-                            original_ingredient_id: sg.rule.original_ingredient_id,
-                            substitute_ingredient_id: sg.rule.substitute_ingredient_id,
-                          },
-                        ])
+                        setChoices({
+                          recipeId: id,
+                          servings: s,
+                          substitutions: [
+                            ...subs,
+                            {
+                              rule_id: sg.rule.id,
+                              original_ingredient_id: sg.rule.original_ingredient_id,
+                              substitute_ingredient_id: sg.rule.substitute_ingredient_id,
+                            },
+                          ],
+                        })
                       }
                     >
                       Use substitute
@@ -173,7 +222,9 @@ export function RecipePage() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => setRejected([...rejected, sg.rule.id])}
+                      onClick={() =>
+                        setRejections({ recipeId: id, ruleIds: [...rejected, sg.rule.id] })
+                      }
                     >
                       No thanks
                     </Button>
@@ -183,7 +234,11 @@ export function RecipePage() {
             </div>
           )}
           {subs.length > 0 && (
-            <Button variant="ghost" size="sm" onClick={() => setSubs([])}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setChoices({ recipeId: id, servings: s, substitutions: [] })}
+            >
               <Undo2 className="h-4 w-4" /> Undo substitutions
             </Button>
           )}
@@ -201,5 +256,19 @@ export function RecipePage() {
         request={{ recipe_id: id, servings: s, substitutions: subs }}
       />
     </>
+  );
+}
+
+function sameSubstitutions(left: ConfirmedSubstitution[], right: ConfirmedSubstitution[]): boolean {
+  return (
+    left.length === right.length &&
+    left.every((substitution) =>
+      right.some(
+        (saved) =>
+          saved.rule_id === substitution.rule_id &&
+          saved.original_ingredient_id === substitution.original_ingredient_id &&
+          saved.substitute_ingredient_id === substitution.substitute_ingredient_id,
+      ),
+    )
   );
 }
