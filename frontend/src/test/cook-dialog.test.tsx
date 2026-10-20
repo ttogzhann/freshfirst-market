@@ -5,7 +5,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { toast } from "sonner";
 import { CookDialog } from "@/components/fresh/CookDialog";
 import { createMockService } from "@/services/mock/mockService";
-import { setService, type CookRequest, type FreshService } from "@/services";
+import {
+  ServiceError,
+  setService,
+  type CookRequest,
+  type CookingRecord,
+  type FreshService,
+} from "@/services";
 
 afterEach(() => {
   cleanup();
@@ -143,6 +149,43 @@ describe("CookDialog recovery", () => {
     expect(within(dialog).queryByText(/Enjoy your/)).not.toBeInTheDocument();
   });
 
+  it.each([
+    [404, "NOT_FOUND"],
+    [422, "VALIDATION_ERROR"],
+  ] as const)(
+    "shows definitive HTTP %i confirmation rejection as recoverable, not unknown",
+    async (status, code) => {
+      const { mock, request } = await cookFixture();
+      const confirm = vi
+        .spyOn(mock, "confirmCook")
+        .mockRejectedValueOnce(new ServiceError(status, code, "Cook request was rejected."));
+      const preview = vi.spyOn(mock, "previewCook");
+      const pantryBefore = await mock.listPantry();
+      const historyBefore = await mock.listHistory();
+      renderCookDialog(mock, request);
+      const dialog = await screen.findByRole("dialog");
+
+      fireEvent.click(await within(dialog).findByRole("button", { name: "Confirm & deduct" }));
+
+      expect(await within(dialog).findByText("Cook request was rejected.")).toBeVisible();
+      expect(within(dialog).queryByText(/Cooking outcome unknown/)).not.toBeInTheDocument();
+      expect(within(dialog).getByRole("button", { name: "Retry preview" })).toBeEnabled();
+      expect(within(dialog).getByRole("button", { name: "Confirm & deduct" })).toBeDisabled();
+      expect(confirm).toHaveBeenCalledTimes(1);
+      expect(await mock.listPantry()).toEqual(pantryBefore);
+      expect(await mock.listHistory()).toEqual(historyBefore);
+
+      fireEvent.click(within(dialog).getByRole("button", { name: "Retry preview" }));
+      expect(
+        await within(dialog).findByText(
+          (await mock.getRecipe(request.recipe_id, 1)).lines[0]!.name,
+        ),
+      ).toBeVisible();
+      expect(preview).toHaveBeenCalledTimes(2);
+      expect(confirm).toHaveBeenCalledTimes(1);
+    },
+  );
+
   it("reports a pre-commit lost response as unknown and requires close before previewing again", async () => {
     const { mock, recipe, request } = await cookFixture();
     const confirm = vi
@@ -207,9 +250,32 @@ describe("CookDialog recovery", () => {
     expect(await mock.listHistory()).toHaveLength(1);
   });
 
-  it("treats an unreadable confirmed-cook response as unknown, not success", async () => {
-    const { mock, request } = await cookFixture();
-    const confirm = vi.spyOn(mock, "confirmCook").mockResolvedValueOnce(null as never);
+  it.each([
+    [
+      "invalid date-time",
+      (record: CookingRecord): CookingRecord => ({ ...record, cooked_at: "not-a-date" }),
+    ],
+    [
+      "negative consumed quantity",
+      (record: CookingRecord): CookingRecord => ({
+        ...record,
+        consumed: [{ ingredient_id: "egg", quantity: -1 }],
+      }),
+    ],
+  ])("treats a response with %s as unknown, not success", async (_caseName, corrupt) => {
+    const { mock, recipe, request } = await cookFixture();
+    const validRecord: CookingRecord = {
+      id: "history-1",
+      recipe_id: request.recipe_id,
+      recipe_title: recipe.title,
+      servings: request.servings,
+      cooked_at: "2026-10-20T09:00:00Z",
+      consumed: recipe.lines.map(({ ingredient_id, required }) => ({
+        ingredient_id,
+        quantity: required,
+      })),
+    };
+    const confirm = vi.spyOn(mock, "confirmCook").mockResolvedValueOnce(corrupt(validRecord));
     const success = vi.spyOn(toast, "success");
     const pantryBefore = await mock.listPantry();
     const historyBefore = await mock.listHistory();

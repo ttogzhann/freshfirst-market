@@ -63,21 +63,61 @@ export function CookDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, JSON.stringify(request)]);
 
-  function validRecord(record: CookingRecord): boolean {
+  function validDateTime(value: unknown): value is string {
+    if (typeof value !== "string") return false;
+    const match =
+      /^(\d{4})-(\d{2})-(\d{2})[Tt]([01]\d|2[0-3]):([0-5]\d):([0-5]\d)(?:\.\d+)?([Zz]|[+-](\d{2}):([0-5]\d))$/.exec(
+        value,
+      );
+    if (!match) return false;
+
+    const [, year, month, day, , , , zone, offsetHours] = match;
+    const yearNumber = Number(year);
+    const monthNumber = Number(month);
+    const dayNumber = Number(day);
+    const daysInMonth = [
+      31,
+      (yearNumber % 4 === 0 && yearNumber % 100 !== 0) || yearNumber % 400 === 0 ? 29 : 28,
+      31,
+      30,
+      31,
+      30,
+      31,
+      31,
+      30,
+      31,
+      30,
+      31,
+    ][monthNumber - 1];
     return (
-      record !== null &&
-      typeof record === "object" &&
-      typeof record.id === "string" &&
-      record.recipe_id === request.recipe_id &&
-      typeof record.recipe_title === "string" &&
-      record.servings === request.servings &&
-      typeof record.cooked_at === "string" &&
-      Array.isArray(record.consumed) &&
-      record.consumed.every(
+      dayNumber >= 1 &&
+      dayNumber <= daysInMonth! &&
+      (offsetHours === undefined || Number(offsetHours) <= 23)
+    );
+  }
+
+  function validRecord(record: unknown): record is CookingRecord {
+    if (record === null || typeof record !== "object") return false;
+    const value = record as Partial<CookingRecord>;
+    return (
+      typeof value.id === "string" &&
+      value.recipe_id === request.recipe_id &&
+      typeof value.recipe_title === "string" &&
+      typeof value.servings === "number" &&
+      Number.isInteger(value.servings) &&
+      value.servings >= 1 &&
+      value.servings <= 8 &&
+      value.servings === request.servings &&
+      validDateTime(value.cooked_at) &&
+      Array.isArray(value.consumed) &&
+      Array.from(value.consumed).every(
         (line) =>
+          line !== null &&
+          typeof line === "object" &&
           typeof line.ingredient_id === "string" &&
           typeof line.quantity === "number" &&
-          Number.isFinite(line.quantity),
+          Number.isFinite(line.quantity) &&
+          line.quantity >= 0,
       )
     );
   }
@@ -98,6 +138,10 @@ export function CookDialog({
         setLoadingPreview(true);
         await qc.invalidateQueries({ refetchType: "all" });
         await loadPreview();
+      } else if (e instanceof ServiceError && (e.status === 404 || e.status === 422)) {
+        setPreview(null);
+        setUnknownOutcome(false);
+        setError(errorMessage(e));
       } else {
         setPreview(null);
         setUnknownOutcome(true);
