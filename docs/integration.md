@@ -102,3 +102,20 @@ The packaged baseline lets a fresh install seed missing reviewed IDs offline. Th
 Recipes import action is a separate live-source request and requires network access; a
 failed import reports its source error and preserves saved data. No live import is
 performed by this documentation record.
+
+## Handover decision discussion — 2026-10-20
+
+This is a contemporaneous record of the current handover discussion, not a reconstructed
+transcript of earlier brainstorming. The owner explicitly required preserving existing
+work, finishing #46–#48, independent QA and removing the internal 12-hour blocking rule.
+The orchestrator selected a clean worktree from verified main and the engineer integrated
+existing candidates instead of rebuilding the application. PM separately reviewed the
+remaining acceptance criteria. Engineering retained strict recipe normalization and used
+the preserved import-report fix and documentation candidates without expanding scope.
+
+During execution, occupied application ports required an isolated 8001/5174 runtime.
+The existing CORS policy permits 5173; the resulting browser limitation was reported to QA
+instead of weakening application security for a test. Windows CRLF checkout caused lint
+format errors; LF normalization in this clean worktree produced no committed source diff.
+A frontend test exceeded its five-second timeout under concurrent load; rerunning the full
+suite with one worker passed all 89 tests. These are actual observed decisions and results.
