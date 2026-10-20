@@ -19,10 +19,10 @@
 - Before authorized issue work, follow [the development process](docs/process.md). The main session orchestrates separate PM, Software Engineer and independent QA contexts; it does not replace those roles with its own verdict.
 - PM grooms one issue using [the task template](docs/task-template.md) and [PM instructions](docs/team/pm.md).
 - The [Software Engineer](docs/team/software-engineer.md) implements and tests one groomed issue, commits a candidate and leaves the issue open.
-- [QA](docs/team/qa-engineer.md) independently verifies every acceptance criterion. QA FAIL returns to the engineer; QA does not repair the code. Only the orchestrator may close after a current QA PASS for the delivered revision.
+- [QA](docs/team/qa-engineer.md) independently verifies every acceptance criterion. QA FAIL returns to the engineer; QA does not repair the code or close on failure. QA may close only after an independent PASS and confirmation that the passed SHA exactly matches the delivered revision; the orchestrator may close after making the same checks.
 - For user-discovered bugs, retain `user-test-bug` and require PM grooming, QA test cases before implementation, engineering regression/fix and independent QA verification.
 - Before writing/running tests, read [testing guidelines](docs/testing-guidelines.md). Preserve all 23 operations in [OpenAPI](openapi.yaml), SQLite integrity, exact units, expiry rules and the existing frontend design.
-- All roles and rework share the specification's 12-hour aggregate budget. Record actual effort; stop/report rather than bypassing verification or moving a core bug to Post-MVP.
+- The 12-hour figure is only a historical internal planning target, not a mandatory cap, stop condition or acceptance gate. Record estimates as estimates and report actual effort only when it was tracked; otherwise state that the effort ledger is unknown. Never bypass verification or move a core bug to Post-MVP to satisfy a time target.
 - These process documents apply prospectively. Do not claim earlier implementation or retrospective closures used this workflow. Do not reopen them merely to install it.
 - Reading/installing these instructions does not authorize starting a remaining issue, launching a loop, pushing code or deploying. Follow the user's current task scope; do not start the backlog during workflow setup.
 

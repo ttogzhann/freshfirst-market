@@ -36,13 +36,13 @@ For `user-test-bug`, **QA prepares this case plan before implementation**, inclu
 - **Allowed files / ownership:** <small file set and worktree/branch; identify shared-file conflicts>.
 - **Contract / data invariants:** <relevant OpenAPI fields, canonical units, expiry rules, transactions, repeat safety and retained data>.
 - **Libraries / environment:** <existing toolchain; uv for Python; avoid unnecessary dependencies or schema changes>.
-- **Budget:** <task minutes, spent-to-date and remaining aggregate MVP budget; include PM/QA/rework overhead>.
+- **Effort estimate (optional):** <clearly labeled estimate, not a cap>. **Actual effort:** <record only if measured; otherwise unknown>. Do not infer a remaining-time ledger from historical estimates.
 - **Acceptance revision / readiness:** <dated revision or comment link, unresolved questions, PM Ready or Blocked>.
 
 ### Engineering handoff (issue comment after the work)
 
-Record the exact candidate SHA, branch/worktree, changed files, AC-to-change mapping, tests with commands/results, limitations, relevant QA failure resolved and actual effort. Leave the issue open; passing self-tests is a handoff, not independent QA.
+Record the exact candidate SHA, branch/worktree, changed files, AC-to-change mapping, tests with commands/results, limitations, relevant QA failure resolved and actual effort only if recorded. Leave the issue open; passing self-tests are a handoff, not independent QA.
 
 ### QA and closure record (separate issue comments)
 
-QA uses the [independent verdict format](team/qa-engineer.md#verdict-format), including each criterion, tested SHA, commands/results and reproducible failures. On FAIL, return to engineering. On PASS, orchestrator checks the delivered revision, links the latest QA report, records delivery/time and closes. Neither the engineer nor QA closes the issue. An implementation change after PASS invalidates affected evidence and requires re-verification.
+QA uses the [independent verdict format](team/qa-engineer.md#verdict-format), including each criterion, tested SHA, commands/results and reproducible failures. On FAIL, return to engineering and leave the issue open; nobody closes on failure. After an independent PASS, QA may close only after verifying that the tested SHA exactly matches the delivered revision. The orchestrator may close after making the same checks. Record the QA report, acceptance revision and actual effort only when measured. An implementation change after PASS invalidates affected evidence and requires re-verification.

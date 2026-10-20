@@ -20,7 +20,9 @@ The catalog contains 41 ingredient identities and ten context-limited substituti
 
 Configure matching frontend/backend thresholds before launch. For five days in PowerShell, set `$env:FRESHFIRST_EXPIRY_DAYS="5"` in the backend shell, and set `VITE_FRESHFIRST_EXPIRY_DAYS=5` in `frontend/.env.local` or the frontend shell environment. Restart both applications; rebuild production frontend assets after changing the Vite value. Both must match because this release has no configuration endpoint or automatic mismatch detection. Missing values default to 3; 0 includes today only. Supplied environment values must contain decimal digits only, from 0 through 9007199254740991 (the shared JavaScript exact-integer limit). Blank, negative, fractional, `NaN`, `Infinity` or nonnumeric values fail early with the variable name; injected `FreshService` thresholds are validated too. Today and the threshold day are inclusive; yesterday always supplies zero stock. This only changes urgency/status/counts and does not alter saved dates, stock availability or imply a food-safety guarantee.
 
-Startup seeds only missing recipe IDs from two complete reviewed real TheMealDB responses packaged in `app/data/mealdb-source/` (53137 and 52776). The provenance manifest records source URLs, capture timestamps and SHA-256 hashes; raw bytes match FF-18 captures in `tests/fixtures/mealdb-source/`. The same strict normalizer used for live import validates the entire package before any recipe is committed. Startup works offline without network traversal, never overwrites existing recipes, and fails visibly if packaged data is malformed. Recipe seeding creates no inventory. Explicit live import requires connectivity:
+Startup seeds only missing recipe IDs from two complete reviewed real TheMealDB responses packaged in `app/data/mealdb-source/` (53137 and 52776). The provenance manifest records source URLs, capture timestamps and SHA-256 hashes; raw bytes match FF-18 captures in `tests/fixtures/mealdb-source/`. The same strict normalizer used for live import validates the entire package before any recipe is committed. Startup works offline without network traversal, never overwrites existing recipes, and fails visibly if packaged data is malformed. Recipe seeding creates no inventory. For these records, `base_servings=1` means the complete quantity set from one source recipe; it does not claim a human yield or portion count. A selected value of 1–8 scales whole source batches.
+
+The explicit import endpoint fetches from the live TheMealDB service and therefore requires network access. It does not substitute the packaged seed or synthetic success when the source is unavailable. Upstream timeout, HTTP, malformed JSON/shape and import validation failures are reported through the existing API error behavior; a live-source failure returns HTTP 502 with `SOURCE_UNAVAILABLE`, and previously stored recipes and user state remain unchanged. The reviewed startup baseline and an explicit live import are separate operations:
 
 ```sh
 curl -X POST http://127.0.0.1:8000/api/recipes/import
@@ -72,9 +74,9 @@ The adapter uses the [official TheMealDB V1 first-letter search API](https://www
 
 TheMealDB does not supply serving yields. `base_servings=1` explicitly means **one complete source-recipe batch**, not an inferred number of human portions. Requested servings multiply that batch consistently. A verified per-source yield mapping is needed before promising portion counts.
 
-The MVP baseline is two verified real recipes sharing milk and sugar. Expansion to 15-20 supported recipes is Post-MVP FF-20. Cups without an exact supported definition, mass measured as tablespoons without a verified density, counts for mass-only ingredients, ranges, pinches, handfuls, package sizes and to-taste quantities remain unsupported. Quantities and human yields are never guessed.
+The MVP baseline is two verified real recipes sharing milk and sugar. The 15–20 recipe breadth was an internal planning target and optional Post-MVP FF-20 expansion, not a university requirement or a completed result. The importer can accept up to 20 distinct recipes, but that capacity does not mean the breadth target has been met. Cups without an exact supported definition, mass measured as tablespoons without a verified density, counts for mass-only ingredients, ranges, pinches, handfuls, package sizes and to-taste quantities remain unsupported. Quantities and human yields are never guessed.
 
-Two unaltered TheMealDB responses captured during verification are stored in `tests/fixtures/mealdb.json` for offline import tests (source IDs 53137 and 52768, retrieved 2026-10-20). Synthetic test payloads are isolated to tests and are never used as production recipes.
+The packaged startup baseline consists of unaltered TheMealDB responses `app/data/mealdb-source/53137.json` and `app/data/mealdb-source/52776.json`. `app/data/mealdb-source/provenance.json` records their source lookup URLs, capture timestamps and SHA-256 hashes; the raw bytes match the FF-18 captures under `tests/fixtures/mealdb-source/`. Both are passed through the strict normalizer and seed only missing external IDs. A synthetic test payload is isolated to tests and is never a production recipe.
 
 ## Verify
 
@@ -92,7 +94,7 @@ Tests validate the authored OpenAPI document, compare registered operation IDs/m
 From `backend/`, install dependencies using `uv sync --locked`. Configure the URL in the server environment before starting Uvicorn. PowerShell example:
 
 ```powershell
-$env:DATABASE_URL = "sqlite:///C:/Users/User/OneDrive/FreshFirst/freshfirst-market/backend/freshfirst.db"
+$env:DATABASE_URL = "sqlite:///C:/path/to/freshfirst.db"
 uv run uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
