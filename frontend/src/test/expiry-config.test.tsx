@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { parseExpiryDays } from "@/expiry-config";
 
@@ -107,6 +107,19 @@ describe("expiry configuration", () => {
       await screen.findByRole("button", { name: "Edit Pasta" });
       expect(screen.getByRole("button", { name: "Edit Pasta" })).toBeEnabled();
       expect(screen.getByText("Pasta").closest(".shadow-card")).toHaveTextContent("Expired");
+      fireEvent.click(screen.getByRole("button", { name: "Edit Pasta" }));
+      const editDialog = await screen.findByRole("dialog");
+      fireEvent.change(within(editDialog).getByRole("spinbutton", { name: "Quantity" }), {
+        target: { value: "90" },
+      });
+      fireEvent.click(within(editDialog).getByRole("button", { name: "Save" }));
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      expect(
+        (await service.listPantry()).find((item) => item.ingredient_id === "pasta"),
+      ).toMatchObject({ quantity: 90, expiry_date: "2026-10-19" });
+      await waitFor(() =>
+        expect(screen.getByText("Pasta").closest(".shadow-card")).toHaveTextContent("Expired"),
+      );
       expect(screen.getByText("Milk").closest(".shadow-card")).toHaveTextContent("Expires today");
       expect(screen.getByText("Butter").closest(".shadow-card")).toHaveTextContent("3d left");
       expect(screen.getByText("4d left").className.includes("bg-warning")).toBe(threshold === 5);
