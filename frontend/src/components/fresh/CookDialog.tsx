@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, XCircle } from "lucide-react";
@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { errorMessage, service } from "@/hooks/use-fresh";
 import { formatQty } from "@/services/domain";
-import type { CookPreview, CookRequest } from "@/services";
+import { ServiceError, type CookPreview, type CookRequest, type CookingRecord } from "@/services";
 import { Loading } from "./ui-bits";
 import { recipeQuantity } from "./recipe-quantity";
 
@@ -34,35 +34,78 @@ export function CookDialog({
   const [preview, setPreview] = useState<CookPreview | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [loadingPreview, setLoadingPreview] = useState(false);
+  const [unknownOutcome, setUnknownOutcome] = useState(false);
+  const previewRequestId = useRef(0);
+
+  async function loadPreview() {
+    const requestId = ++previewRequestId.current;
+    setPreview(null);
+    setError(null);
+    setLoadingPreview(true);
+    try {
+      const value = await service().previewCook(request);
+      if (requestId === previewRequestId.current) setPreview(value);
+    } catch (e) {
+      if (requestId === previewRequestId.current) setError(errorMessage(e));
+    } finally {
+      if (requestId === previewRequestId.current) setLoadingPreview(false);
+    }
+  }
 
   useEffect(() => {
     if (!open) return;
-    let active = true;
-    setPreview(null);
-    setError(null);
-    service()
-      .previewCook(request)
-      .then((value) => {
-        if (active) setPreview(value);
-      })
-      .catch((e) => {
-        if (active) setError(errorMessage(e));
-      });
+    setUnknownOutcome(false);
+    void loadPreview();
     return () => {
-      active = false;
+      previewRequestId.current += 1;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, JSON.stringify(request)]);
 
+  function validRecord(record: CookingRecord): boolean {
+    return (
+      record !== null &&
+      typeof record === "object" &&
+      typeof record.id === "string" &&
+      record.recipe_id === request.recipe_id &&
+      typeof record.recipe_title === "string" &&
+      record.servings === request.servings &&
+      typeof record.cooked_at === "string" &&
+      Array.isArray(record.consumed) &&
+      record.consumed.every(
+        (line) =>
+          typeof line.ingredient_id === "string" &&
+          typeof line.quantity === "number" &&
+          Number.isFinite(line.quantity),
+      )
+    );
+  }
+
   async function confirm() {
     setBusy(true);
     try {
-      await service().confirmCook(request);
+      const record = await service().confirmCook(request);
+      if (!validRecord(record))
+        throw new Error("FreshFirst returned an unreadable cooking result.");
       toast.success(`Enjoy your ${title}! Pantry updated.`);
-      qc.invalidateQueries();
+      await qc.invalidateQueries({ refetchType: "all" });
       onOpenChange(false);
     } catch (e) {
-      toast.error(errorMessage(e));
+      if (e instanceof ServiceError && e.status === 409 && e.code === "INSUFFICIENT_STOCK") {
+        setPreview(null);
+        setError(null);
+        setLoadingPreview(true);
+        await qc.invalidateQueries({ refetchType: "all" });
+        await loadPreview();
+      } else {
+        setPreview(null);
+        setUnknownOutcome(true);
+        setError(
+          "Cooking outcome unknown. Inspect Pantry and recent cooking history before deciding what to do. Close this dialog to refresh the preview; cooking will not be retried automatically.",
+        );
+        void qc.invalidateQueries({ refetchType: "all" });
+      }
     } finally {
       setBusy(false);
     }
@@ -78,8 +121,17 @@ export function CookDialog({
             {recipeQuantity(request.servings, baseServings)}).
           </DialogDescription>
         </DialogHeader>
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        {!preview && !error && <Loading label="Checking pantry…" />}
+        {error && (
+          <div className="space-y-2">
+            <p className="text-sm text-destructive">{error}</p>
+            {!unknownOutcome && !loadingPreview && (
+              <Button variant="outline" onClick={() => void loadPreview()}>
+                Retry preview
+              </Button>
+            )}
+          </div>
+        )}
+        {!preview && loadingPreview && <Loading label="Checking pantry…" />}
         {preview && (
           <ul className="divide-y rounded-lg border">
             {preview.lines.map((l) => (
@@ -114,9 +166,9 @@ export function CookDialog({
         )}
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {unknownOutcome ? "Close" : "Cancel"}
           </Button>
-          <Button disabled={!preview?.can_cook || busy} onClick={confirm}>
+          <Button disabled={!preview?.can_cook || busy || unknownOutcome} onClick={confirm}>
             {busy ? "Saving…" : "Confirm & deduct"}
           </Button>
         </DialogFooter>
