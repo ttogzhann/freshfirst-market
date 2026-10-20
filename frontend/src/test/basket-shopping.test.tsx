@@ -61,7 +61,7 @@ describe("basket and shopping journeys", () => {
   it("updates basket servings and removes selections", async () => {
     await service.addToBasket("rec_52982", 2);
     show(<BasketPage />);
-    const select = await screen.findByLabelText(/Servings for/);
+    const select = await screen.findByLabelText(/Recipe quantity for/);
     fireEvent.change(select, { target: { value: "4" } });
     await waitFor(async () => expect((await service.getBasket()).items[0]?.servings).toBe(4));
     expect(await screen.findByText("Cumulative ingredients")).toBeInTheDocument();

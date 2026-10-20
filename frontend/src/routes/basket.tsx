@@ -7,6 +7,7 @@ import { Empty, ErrorState, Loading, PageHeader } from "@/components/fresh/ui-bi
 import { service, useAction, useBasket, useRecipe } from "@/hooks/use-fresh";
 import { formatQty } from "@/services/domain";
 import type { BasketView } from "@/services";
+import { quantityControlLabel } from "@/components/fresh/recipe-quantity";
 
 export const Route = createFileRoute("/basket")({ component: BasketPage });
 
@@ -27,9 +28,9 @@ function BasketSelection({ item }: { item: BasketView["items"][number] }) {
       </Link>
       <div className="flex flex-wrap items-center gap-3">
         <label>
-          Servings{" "}
+          {quantityControlLabel(item.recipe.base_servings)}{" "}
           <select
-            aria-label={`Servings for ${item.recipe.title}`}
+            aria-label={`${quantityControlLabel(item.recipe.base_servings)} for ${item.recipe.title}`}
             value={item.servings}
             disabled={update.isPending}
             onChange={(e) => update.mutate({ servings: Number(e.target.value) })}
@@ -94,6 +95,7 @@ function BasketSelection({ item }: { item: BasketView["items"][number] }) {
         open={cooking}
         onOpenChange={setCooking}
         title={item.recipe.title}
+        baseServings={item.recipe.base_servings}
         request={{
           recipe_id: item.recipe_id,
           servings: item.servings,
@@ -112,7 +114,7 @@ export function BasketPage() {
     <>
       <PageHeader
         title="Basket"
-        subtitle="Plan servings and confirm substitutions before shopping or cooking."
+        subtitle="Plan recipe quantities and confirm substitutions before shopping or cooking."
         action={<Link to="/shopping">Open shopping list</Link>}
       />
       {!basket.data?.items.length ? (

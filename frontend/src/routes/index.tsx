@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AlertTriangle, Clock, Package } from "lucide-react";
 import { useDashboard } from "@/hooks/use-fresh";
+import { recipeQuantity } from "@/components/fresh/recipe-quantity";
 import {
   Empty,
   ErrorState,
@@ -25,7 +26,7 @@ export const Route = createFileRoute("/")({
   component: Dashboard,
 });
 
-function Dashboard() {
+export function Dashboard() {
   const { data, isLoading, error, refetch } = useDashboard();
   return (
     <>
@@ -93,7 +94,7 @@ function Dashboard() {
                   <li key={h.id} className="flex justify-between px-4 py-3 text-sm">
                     <span className="font-medium">{h.recipe_title}</span>
                     <span className="text-muted-foreground">
-                      {h.servings} servings · {new Date(h.cooked_at).toLocaleString()}
+                      {recipeQuantity(h.servings)} · {new Date(h.cooked_at).toLocaleString()}
                     </span>
                   </li>
                 ))}

@@ -8,6 +8,7 @@ import type { ConfirmedSubstitution } from "@/services";
 import { ErrorState, Loading, MatchPill, RecipeImage } from "@/components/fresh/ui-bits";
 import { IngredientLines } from "@/components/fresh/IngredientLines";
 import { CookDialog } from "@/components/fresh/CookDialog";
+import { quantityControlLabel, recipeQuantity } from "@/components/fresh/recipe-quantity";
 
 export const Route = createFileRoute("/recipes/$id")({
   head: () => ({
@@ -24,7 +25,7 @@ export const Route = createFileRoute("/recipes/$id")({
   component: RecipePage,
 });
 
-function RecipePage() {
+export function RecipePage() {
   const { id } = Route.useParams();
   const [servings, setServings] = useState<number | undefined>();
   const [subs, setSubs] = useState<ConfirmedSubstitution[]>([]);
@@ -81,10 +82,15 @@ function RecipePage() {
           <div className="flex items-center gap-3">
             <MatchPill score={data.match.score} />
             <span className="text-sm text-muted-foreground">
-              {data.category} · serves {data.base_servings}
+              {data.category} · {recipeQuantity(data.base_servings, data.base_servings)}
             </span>
           </div>
           <h1 className="text-4xl font-semibold">{data.title}</h1>
+          <p className="text-sm text-muted-foreground">
+            {data.base_servings === 1
+              ? "One batch uses the complete source ingredient quantities."
+              : `Source ingredient quantities correspond to recipe quantity ${data.base_servings}.`}
+          </p>
           {data.match.expiring_used.length > 0 && (
             <p className="rounded-lg bg-warning/25 px-3 py-2 text-sm text-warning-foreground">
               Uses {data.match.expiring_used.join(", ")}, which expire within 3 days.
@@ -95,17 +101,19 @@ function RecipePage() {
               <Button
                 variant="ghost"
                 size="icon"
-                aria-label="Fewer servings"
+                aria-label={`Decrease ${quantityControlLabel(data.base_servings).toLowerCase()}`}
                 disabled={s <= MIN_SERVINGS}
                 onClick={() => setServings(s - 1)}
               >
                 <Minus className="h-4 w-4" />
               </Button>
-              <span className="w-24 text-center text-sm font-medium">{s} servings</span>
+              <span className="min-w-24 px-2 text-center text-sm font-medium">
+                {recipeQuantity(s, data.base_servings)}
+              </span>
               <Button
                 variant="ghost"
                 size="icon"
-                aria-label="More servings"
+                aria-label={`Increase ${quantityControlLabel(data.base_servings).toLowerCase()}`}
                 disabled={s >= MAX_SERVINGS}
                 onClick={() => setServings(s + 1)}
               >
@@ -187,6 +195,7 @@ function RecipePage() {
         open={cooking}
         onOpenChange={setCooking}
         title={data.title}
+        baseServings={data.base_servings}
         request={{ recipe_id: id, servings: s, substitutions: subs }}
       />
     </>

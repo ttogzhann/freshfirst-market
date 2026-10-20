@@ -15,15 +15,18 @@ import { errorMessage, service } from "@/hooks/use-fresh";
 import { formatQty } from "@/services/domain";
 import type { CookPreview, CookRequest } from "@/services";
 import { Loading } from "./ui-bits";
+import { recipeQuantity } from "./recipe-quantity";
 
 export function CookDialog({
   request,
   title,
+  baseServings,
   open,
   onOpenChange,
 }: {
   request: CookRequest;
   title: string;
+  baseServings?: number;
   open: boolean;
   onOpenChange: (o: boolean) => void;
 }) {
@@ -71,7 +74,8 @@ export function CookDialog({
         <DialogHeader>
           <DialogTitle className="font-display text-2xl">I cooked {title}</DialogTitle>
           <DialogDescription>
-            These amounts will be taken from your pantry ({request.servings} servings).
+            These amounts will be taken from your pantry (
+            {recipeQuantity(request.servings, baseServings)}).
           </DialogDescription>
         </DialogHeader>
         {error && <p className="text-sm text-destructive">{error}</p>}
