@@ -1,34 +1,18 @@
 # FreshFirst Market
 
-Create a FreshFirst application.
-
-follow the spec
-
-Centralize every backend call in one services layer,
-
-and create a mock implementation of it so the
-
-whole app runs without a real backend.
-
-Add tests.
-
-This project was built with [Lovable](https://lovable.dev).
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/6cb9dff6-bb51-46af-ac03-9d288c2e416f).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+FreshFirst is a local, single-user recipe and pantry application. Its React/TypeScript
+frontend communicates with a FastAPI backend over HTTP; SQLAlchemy and SQLite persist
+pantry, recipes, basket selections, shopping changes, purchase transfers and cooking
+history. The backend is the source of truth for recipe matching, quantities, shopping
+and cooking calculations.
 
 ## Development
 
 Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>/frontend
+git clone https://github.com/ttogzhann/freshfirst-market.git
+cd freshfirst-market/frontend
 npm ci
 npm run dev
 ```
@@ -53,7 +37,7 @@ Root `openapi.yaml` defines 23 unauthenticated operations, request/response sche
 
 The FastAPI backend implements all 23 operations with SQLAlchemy/SQLite persistence and a strict TheMealDB importer. See [backend startup, endpoint list and verification](backend/README.md). From `backend/`, run `uv sync --locked`, then `uv run uvicorn app.main:app --reload`. API docs are at `http://127.0.0.1:8000/docs`.
 
-SQLite persists pantry, recipes, basket substitutions, shopping and cooking history across backend restarts. Set `DATABASE_URL` before startup (default `sqlite:///./freshfirst.db`, relative to the backend working directory). Tables and duplicate-safe catalog/rule seeds are created automatically; the previous in-memory state cannot be recovered after its process stops. See the backend README for setup and backups. Offline startup seeds two reviewed real TheMealDB recipes only when their IDs are missing; existing recipes are preserved. Expansion to 15-20 recipes is Post-MVP. TheMealDB has no serving yield, so imported `base_servings=1` denotes one complete source batch rather than an inferred human portion count.
+SQLite persists pantry, recipes, basket substitutions, shopping and cooking history across backend restarts. Set `DATABASE_URL` before startup (default `sqlite:///./freshfirst.db`, relative to the backend working directory). Tables and duplicate-safe catalog/rule seeds are created automatically. The earlier in-memory implementation had no disk state to recover; the current SQLite database persists across process restarts. Browser mock/localStorage data is not migrated. See the backend README for setup and backups. Offline startup seeds the two reviewed real TheMealDB recipes only when their IDs are missing; existing records are preserved. The 15–20 recipe breadth was an internal planning target and optional FF-20 expansion, not a university requirement or a completed result. TheMealDB has no serving yield, so imported `base_servings=1` denotes one complete source-recipe batch, not a human portion count.
 
 ## Run the integrated app
 
@@ -71,10 +55,12 @@ npm ci
 npm run dev -- --host 127.0.0.1
 ```
 
-Open `http://127.0.0.1:5173`. Vite uses port 5173 with strict port checking; FastAPI allows CORS from `http://localhost:5173` and `http://127.0.0.1:5173`, including JSON mutation preflights. To change the API address, copy `frontend/.env.example` to `frontend/.env.local` and set `VITE_API_BASE_URL` to the complete API base URL (including `/api`), then restart Vite. There is no automatic mock fallback on backend failure. Startup initializes missing reviewed baseline recipes offline; the Recipes import button explicitly imports from the live source.
+Open `http://127.0.0.1:5173`. Vite uses port 5173 with strict port checking; FastAPI allows CORS from `http://localhost:5173` and `http://127.0.0.1:5173`, including JSON mutation preflights. To change the API address, copy `frontend/.env.example` to `frontend/.env.local` and set `VITE_API_BASE_URL` to the complete API base URL (including `/api`), then restart Vite. There is no automatic mock fallback on backend failure. Startup initializes missing reviewed baseline recipes offline; the Recipes import button makes a separate network-dependent live-source request. Source failures use the documented API error response (HTTP 502 `SOURCE_UNAVAILABLE`) and do not replace the offline seed or erase previously stored state.
 
 The near-expiry threshold defaults to **3 days** in both applications. To use 5 days, set `$env:FRESHFIRST_EXPIRY_DAYS="5"` in the backend PowerShell before starting uvicorn and set `VITE_FRESHFIRST_EXPIRY_DAYS=5` in `frontend/.env.local` (or `$env:VITE_FRESHFIRST_EXPIRY_DAYS="5"` in the frontend shell) before starting Vite/building. **Both values must match**; restart the backend and Vite after changing them, and rebuild/reload production frontend assets because Vite embeds this value at build time. There is no runtime configuration negotiation.
 
 Values must contain only decimal digits for a nonnegative whole-day integer. Missing values default to 3; **0 means today only**. Explicit blank, negative, fractional, `NaN`, `Infinity` or other text fail early with the responsible variable name (frontend dev/build and backend startup). The technical maximum is 9007199254740991, JavaScript's largest exact integer, shared by both apps; this is a numeric representation limit, not a recommended food-storage interval. The threshold includes today and the final configured day. Yesterday is always expired and supplies zero stock, while today is usable. Configuration changes urgency, badges and counts only, never stored expiry dates or food-safety guarantees.
 
 Run `npm test` after `uv sync --locked`: the frontend suite starts and stops an isolated FastAPI subprocess on a free local port and exercises the actual TypeScript HTTP adapter through all 23 operations. It uses a strictly normalized synthetic source only within tests and requires the backend `.venv` Python executable. Set `FRESHFIRST_TEST_PYTHON` to override that executable. Other frontend tests retain their injected mocks. Run `uv run pytest -q` from `backend/` for the backend suite. See [integration verification](docs/integration.md) for results and limitations.
+
+The owner's supplied partial original [brainstorming history](docs/brainstorming.md) preserves the earlier FreshRescue discussion and its original gaps; the current specification governs implementation.

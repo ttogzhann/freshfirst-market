@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Download, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -40,7 +40,7 @@ export const Route = createFileRoute("/recipes/")({
   component: Recipes,
 });
 
-function Recipes() {
+export function Recipes() {
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("all");
   const [sort, setSort] = useState<"match" | "title">("match");
@@ -48,6 +48,7 @@ function Recipes() {
   const list = useRecipes(q || undefined, cat === "all" ? undefined : cat, sort);
   const categories = [...new Set((all.data ?? []).map((r) => r.category))].sort();
   const [report, setReport] = useState<ImportReport | null>(null);
+  const importButtonRef = useRef<HTMLButtonElement>(null);
   const imp = useAction(
     () => service().importRecipes(),
     (r) => `Import done: ${r.imported} new, ${r.updated} updated`,
@@ -60,6 +61,7 @@ function Recipes() {
         subtitle="Ranked by how much you already have, with soon-expiring items as a tie-breaker."
         action={
           <Button
+            ref={importButtonRef}
             variant="outline"
             disabled={imp.isPending}
             onClick={() => imp.mutate(undefined, { onSuccess: setReport })}
@@ -132,28 +134,40 @@ function Recipes() {
         ))}
       </div>
       <Dialog open={!!report} onOpenChange={(o) => !o && setReport(null)}>
-        <DialogContent>
-          <DialogHeader>
+        <DialogContent
+          className="max-h-[calc(100dvh-2rem)] overflow-hidden"
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            importButtonRef.current?.focus();
+          }}
+        >
+          <DialogHeader className="pr-8">
             <DialogTitle className="font-display text-2xl">Import report</DialogTitle>
           </DialogHeader>
           {report && (
-            <div className="space-y-3 text-sm">
-              <p>
-                {report.imported} new · {report.updated} updated · {report.total_recipes} recipes
-                total
-              </p>
-              {report.skipped.length > 0 && (
-                <>
-                  <p className="font-medium">Skipped ({report.skipped.length})</p>
-                  <ul className="space-y-1 text-muted-foreground">
-                    {report.skipped.map((s) => (
-                      <li key={s.external_id}>
-                        <span className="text-foreground">{s.title}</span> — {s.reason}
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              )}
+            <div
+              aria-label="Import report results"
+              className="max-h-[calc(100dvh-8rem)] overflow-y-auto overscroll-contain"
+              role="region"
+            >
+              <div className="space-y-3 text-sm">
+                <p>
+                  {report.imported} new · {report.updated} updated · {report.total_recipes} recipes
+                  total
+                </p>
+                {report.skipped.length > 0 && (
+                  <>
+                    <p className="font-medium">Skipped ({report.skipped.length})</p>
+                    <ul className="space-y-1 text-muted-foreground" aria-label="Skipped recipes">
+                      {report.skipped.map((s) => (
+                        <li key={s.external_id}>
+                          <span className="text-foreground">{s.title}</span> — {s.reason}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+              </div>
             </div>
           )}
         </DialogContent>

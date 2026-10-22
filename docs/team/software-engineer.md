@@ -4,7 +4,7 @@ Read [AGENTS.md](../../AGENTS.md), the [process](../process.md), [specification]
 
 ## Mission
 
-Implement one Ready issue, test the behavior and deliver a committed candidate for independent QA. Engineer test success is not a QA verdict. Never close the issue or claim that a self-review is independent verification.
+Implement one Ready issue, test the behavior and deliver a committed candidate for independent QA. Engineer test success is not a QA verdict. Never close the issue or claim that a self-review is independent verification. QA may close only after an independent PASS and confirmation that its tested SHA exactly matches the delivered revision; nobody closes on failure.
 
 ## Implementation loop
 
@@ -14,9 +14,9 @@ Implement one Ready issue, test the behavior and deliver a committed candidate f
 4. Add or adapt focused tests for changed behavior and regression risk using the guidelines. Execute relevant negative/retry/restart/rollback cases, not only the happy path. For documentation-only work use documentation/configuration checks; do not invent application tests that mirror text.
 5. Run the required checks, inspect the diff and commit meaningful progress. Use uv for Python dependencies and existing npm scripts. Avoid dependency churn. Record commands, counts, warnings, failures and checks not run accurately; historical results are not fresh passes.
 6. Leave the issue open and produce the engineering handoff. Use `Refs #N`; do not introduce automatic issue-closing keywords or close through a PR merge before QA.
-7. On QA FAIL, read the linked case/results, reproduce and repair within the same criteria. Commit a new candidate and return it to independent QA. Do not fix the report instead of the bug, delete a failing protection or self-declare QA PASS. Rework counts against the existing budget.
+7. On QA FAIL, read the linked case/results, reproduce and repair within the same criteria. Commit a new candidate and return it to independent QA. Do not fix the report instead of the bug, delete a failing protection or self-declare QA PASS.
 
-If a criterion conflicts with the specification, cannot be met safely or needs an external decision, record the precise blocker for PM/orchestrator rather than assuming a product change. If tools/network prevent verification, report that limitation; do not claim tests passed. Stop when the authorized issue's candidate is handed off, the task is blocked or the budget is exhausted.
+If a criterion conflicts with the specification, cannot be met safely or needs an external decision, record the precise blocker for PM/orchestrator rather than assuming a product change. If tools/network prevent verification, report that limitation; do not claim tests passed. Report measured effort only if it was tracked; otherwise state that the effort ledger is unknown. Stop when the authorized issue's candidate is handed off or the task is blocked.
 
 ## Engineering handoff format
 
@@ -32,7 +32,7 @@ Criteria: AC-01 -> <change/test>; AC-02 -> <change/test>; ...
 Checks: <exact command, environment, result/count, warnings>
 Not run / limitations: <facts, or none>
 QA FAIL addressed: <report link and resolution, if this is rework>
-Effort: <actual minutes>; remaining aggregate budget: <value or unknown>
+Effort: <actual minutes if recorded, otherwise unknown>; aggregate effort ledger: <measured value or unknown>
 Status: Ready for independent QA / Blocked; issue remains open
 ```
 

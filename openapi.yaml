@@ -4,20 +4,16 @@ info:
   title: FreshFirst API
   version: 1.0.0
   description: >-
-    Backend contract derived from frontend/src/services/types.ts, services/index.ts,
-    services/mock/mockService.ts, services/domain.ts and hooks/use-fresh.ts, with product scope from
-    docs/spec.md. The frontend currently uses FreshService backed by a localStorage mock; no HTTP
-    client or existing URL conventions exist. The paths, HTTP status choices, JSON query encoding
-    and error envelope below define the HTTP mapping for a future adapter, rather than documenting
-    live endpoints. operationId matches each FreshService method. JSON response bodies preserve
-    frontend field names and return bare arrays where the service returns arrays. All endpoints are
-    unauthenticated: FreshFirst v1.0 is local and single-user, with no login, tokens, API keys,
-    sessions or user tables. No backend implementation is included.
+    Live FastAPI contract for the FreshFirst React/TypeScript application. The frontend's
+    FreshService uses the typed HTTP adapter; the backend implements these unauthenticated `/api`
+    operations. operationId matches each FreshService method. JSON response bodies preserve
+    frontend field names and return bare arrays where the service returns arrays. FreshFirst v1.0
+    is local and single-user, with no login, tokens, API keys, sessions or user tables.
 servers:
   - url: /api
     description: >-
-      Relative API base URL chosen for the future adapter; configure the backend origin separately
-      for local cross-origin development.
+      Relative API base URL served by FastAPI; configure the backend origin separately for local
+      cross-origin frontend development.
 security: []
 tags:
   - name: Catalog
