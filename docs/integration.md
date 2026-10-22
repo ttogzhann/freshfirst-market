@@ -1,6 +1,35 @@
 # Frontend / FastAPI integration and acceptance evidence
 
-## Current acceptance status — 2026-10-20
+## Current acceptance status — 2026-10-22
+
+[#46 independent QA](https://github.com/ttogzhann/freshfirst-market/issues/46#issuecomment-6340133326)
+now reports **PASS for all seven FF46-PM-r3 criteria** on
+`0147990ac179dd7dd1817ef250554ee7b4bc7f04` (tree
+`0630c6c07aa1d8b5591238ec3c92a0c0d5675dee`). Windows x64, Edge
+155.0.4283.62, supported origin 127.0.0.1:5173/API 8000 and disposable file-backed
+SQLite were used. At actual 1280x800 and 375x812, QA verified keyboard navigation,
+pantry validation/error/retry/edit/refresh, genuine-source batch scaling and saved
+scale, shopping overwrite/purchase confirmation, atomic cooking and stale-stock
+recovery, and the natural 788-entry report through its final entry with both close
+paths returning focus. Substitution coverage remains separately labeled test-only
+fixture coverage, not a real-source substitution journey. Independent focused checks
+passed 30 backend and 24 frontend tests; the known Starlette/httpx deprecation warning
+remained. Full suites/build are not claimed by this report.
+
+Earlier incomplete keyboard/viewport evidence is preserved in the
+[2026-10-20 QA FAIL](https://github.com/ttogzhann/freshfirst-market/issues/46#issuecomment-6287820172),
+which tested application `9c528acfeb3100136b754f3ab482c6336b48b3d2` with evidence
+revision `899dccd`. It reported verification gaps rather than a newly confirmed bug.
+The fresh report supersedes those gaps for its exact tested revision; it does not
+rewrite earlier FAIL records or itself prove delivery or closure.
+
+**#47 awaits independent documentation QA and delivered-tree prerequisite review.**
+The #46 independent verification blocker now has a PASS, while exact delivery-SHA
+validation and #44/#45 evidence applicability remain required before final acceptance.
+This documentation reconciliation changes no application code. It does not claim
+#46/#47 closed, final MVP acceptance, or a new #44/#45 browser run.
+
+### Historical acceptance checkpoint — 2026-10-20
 
 This is an evidence record, not a new QA run. The linked reports below tested application
 revision `f421b8432ef93e67e29921663009dd624519bdcb` (tree
@@ -12,19 +41,19 @@ verification of a later delivered tree.
 | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [#44 — two-real-recipe end-to-end baseline](https://github.com/ttogzhann/freshfirst-market/issues/44#issuecomment-6285195185)      | `f421b8432ef93e67e29921663009dd624519bdcb` | **QA: PASS**, seven criteria. Fresh offline SQLite startup seeded only real TheMealDB IDs `53137` and `52776`, with ten exact normalized lines and shared milk/sugar. The real-source browser/API flow verified whole-batch shopping aggregation, expired-stock exclusion, protected edits, actual-quantity purchase and repeat-safe transfer, atomic cooking, history, restart recovery, and SQLite integrity. Its separate substitution supplement used a clearly labeled synthetic strict test source; it is not production-source evidence. |
 | [#45 — offline startup and failed live import](https://github.com/ttogzhann/freshfirst-market/issues/45#issuecomment-6285478790)   | `f421b8432ef93e67e29921663009dd624519bdcb` | **QA: PASS**, four criteria. Normal startup and saved state reopened in separate processes while external sockets were blocked; missing-only seeding preserved newer/non-baseline recipes and empty pantry; a later-page HTTP 503 returned HTTP 502 `SOURCE_UNAVAILABLE` and left the complete stored-state snapshot unchanged.                                                                                                                                                                                                                 |
-| [#46 — responsive navigation and critical forms](https://github.com/ttogzhann/freshfirst-market/issues/46#issuecomment-6286106540) | `f421b8432ef93e67e29921663009dd624519bdcb` | **QA: FAIL; issue remains OPEN.** AC-01, AC-02, AC-04 and AC-05 passed. AC-03 substitution persistence was unverified because neither naturally seeded recipe offered an eligible substitution. AC-06 failed: the live import report was clipped/inaccessible at desktop and mobile; closing it also failed to restore focus to its trigger. No PASS exists.                                                                                                                                                                                    |
+| [#46 — responsive navigation and critical forms](https://github.com/ttogzhann/freshfirst-market/issues/46#issuecomment-6286106540) | `f421b8432ef93e67e29921663009dd624519bdcb` | **QA: FAIL at this checkpoint; issue was OPEN.** AC-01, AC-02, AC-04 and AC-05 passed. AC-03 substitution persistence was unverified because neither naturally seeded recipe offered an eligible substitution. AC-06 failed: the live import report was clipped/inaccessible at desktop and mobile; closing it also failed to restore focus to its trigger. No PASS existed at this checkpoint.                                                                                                                                                 |
 
 After that QA report, the owner feasibility note
 [on #46](https://github.com/ttogzhann/freshfirst-market/issues/46#issuecomment-6286291524)
 records an authorized check of 100 genuine TheMealDB lookup responses. None both passed
 the existing strict normalizer and supplied an ingredient eligible under the existing
 substitution rules. No records, rules, quantities, files, or acceptance criteria were
-changed. This is not a QA PASS and does not resolve either #46 gap.
+changed. This was not a QA PASS and did not resolve either #46 gap at that checkpoint.
 
-**#47 final acceptance and closure remain blocked on #46.** Documentation may be prepared
-independently, but the open #46 QA FAIL is unresolved. Final acceptance must wait for
-current independent PASS evidence on the delivered tree and a check that #44/#45
-prerequisite evidence still applies. This page does not claim #47 complete.
+At that checkpoint, **#47 final acceptance and closure were blocked on #46**.
+Documentation could be prepared independently, while #46 QA FAIL remained unresolved.
+The current dated status above records subsequent evidence; delivered-tree checks and
+independent documentation QA still apply.
 
 ### Source record and batch meaning
 

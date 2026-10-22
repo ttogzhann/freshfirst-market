@@ -1,0 +1,17 @@
+# FF47 engineering reconciliation - 2026-10-22
+
+Acceptance: FF47-PM-r3/r3a, unchanged, preserved with earlier criteria in the [PM refresh](ff47-pm-2026-10-22.md). Baseline `0147990ac179dd7dd1817ef250554ee7b4bc7f04`, branch `mvp/final-acceptance`, worktree `freshfirst-market-final`. Candidate is the commit containing this record; its exact SHA accompanies delivery.
+
+## Changes and criteria
+
+- AC-01/02: existing root/backend setup, SQLite persistence, missing-ID offline seed, per-record successful skipped reports versus source HTTP502, genuine source provenance, whole-batch meaning and optional historical breadth target remain accurate. No setup/source/API behavior edits.
+- AC-03/06: updated [integration evidence](../integration.md) with the dated independent #46 all-criteria PASS on `0147990ac179dd7dd1817ef250554ee7b4bc7f04`, report link, scope, environment, commands and warning. Original failures remain historical. Exact delivery and independent #47 QA are still pending. Compared `f421b843` to baseline: the only application-source delta is the report route repair, with its new focused report test; backend, other frontend code and source captures are unchanged. The #46 independent PASS covers that repaired route and surrounding browser flows. OpenAPI edits are descriptions; independent prerequisite/structure review remains QA's responsibility.
+- AC-04/08: existing README/integration archive links and provenance disclosures preserved. Read owner source with strict UTF-8: 14113 bytes, 8605 decoded characters, SHA256 `0ab3dbb7a81277b5fcccb82258903c22a84e42c600e5f64bad292279a1e4de9e`. Full archived content equals source after newline-only normalization and exclusion of the one newline required before the Markdown closing fence. The source has no terminal newline; initially including that fence delimiter correctly produced a length mismatch (8606 versus 8605), then explicit delimiter-aware extraction passed. No stripping of source whitespace or Unicode, reconstruction, deduplication or transcript edits occurred.
+- AC-05: governing role/process/specification instructions preserve the historical time target without imposing a cap or inferring effort. No policy change needed.
+- AC-07: existing formatter checks include the 11 specified files, the protected transcript, and the new PM/engineering records. Local links and whitespace are checked. Cumulative transcript trailing-space warnings at archived lines 50/244 are explicitly excepted by r3a; no clean cumulative diff is claimed.
+
+## Verification and limitations
+
+Fresh checks: existing Prettier `--check` passed all 14 files (the 11 r2 targets, transcript, PM and engineering records); local Markdown scan passed 55 links/anchors across those files; strict UTF-8 delimiter-aware equality passed all 8605 source characters; `npm --prefix frontend run validate:api` passed all 23 operations. `git diff --check` passed the current prose delta. `git diff --check f421b843 HEAD` exited 1 with only the two preserved transcript lines 50/244 covered by r3a. Git also emitted the existing LF-to-CRLF working-copy advisories; formatting passed despite those advisories.
+
+No application suite/browser journey rerun for these prose changes. This record is engineering evidence, not independent QA. Existing QA servers, disposable databases, untracked handoffs and state are preserved; no push, merge, GitHub edits or closure. Issue #47 remains open, ready for independent QA. Current effort and aggregate effort ledger: unknown.
