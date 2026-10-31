@@ -1,6 +1,23 @@
 # Frontend / FastAPI integration and acceptance evidence
 
-## Current acceptance status — 2026-10-22
+## Engineering integration refresh — 2026-10-31
+
+The [final engineering record](evidence/final-acceptance.md#engineering-integration-refresh--2026-10-31-ff48-pm-r1)
+records all eight required checks passing on `f0f2820d686be59408b970cac6b066d48b9884ba`:
+153 backend tests, 89 frontend tests, Ruff/format, typecheck, 23-operation validation,
+lint and build. It also records a genuine two-recipe HTTP purchase/cook journey,
+exact shared-stock aggregation, browser page reloads and an actual backend restart
+reopening the same disposable SQLite file with identical persisted state and
+repeat-safe transfer. Existing warnings and the corrected disposable harness
+assumption are disclosed there. No source or dependency changes were required.
+
+[#47 independent PASS](https://github.com/ttogzhann/freshfirst-market/issues/47#issuecomment-6340220649)
+covered all eight documentation criteria on that SHA. The earlier #46 PASS remains
+linked below. Fresh independent final-matrix/runtime/UI verification and exact
+SHA/delivery checks are still required; this engineering refresh does not close
+#46/#47/#48 or claim independent QA success for a later evidence commit.
+
+## Independent acceptance checkpoint — 2026-10-22
 
 [#46 independent QA](https://github.com/ttogzhann/freshfirst-market/issues/46#issuecomment-6340133326)
 now reports **PASS for all seven FF46-PM-r3 criteria** on
