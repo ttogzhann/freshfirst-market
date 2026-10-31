@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AlertTriangle, Clock, Package } from "lucide-react";
 import { useDashboard } from "@/hooks/use-fresh";
-import { recipeQuantity } from "@/components/fresh/recipe-quantity";
+import { CookingHistory } from "@/components/fresh/cooking-history";
 import { EXPIRY_THRESHOLD_DAYS } from "@/config";
 import {
   Empty,
@@ -83,25 +83,7 @@ export function Dashboard() {
             )}
           </section>
 
-          <section>
-            <h2 className="mb-4 text-2xl font-semibold">Recently cooked</h2>
-            {data.recent_history.length === 0 ? (
-              <Empty title="Nothing cooked yet">
-                Open a recipe and tap “I cooked this” to log it.
-              </Empty>
-            ) : (
-              <ul className="divide-y rounded-xl border bg-card">
-                {data.recent_history.map((h) => (
-                  <li key={h.id} className="flex justify-between px-4 py-3 text-sm">
-                    <span className="font-medium">{h.recipe_title}</span>
-                    <span className="text-muted-foreground">
-                      {recipeQuantity(h.servings)} · {new Date(h.cooked_at).toLocaleString()}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
+          <CookingHistory recent={data.recent_history} />
         </div>
       )}
     </>
