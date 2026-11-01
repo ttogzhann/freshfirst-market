@@ -4,11 +4,12 @@ Updated: 2026-11-01, Asia/Qyzylorda. Deadline: 2026-11-03.
 
 ## Issue #53 - backend authentication milestone
 
-- Backend implementation is committed as `410f6d316aace04a8d0093ceb037c7b42bcd9a41` (tree `d1b60b2f023de7c26d62198a853b4a4057f74066`) on `feature/ff49-auth`, based on `57051e4913beb9e19a24bd1e483ae78e7b8b741c`. This milestone is confined to the dedicated `freshfirst-market-auth` worktree.
+- Backend implementation is committed as `410f6d316aace04a8d0093ceb037c7b42bcd9a41` (tree `d1b60b2f023de7c26d62198a853b4a4057f74066`) on `feature/ff49-auth`, based on `57051e4913beb9e19a24bd1e483ae78e7b8b741c`. The current milestone/handoff revision is `4ba81f2f6cfafc0e86ad374fe800489da2dc350d` (tree `747f269c2cda0c3cf4b69cc08e96d3d17fa6f659`), confined to the dedicated `freshfirst-market-auth` worktree.
 - Adds Argon2id password hashing, normalized email identity, opaque server-side SQLite sessions, rotation/revocation/expiry, CSRF proofs, database-backed auth rate limits, explicit credentialed CORS, and protected per-account domain state. The versioned SQLite migration preserves legacy ownerless personal rows as quarantined/unclaimed, adds owner-scoped constraints, and starts every account with empty personal state. Public shared catalog/content reads remain shared; the original 23 domain operation IDs and semantics are retained, with four auth operations added.
 - Backend checks on this candidate: full suite **197 passed** (one Starlette/httpx deprecation warning); focused regression group **118 passed**; Ruff check and formatting check passed. Contract tests cover all 27 operations. No frontend, browser, or final integration acceptance is claimed.
-- Next milestone: independent backend QA against the exact implementation SHA, including migration rollback/quarantine, multi-account isolation, auth/session/CSRF/rate-limit/restart behavior, unauthorized-ID no-mutation checks, and all 27 OpenAPI operations. Then implement frontend integration and run independent end-to-end/final acceptance on the combined candidate. Do not deploy, merge, or close the issue in this milestone.
-- Issue #53 remains open and awaits independent QA. Historical aggregate effort is unknown; no effort estimate is inferred.
+- Independent backend QA passed the exact handoff SHA `4ba81f2f6cfafc0e86ad374fe800489da2dc350d` (tree `747f269c2cda0c3cf4b69cc08e96d3d17fa6f659`): 197 tests passed with one existing Starlette/httpx deprecation warning; Ruff checks passed. [QA report](https://github.com/ttogzhann/freshfirst-market/issues/53#issuecomment-6554751865).
+- Next milestone: frontend registration/login/logout/session restoration, protected routing and credentialed CSRF-aware service integration; then full integrated independent QA against all 13 issue criteria. Backend-stage PASS is not final issue PASS. Do not deploy, merge, or close #53 before the complete gate.
+- Issue #53 remains open. Historical aggregate effort is unknown; no effort estimate is inferred.
 
 ## New feature milestone - authentication issue groomed
 
