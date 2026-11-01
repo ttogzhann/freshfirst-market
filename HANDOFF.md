@@ -2,13 +2,23 @@
 
 Updated: 2026-11-01, Asia/Qyzylorda. Deadline: 2026-11-03.
 
+## Issue #53 - frontend authentication engineering milestone (final QA pending)
+
+- Frontend implementation is committed as `0f07ec4a26955cbd2e80a657b7580e6799d907c5` (tree `7079677559dd67c8f267554e54ee3504866c5bf7`) on `feature/ff49-auth`, based on the independently QA-passed backend handoff `4ba81f2f6cfafc0e86ad374fe800489da2dc350d`. The handoff-record commit follows this implementation commit.
+- Adds registration/login/logout UI, session restoration before private routes and queries, protected routing, cache clearing at account/session transitions, and credentialed HTTP requests with backend-compatible CSRF bootstrap/header handling. The session remains server-backed in an HttpOnly cookie; the CSRF proof remains in the service's in-memory closure. Passwords are not retained in browser storage or logged. Public shared catalog reads remain available; private and mutation operations retain backend authorization.
+- Frontend checks on the implementation: **103 tests passed** across 14 files; TypeScript typecheck, OpenAPI/API validation (27 operation IDs, original 23 preserved), ESLint, and production build passed. ESLint reports six existing Fast Refresh warnings; build reports nonfatal chunk-size/Vite-plugin warnings.
+- Combined backend regression after integration: **197 passed** (one Starlette/httpx deprecation warning); Ruff check and formatting passed. The independent backend QA applies specifically to `4ba81f2f6cfafc0e86ad374fe800489da2dc350d`, not this frontend commit.
+- Local browser smoke covered guarded-route redirect, account registration/login, session restoration after reload, and logout. The logout POST returned 204 and a subsequent session restore was unauthenticated; `document.cookie` did not expose the session cookie. The browser tool also reported an aborted logout request despite the fetch wrapper observing 204, and a private dashboard request returned 401 after logout; this smoke is not independent browser/security QA.
+- `npm ci` reported 17 dependency audit advisories (15 moderate, 2 high); dependency manifests were not changed and those advisories were not remediated in this stage.
+- Next: independent integrated QA against all 13 issue acceptance criteria. No final acceptance or security-QA PASS is claimed. Issue #53 remains open; no push, merge, or deployment was performed.
+
 ## Issue #53 - backend authentication milestone
 
 - Backend implementation is committed as `410f6d316aace04a8d0093ceb037c7b42bcd9a41` (tree `d1b60b2f023de7c26d62198a853b4a4057f74066`) on `feature/ff49-auth`, based on `57051e4913beb9e19a24bd1e483ae78e7b8b741c`. The current milestone/handoff revision is `4ba81f2f6cfafc0e86ad374fe800489da2dc350d` (tree `747f269c2cda0c3cf4b69cc08e96d3d17fa6f659`), confined to the dedicated `freshfirst-market-auth` worktree.
 - Adds Argon2id password hashing, normalized email identity, opaque server-side SQLite sessions, rotation/revocation/expiry, CSRF proofs, database-backed auth rate limits, explicit credentialed CORS, and protected per-account domain state. The versioned SQLite migration preserves legacy ownerless personal rows as quarantined/unclaimed, adds owner-scoped constraints, and starts every account with empty personal state. Public shared catalog/content reads remain shared; the original 23 domain operation IDs and semantics are retained, with four auth operations added.
 - Backend checks on this candidate: full suite **197 passed** (one Starlette/httpx deprecation warning); focused regression group **118 passed**; Ruff check and formatting check passed. Contract tests cover all 27 operations. No frontend, browser, or final integration acceptance is claimed.
 - Independent backend QA passed the exact handoff SHA `4ba81f2f6cfafc0e86ad374fe800489da2dc350d` (tree `747f269c2cda0c3cf4b69cc08e96d3d17fa6f659`): 197 tests passed with one existing Starlette/httpx deprecation warning; Ruff checks passed. [QA report](https://github.com/ttogzhann/freshfirst-market/issues/53#issuecomment-6554751865).
-- Next milestone: frontend registration/login/logout/session restoration, protected routing and credentialed CSRF-aware service integration; then full integrated independent QA against all 13 issue criteria. Backend-stage PASS is not final issue PASS. Do not deploy, merge, or close #53 before the complete gate.
+- The frontend authentication engineering milestone is recorded above. Next: independent integrated QA against all 13 issue criteria. Backend-stage PASS is not final issue PASS. Do not deploy, merge, or close #53 before the complete gate.
 - Issue #53 remains open. Historical aggregate effort is unknown; no effort estimate is inferred.
 
 ## New feature milestone - authentication issue groomed
@@ -17,7 +27,7 @@ Updated: 2026-11-01, Asia/Qyzylorda. Deadline: 2026-11-03.
 - This is an explicitly authorized product scope change from the prior single-user/no-auth non-goal. No previous MVP scope or completion evidence is retroactively changed.
 - Architecture review found ownerless SQLite domain state, no migration framework, unprotected API routes, and a frontend service that does not send credentials. The issue's migration decision is conservative: preserve legacy personal records as unclaimed and inaccessible to all new accounts; never assign them to the first registrant. New accounts start empty; shared catalog/recipe data remains global.
 - The dedicated engineering worktree is `C:\Users\User\OneDrive\FreshFirst\freshfirst-market-auth`, branch `feature/ff49-auth`, based on `57051e4913beb9e19a24bd1e483ae78e7b8b741c` (`origin/main` at setup). Original dirty checkout, prior feature worktree, sibling worktrees and ignored/untracked QA artifacts remain preserved.
-- Status: PM grooming and the backend engineering milestone are complete; independent backend QA is next. Frontend integration and final acceptance remain outstanding. No deployment or paid resources.
+- Status: PM grooming, backend engineering, independent backend QA, and frontend engineering are complete; integrated final acceptance remains outstanding. No deployment or paid resources.
 - Historical aggregate effort remains unknown. No 12-hour completion claim is made.
 
 ## Latest milestone - FF-20 accepted
