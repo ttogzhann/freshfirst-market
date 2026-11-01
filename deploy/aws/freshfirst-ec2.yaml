@@ -1,0 +1,374 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  FreshFirst approval-gated single-EC2 proof-of-concept architecture. This
+  template is static design input for review; do not deploy without the
+  written approvals described in deploy/aws/README.md.
+
+Parameters:
+  AmiId:
+    Type: AWS::EC2::Image::Id
+    Description: Amazon Linux 2023 x86_64 AMI ID approved for the selected region.
+  AppImage:
+    Type: String
+    Description: Immutable production FreshFirst image URI (prefer a digest, not latest).
+    AllowedPattern: '^.{1,512}$'
+  DomainName:
+    Type: String
+    Description: DNS name that will resolve to the instance public address before Caddy obtains a certificate.
+    AllowedPattern: '^[a-z0-9][a-z0-9.-]+[a-z0-9]$'
+  VpcCidr:
+    Type: String
+    Default: 10.42.0.0/16
+  PublicSubnetCidr:
+    Type: String
+    Default: 10.42.1.0/24
+  InstanceType:
+    Type: String
+    Default: t3.small
+    AllowedValues: [t3.small, t3.medium]
+  RootVolumeSizeGiB:
+    Type: Number
+    Default: 30
+    MinValue: 20
+    MaxValue: 100
+  DatabaseName:
+    Type: String
+    Default: freshfirst
+    AllowedPattern: '^[a-z][a-z0-9_]{0,62}$'
+  DatabaseUser:
+    Type: String
+    Default: freshfirst
+    AllowedPattern: '^[a-z][a-z0-9_]{0,62}$'
+  GitHubOidcProviderArn:
+    Type: String
+    Description: Existing token.actions.githubusercontent.com OIDC provider ARN; no provider is created here.
+    Default: ''
+  GitHubRepository:
+    Type: String
+    Default: ttogzhann/freshfirst-market
+    AllowedPattern: '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$'
+  GitHubRef:
+    Type: String
+    Default: refs/heads/main
+    AllowedPattern: '^refs/heads/[A-Za-z0-9._/-]+$'
+  GitHubEnvironment:
+    Type: String
+    Default: production
+    AllowedPattern: '^[A-Za-z0-9._-]+$'
+
+Conditions:
+  CreateDeploymentRole: !Not [!Equals [!Ref GitHubOidcProviderArn, '']]
+
+Resources:
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCidr
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags: [{Key: Name, Value: !Sub '${AWS::StackName}-vpc'}]
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags: [{Key: Name, Value: !Sub '${AWS::StackName}-igw'}]
+
+  VpcGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref Vpc
+
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: !Ref PublicSubnetCidr
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [0, !GetAZs '']
+      Tags: [{Key: Name, Value: !Sub '${AWS::StackName}-public'}]
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags: [{Key: Name, Value: !Sub '${AWS::StackName}-routes'}]
+
+  DefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: VpcGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet
+
+  AppSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: FreshFirst public Caddy ingress only; app and PostgreSQL remain private.
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          Description: HTTP redirect and ACME HTTP challenge for Caddy.
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: Public HTTPS application traffic.
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      Tags: [{Key: Name, Value: !Sub '${AWS::StackName}-sg'}]
+
+  DatabaseSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub '${AWS::StackName}/database'
+      Description: Generated FreshFirst PostgreSQL password; never output by the stack.
+      GenerateSecretString:
+        SecretStringTemplate: '{}'
+        GenerateStringKey: password
+        PasswordLength: 48
+        ExcludePunctuation: true
+      Tags:
+        - Key: Application
+          Value: FreshFirst
+        - Key: ManagedBy
+          Value: CloudFormation
+
+  AuthSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub '${AWS::StackName}/auth'
+      Description: Generated FreshFirst authentication secret; never output by the stack.
+      GenerateSecretString:
+        SecretStringTemplate: '{}'
+        GenerateStringKey: value
+        PasswordLength: 64
+        ExcludePunctuation: true
+      Tags:
+        - Key: Application
+          Value: FreshFirst
+        - Key: ManagedBy
+          Value: CloudFormation
+
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: Narrow runtime role for SSM secret reads and private image pulls.
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: {Service: ec2.amazonaws.com}
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: FreshFirstRuntime
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: ReadOnlyApplicationSecrets
+                Effect: Allow
+                Action: secretsmanager:GetSecretValue
+                Resource:
+                  - !Ref DatabaseSecret
+                  - !Ref AuthSecret
+              - Sid: EcrPullOnly
+                Effect: Allow
+                Action:
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:BatchGetImage
+                  - ecr:GetDownloadUrlForLayer
+                Resource: !Sub 'arn:${AWS::Partition}:ecr:${AWS::Region}:${AWS::AccountId}:repository/freshfirst'
+              - Sid: EcrToken
+                Effect: Allow
+                Action: ecr:GetAuthorizationToken
+                Resource: '*'
+              - Sid: SsmSessionAgent
+                Effect: Allow
+                Action:
+                  - ssm:UpdateInstanceInformation
+                  - ssmmessages:CreateControlChannel
+                  - ssmmessages:CreateDataChannel
+                  - ssmmessages:OpenControlChannel
+                  - ssmmessages:OpenDataChannel
+                Resource: '*'
+      Tags: [{Key: Application, Value: FreshFirst}]
+
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles: [!Ref InstanceRole]
+
+  DeploymentRole:
+    Type: AWS::IAM::Role
+    Condition: CreateDeploymentRole
+    Properties:
+      Description: Future approval-gated GitHub OIDC deployment role; unused by this issue.
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: {Federated: !Ref GitHubOidcProviderArn}
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:sub: !Sub 'repo:${GitHubRepository}:environment:${GitHubEnvironment}'
+                token.actions.githubusercontent.com:ref: !Ref GitHubRef
+      Policies:
+        - PolicyName: FreshFirstFutureDeployment
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: PushOnlyFreshFirstImage
+                Effect: Allow
+                Action:
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:CompleteLayerUpload
+                  - ecr:InitiateLayerUpload
+                  - ecr:PutImage
+                  - ecr:UploadLayerPart
+                Resource: !Sub 'arn:${AWS::Partition}:ecr:${AWS::Region}:${AWS::AccountId}:repository/freshfirst'
+              - Sid: EcrToken
+                Effect: Allow
+                Action: ecr:GetAuthorizationToken
+                Resource: '*'
+              - Sid: SendOnlyToThisInstance
+                Effect: Allow
+                Action: ssm:SendCommand
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}::document/AWS-RunShellScript'
+                  - !Sub 'arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/${FreshFirstInstance}'
+              - Sid: DescribeForDeploymentPolling
+                Effect: Allow
+                Action:
+                  - ssm:ListCommandInvocations
+                  - ssm:GetCommandInvocation
+                Resource: '*'
+              - Sid: PassRuntimeRoleOnly
+                Effect: Allow
+                Action: iam:PassRole
+                Resource: !GetAtt InstanceRole.Arn
+                Condition: {StringEquals: {iam:PassedToService: ec2.amazonaws.com}}
+
+  FreshFirstInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref AmiId
+      InstanceType: !Ref InstanceType
+      IamInstanceProfile: !Ref InstanceProfile
+      SubnetId: !Ref PublicSubnet
+      SecurityGroupIds: [!GetAtt AppSecurityGroup.GroupId]
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeType: gp3
+            VolumeSize: !Ref RootVolumeSizeGiB
+            Encrypted: true
+            DeleteOnTermination: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-app'
+        - Key: Application
+          Value: FreshFirst
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -euo pipefail
+          dnf install -y docker awscli2 jq
+          systemctl enable --now docker
+          install -d -m 0700 /opt/freshfirst /opt/freshfirst/caddy-data /opt/freshfirst/caddy-config
+          DB_PASSWORD="$$(aws secretsmanager get-secret-value --secret-id '${DatabaseSecret}' --query SecretString --output text | jq -r .password)"
+          AUTH_SECRET="$$(aws secretsmanager get-secret-value --secret-id '${AuthSecret}' --query SecretString --output text | jq -r .value)"
+          umask 077
+          cat > /opt/freshfirst/.env <<EOF
+          POSTGRES_DB=${DatabaseName}
+          POSTGRES_USER=${DatabaseUser}
+          POSTGRES_PASSWORD=${!DB_PASSWORD}
+          DATABASE_URL=postgresql+psycopg://${DatabaseUser}:${!DB_PASSWORD}@db:5432/${DatabaseName}
+          AUTH_SECRET=${!AUTH_SECRET}
+          APP_IMAGE=${AppImage}
+          FRESHFIRST_DOMAIN=${DomainName}
+          EOF
+          cat > /opt/freshfirst/Caddyfile <<EOF
+          ${DomainName} {
+            encode gzip
+            reverse_proxy app:8000
+          }
+          EOF
+          cat > /opt/freshfirst/compose.yaml <<'EOF'
+          services:
+            db:
+              image: postgres:16-alpine
+              restart: unless-stopped
+              env_file: .env
+              environment:
+                POSTGRES_DB: ${!POSTGRES_DB}
+                POSTGRES_USER: ${!POSTGRES_USER}
+                POSTGRES_PASSWORD: ${!POSTGRES_PASSWORD}
+              volumes:
+                - postgres-data:/var/lib/postgresql/data
+              healthcheck:
+                test: [CMD-SHELL, 'pg_isready -U ${!POSTGRES_USER} -d ${!POSTGRES_DB}']
+                interval: 5s
+                timeout: 5s
+                retries: 20
+            app:
+              image: ${!APP_IMAGE}
+              restart: unless-stopped
+              env_file: .env
+              environment:
+                DATABASE_URL: ${!DATABASE_URL}
+                AUTH_SECRET: ${!AUTH_SECRET}
+              expose: [8000]
+              depends_on:
+                db:
+                  condition: service_healthy
+              healthcheck:
+                test: [CMD, node, -e, 'fetch("http://127.0.0.1:8000/healthz").then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))']
+                interval: 10s
+                timeout: 5s
+                retries: 12
+            caddy:
+              image: caddy:2.10-alpine
+              restart: unless-stopped
+              ports:
+                - 80:80
+                - 443:443
+              volumes:
+                - ./Caddyfile:/etc/caddy/Caddyfile:ro
+                - caddy-data:/data
+                - caddy-config:/config
+              depends_on:
+                app:
+                  condition: service_healthy
+          volumes:
+            postgres-data:
+            caddy-data:
+            caddy-config:
+          EOF
+          chmod 0600 /opt/freshfirst/.env
+          cd /opt/freshfirst
+          docker compose --env-file .env up -d
+
+Outputs:
+  InstanceId:
+    Description: Public instance identity; manage through SSM, never SSH.
+    Value: !Ref FreshFirstInstance
+  PublicAddress:
+    Description: DNS target for the approved domain.
+    Value: !GetAtt FreshFirstInstance.PublicDnsName
+  RuntimeSecretArns:
+    Description: Secrets Manager ARNs read by the instance role; values are never output.
+    Value: !Join [',', [!Ref DatabaseSecret, !Ref AuthSecret]]
