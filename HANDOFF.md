@@ -2,6 +2,14 @@
 
 Updated: 2026-11-01, Asia/Qyzylorda. Deadline: 2026-11-03.
 
+## Issue #54 / FF-50 - production dependency audit remediation
+
+- Candidate `564d8cabe91c21ea077bec95fb003852422dd9c8` removed the unused direct frontend dependencies `@hookform/resolvers` and `zod`, and moved build-only `@tailwindcss/vite` to development dependencies. Independent QA found a remaining production Vite advisory, so PM-R2 authorized a narrowly scoped patched Vite 8.x update.
+- Final dependency commit `bf1b86e607476a168ceb9f76877113bcfdd00a36` (tree `037c96fec4170250b40039f54309b3cf3bf1e03e`) updates Vite to 8.3.5. Independent QA passed all criteria on that exact SHA: [QA report](https://github.com/ttogzhann/freshfirst-market/issues/54#issuecomment-6557734377). The commit was fast-forwarded to `origin/main`, verified at the same SHA/tree, and #54 was closed.
+- `npm audit --omit=dev`: **0 vulnerabilities**. Full `npm audit`: **15 moderate findings**, all confirmed dev-only (four `fast-uri` advisories through swagger-parser/AJV and `minimatch` through ESLint/typescript-eslint); no high/critical findings remain. These dev-only findings are recorded, not silently waived.
+- `npm ci`, frontend tests (**105 passed / 15 files**), typecheck, API validation (**27 operations**), lint, and production build all passed. Existing lint/build warnings remain non-fatal. No application source changes, deployment, or cloud resource creation occurred.
+- Issue #54 is complete; both MVP and Post-MVP milestones had zero open issues after closure. The original dirty main worktree and all pre-existing worktrees/artifacts remain preserved.
+
 ## Issue #53 - integrated final QA PASS
 
 - Independent QA passed all 13 acceptance criteria on `dceb1daf7443ae09a2f3567c9d89b3d89049a1fe` (tree `9f3ceafd36db4dca06fd8e54ecc3357585b3a364`): [QA report](https://github.com/ttogzhann/freshfirst-market/issues/53#issuecomment-6557190030). PM-R3 authorized the exact handoff addition that had caused the prior scope-only FAIL: [PM decision](https://github.com/ttogzhann/freshfirst-market/issues/53#issuecomment-6557180238).
