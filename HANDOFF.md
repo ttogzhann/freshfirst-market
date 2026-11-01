@@ -128,3 +128,11 @@ Do not start #56–#62 or create cloud resources in this step. The delivered ima
 - Engineering verification: real `docker compose up --build -d` succeeded; both services became healthy; browser/API registration, login, pantry, recipes, basket, shopping generation, cooking preview/confirmation/history and account isolation passed; same-volume `down`/`up` preserved the session, pantry and history. Focused SQLite regressions passed `31`; Ruff, formatting, Compose config and Node syntax checks passed.
 - Independent QA passed the exact functional candidate and confirmed clean state, static Compose/security wiring, SSR/API health, public/private routing and unauthenticated private-read rejection. The final docs-only handoff commit was separately checked to contain no functional changes.
 - No Compose tests, Playwright E2E, AWS, cloud, CI/CD, or Issues #58–#62 work was started.
+
+## Part 3 Issue #58 status - real Compose integration tests
+
+- Candidate `0e56c22aa4eca1a5520d31ee46fa17f9c571e261` adds a reproducible integration test at `tests/test_compose_integration.py` and documents the command in `README.md`.
+- The test creates a unique Compose project, host port, PostgreSQL database/user, named volume, temporary environment file, and authentication secret. It uses the production-built app service and real PostgreSQL, never SQLite or mocks, and always removes only its own stack, volume, network, and temporary environment in `finally`.
+- Runtime coverage includes readiness and PostgreSQL routing, registration, login/session continuity, account isolation, recipes, pantry, basket, shopping generation, cooking preview/confirmation/history, failed-cook rollback, and app-container recreation with persisted data. A forced-failure probe confirmed cleanup on failure; secret-bearing values are redacted from command errors.
+- Engineering verification on the exact candidate: real Compose integration `1 passed`; forced-failure cleanup probe produced the expected test failure and removed all test-owned resources; focused SQLite regressions `31 passed`; Ruff check/format, Node syntax, and `git diff --check` passed.
+- Independent QA reviewed the exact candidate and issued `QA: PASS`, confirming unique resources, redaction, cleanup, and workflow coverage. No application changes, Playwright E2E, AWS, HTTPS, CI/CD, or later Part 3 issue work was started.
