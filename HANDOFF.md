@@ -2,13 +2,21 @@
 
 Updated: 2026-11-01, Asia/Qyzylorda. Deadline: 2026-11-03.
 
+## Issue #53 - backend authentication milestone
+
+- Backend implementation is committed as `410f6d316aace04a8d0093ceb037c7b42bcd9a41` (tree `d1b60b2f023de7c26d62198a853b4a4057f74066`) on `feature/ff49-auth`, based on `57051e4913beb9e19a24bd1e483ae78e7b8b741c`. This milestone is confined to the dedicated `freshfirst-market-auth` worktree.
+- Adds Argon2id password hashing, normalized email identity, opaque server-side SQLite sessions, rotation/revocation/expiry, CSRF proofs, database-backed auth rate limits, explicit credentialed CORS, and protected per-account domain state. The versioned SQLite migration preserves legacy ownerless personal rows as quarantined/unclaimed, adds owner-scoped constraints, and starts every account with empty personal state. Public shared catalog/content reads remain shared; the original 23 domain operation IDs and semantics are retained, with four auth operations added.
+- Backend checks on this candidate: full suite **197 passed** (one Starlette/httpx deprecation warning); focused regression group **118 passed**; Ruff check and formatting check passed. Contract tests cover all 27 operations. No frontend, browser, or final integration acceptance is claimed.
+- Next milestone: independent backend QA against the exact implementation SHA, including migration rollback/quarantine, multi-account isolation, auth/session/CSRF/rate-limit/restart behavior, unauthorized-ID no-mutation checks, and all 27 OpenAPI operations. Then implement frontend integration and run independent end-to-end/final acceptance on the combined candidate. Do not deploy, merge, or close the issue in this milestone.
+- Issue #53 remains open and awaits independent QA. Historical aggregate effort is unknown; no effort estimate is inferred.
+
 ## New feature milestone - authentication issue groomed
 
 - PM created [FF-49 / #53](https://github.com/ttogzhann/freshfirst-market/issues/53) for registration, persistent server-side sessions, CSRF, per-account data isolation, safe legacy-data quarantine and frontend integration. PM-R1a records the accepted email identity clarification: [comment](https://github.com/ttogzhann/freshfirst-market/issues/53#issuecomment-6554357199).
 - This is an explicitly authorized product scope change from the prior single-user/no-auth non-goal. No previous MVP scope or completion evidence is retroactively changed.
 - Architecture review found ownerless SQLite domain state, no migration framework, unprotected API routes, and a frontend service that does not send credentials. The issue's migration decision is conservative: preserve legacy personal records as unclaimed and inaccessible to all new accounts; never assign them to the first registrant. New accounts start empty; shared catalog/recipe data remains global.
 - The dedicated engineering worktree is `C:\Users\User\OneDrive\FreshFirst\freshfirst-market-auth`, branch `feature/ff49-auth`, based on `57051e4913beb9e19a24bd1e483ae78e7b8b741c` (`origin/main` at setup). Original dirty checkout, prior feature worktree, sibling worktrees and ignored/untracked QA artifacts remain preserved.
-- Status: PM grooming complete; engineering not yet handed off. Issue #53 remains open. Next: implement only the groomed acceptance criteria in the dedicated worktree, test incrementally, then obtain independent QA on exact commits. No deployment or paid resources.
+- Status: PM grooming and the backend engineering milestone are complete; independent backend QA is next. Frontend integration and final acceptance remain outstanding. No deployment or paid resources.
 - Historical aggregate effort remains unknown. No 12-hour completion claim is made.
 
 ## Latest milestone - FF-20 accepted
