@@ -110,3 +110,12 @@ FF-20 is complete and closed. Do not repeat its acquisition, implementation, ful
 ### Exact next step
 
 Do not start #56–#62 or create cloud resources in this step. The delivered image is a local Docker stage-1 artifact only.
+
+## Part 3 Issue #56 status - PostgreSQL persistence
+
+- PostgreSQL support is implemented in candidate commit `c93d575211be45ddc963b9448b6864d81d8e5760` on `feature/part3-postgres`, based on the Docker-approved `origin/main`.
+- SQLite remains the default local-development backend. `DATABASE_URL` now selects either SQLite or PostgreSQL through the existing SQLAlchemy ORM; PostgreSQL uses `psycopg` and does not touch or migrate any existing SQLite database.
+- The implementation covers dialect-specific inserts, startup seeding, authentication rate-limit upserts, migrations, transaction locking, constraints, account isolation, and persistence for the existing domain tables and workflows. No API or frontend contract changes were made.
+- Engineering verification used a real disposable PostgreSQL 16.15 server/database: PostgreSQL integration `1 passed`; focused SQLite regressions `31 passed`; frontend HTTP integration `2 passed`; Ruff checks and formatting passed. Only the existing Starlette/httpx and Vite configuration warnings remained.
+- Independent QA passed the exact candidate SHA after resetting only the disposable test database: PostgreSQL integration `1 passed in 3.23s`, SQLite focused suite `31 passed`, and the worktree remained clean. QA confirmed authentication, domain transactions, constraints, ownership, persistence across a separate process, and SQLite compatibility.
+- Issue #56 was accepted and closed after the verified candidate was integrated into `origin/main`. No Compose, Playwright E2E, AWS, CI/CD, managed cloud, or subsequent Part 3 issue work was started.
