@@ -60,8 +60,7 @@ class PackagedMealSource:
                     record["raw_file"] != f"{external_id}.json"
                     or record["lookup_url"]
                     != f"https://www.themealdb.com/api/json/v1/1/lookup.php?i={external_id}"
-                    or datetime.fromisoformat(record["captured_at_utc"]).utcoffset()
-                    != timedelta(0)
+                    or datetime.fromisoformat(record["captured_at_utc"]).utcoffset() != timedelta(0)
                 ):
                     raise ValueError("Invalid baseline provenance")
                 raw = (self.DIRECTORY / record["raw_file"]).read_bytes()
