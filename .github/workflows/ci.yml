@@ -1,0 +1,253 @@
+name: FreshFirst CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      aws_region:
+        description: Approved AWS region
+        required: true
+        default: us-east-1
+        type: string
+      stack_name:
+        description: Approved CloudFormation stack name
+        required: true
+        type: string
+      cloudformation_service_role_arn:
+        description: Narrowly scoped CloudFormation service-role ARN
+        required: true
+        type: string
+      app_image:
+        description: Immutable production image URI or digest
+        required: true
+        type: string
+      ami_id:
+        description: Approved Amazon Linux 2023 AMI ID
+        required: true
+        type: string
+      domain_name:
+        description: Approved production DNS name
+        required: true
+        type: string
+      origin_url:
+        description: Approved HTTPS origin for bounded post-deploy smoke
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+      - name: Install uv
+        run: python -m pip install --disable-pip-version-check uv
+      - name: Sync locked backend environment
+        working-directory: backend
+        run: uv sync --locked
+      - name: Run backend tests
+        working-directory: backend
+        run: uv run --locked pytest -q
+      - name: Check backend lint
+        working-directory: backend
+        run: uv run --locked ruff check app tests
+      - name: Check backend formatting
+        working-directory: backend
+        run: uv run --locked ruff format --check app tests
+
+  frontend:
+    name: Frontend checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.20.1
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Run frontend tests
+        working-directory: frontend
+        run: npm test
+      - name: Check frontend types
+        working-directory: frontend
+        run: npm run typecheck
+      - name: Validate OpenAPI contract
+        working-directory: frontend
+        run: npm run validate:api
+      - name: Check frontend lint
+        working-directory: frontend
+        run: npm run lint
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+  production-image:
+    name: Production image build
+    needs: [backend, frontend]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Build production image
+        run: docker build --pull --tag freshfirst:${{ github.sha }} .
+
+  compose-integration:
+    name: Compose PostgreSQL integration
+    needs: production-image
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Start isolated production Compose stack
+        env:
+          COMPOSE_PROJECT_NAME: freshfirst-ci-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          env_file="$RUNNER_TEMP/freshfirst-compose.env"
+          compose=(docker compose --project-name "$COMPOSE_PROJECT_NAME" --env-file "$env_file" -f compose.yaml)
+          cat > "$env_file" <<'EOF'
+          POSTGRES_DB=freshfirst_ci
+          POSTGRES_USER=freshfirst_ci
+          POSTGRES_PASSWORD=ci-only-postgres-password
+          FRESHFIRST_AUTH_SECRET=ci-only-auth-secret-with-at-least-32-bytes
+          FRESHFIRST_PORT=18080
+          FRESHFIRST_TRUSTED_ORIGINS=http://127.0.0.1:18080,http://localhost:18080
+          EOF
+          cleanup() { "${compose[@]}" down -v --remove-orphans; rm -f "$env_file"; }
+          trap cleanup EXIT
+          "${compose[@]}" up --build -d
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --show-error http://127.0.0.1:18080/healthz; then
+              break
+            fi
+            if [ "$attempt" = 30 ]; then exit 1; fi
+            sleep 2
+          done
+          curl --fail --silent --show-error http://127.0.0.1:18080/api/ingredients > /dev/null
+          "${compose[@]}" exec -T db pg_isready -U freshfirst_ci -d freshfirst_ci
+
+  playwright-e2e:
+    name: Playwright Compose E2E
+    needs: compose-integration
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.20.1
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Install Playwright browser
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: Run real Compose browser journey
+        working-directory: frontend
+        run: npm run test:e2e:compose
+
+  deploy:
+    name: Approved production deployment
+    needs: playwright-e2e
+    if: github.event_name == 'workflow_dispatch' && github.repository == 'ttogzhann/freshfirst-market' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    environment: production
+    timeout-minutes: 35
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          aws-region: ${{ inputs.aws_region }}
+          role-to-assume: ${{ secrets.AWS_DEPLOYMENT_ROLE_ARN }}
+          role-session-name: freshfirst-${{ github.run_id }}
+      - name: Deploy existing CloudFormation design
+        env:
+          CFN_ROLE_ARN: ${{ inputs.cloudformation_service_role_arn }}
+          STACK_NAME: ${{ inputs.stack_name }}
+          APP_IMAGE: ${{ inputs.app_image }}
+          AMI_ID: ${{ inputs.ami_id }}
+          DOMAIN_NAME: ${{ inputs.domain_name }}
+        run: |
+          set -euo pipefail
+          case "$CFN_ROLE_ARN" in arn:aws:iam::*:role/*|arn:aws-us-gov:iam::*:role/*|arn:aws-cn:iam::*:role/*) ;; *) echo "cloudformation_service_role_arn must be an IAM role ARN" >&2; exit 2 ;; esac
+          aws cloudformation deploy \
+            --template-file deploy/aws/freshfirst-ec2.yaml \
+            --stack-name "$STACK_NAME" \
+            --role-arn "$CFN_ROLE_ARN" \
+            --capabilities CAPABILITY_IAM \
+            --parameter-overrides "AppImage=$APP_IMAGE" "AmiId=$AMI_ID" "DomainName=$DOMAIN_NAME"
+      - name: Wait for stack output
+        id: stack
+        env:
+          STACK_NAME: ${{ inputs.stack_name }}
+        run: |
+          set -euo pipefail
+          address=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --query 'Stacks[0].Outputs[?OutputKey==`PublicAddress`].OutputValue' --output text)
+          test -n "$address"
+          echo "public_address=$address" >> "$GITHUB_OUTPUT"
+      - name: Bounded real-origin health smoke
+        env:
+          ORIGIN_URL: ${{ inputs.origin_url }}
+        run: |
+          set -euo pipefail
+          origin="${ORIGIN_URL%/}"
+          for attempt in $(seq 1 12); do
+            if curl --fail --silent --show-error --max-time 10 "$origin/healthz"; then exit 0; fi
+            sleep 10
+          done
+          echo "Production origin did not become healthy within 120 seconds" >&2
+          exit 1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.20.1
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install browser smoke dependencies
+        working-directory: frontend
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Bounded real-origin browser and API smoke
+        env:
+          ORIGIN_URL: ${{ inputs.origin_url }}
+        working-directory: frontend
+        run: |
+          node --input-type=module <<'EOF'
+          import { chromium } from "@playwright/test";
+
+          const origin = process.env.ORIGIN_URL.replace(/\/$/, "");
+          const health = await fetch(`${origin}/healthz`, { signal: AbortSignal.timeout(10_000) });
+          if (!health.ok) throw new Error(`healthz returned ${health.status}`);
+          const api = await fetch(`${origin}/api/ingredients`, { signal: AbortSignal.timeout(10_000) });
+          if (!api.ok) throw new Error(`ingredients API returned ${api.status}`);
+          const browser = await chromium.launch({ headless: true });
+          try {
+            const page = await browser.newPage();
+            await page.goto(origin, { waitUntil: "domcontentloaded", timeout: 30_000 });
+            if (!await page.locator("body").isVisible()) throw new Error("origin body is not visible");
+          } finally {
+            await browser.close();
+          }
+          EOF
