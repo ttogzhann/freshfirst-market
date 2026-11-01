@@ -20,6 +20,7 @@ dist
 dist-ssr
 .output
 .vinxi
+frontend/test-results/
 **/.tanstack/**
 .nitro
 *.local

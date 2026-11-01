@@ -128,3 +128,30 @@ The runner creates a unique Compose project, PostgreSQL database, named volume, 
 This is an HTTP integration test, not browser automation. Existing SQLite backend/frontend checks remain separate and must still be run with their documented commands. The runner fails when Docker, Compose or PostgreSQL is unavailable; a skipped or SQLite-only run is not a passing integration result.
 
 The owner's supplied partial original [brainstorming history](docs/brainstorming.md) preserves the earlier FreshRescue discussion and its original gaps; the current specification governs implementation.
+
+## Run real-browser Compose E2E tests (Part 3, Issue #59)
+
+From the repository root, run the single documented command:
+
+```sh
+npm --prefix frontend run test:e2e:compose
+```
+
+The command runs the pinned Playwright `1.55.0` Chromium test against a production-built
+Docker Compose stack. The test allocates a unique project, PostgreSQL database/user, named
+volume, temporary environment file, and host port; it never uses the local SQLite database,
+development server, API mocks, route interception, or committed credentials. The browser
+journey covers registration, login, reload session restoration, logout, visible pantry writes,
+recipe selection, basket, shopping generation, cooking/history, and persistence after app
+recreation. The test always runs `docker compose down -v --remove-orphans` for its own project
+and removes its temporary environment directory, including after assertion failure.
+
+Install the pinned browser once when preparing a machine:
+
+```sh
+npx --prefix frontend playwright install chromium
+```
+
+The E2E runner uses only disposable test resources. Do not run `down -v` against the normal
+Compose project or the existing Issue #55 container. SQLite regression tests and the HTTP-level
+Compose integration test remain separate commands and are not replaced by this browser suite.
