@@ -11,8 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as BasketRouteImport } from './routes/basket'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as PantryRouteImport } from './routes/pantry'
 import { Route as RecipesRouteImport } from './routes/recipes'
+import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ShoppingRouteImport } from './routes/shopping'
 import { Route as RecipesIndexRouteImport } from './routes/recipes.index'
 import { Route as RecipesIdRouteImport } from './routes/recipes.$id'
@@ -27,6 +29,11 @@ const BasketRoute = BasketRouteImport.update({
   path: '/basket',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PantryRoute = PantryRouteImport.update({
   id: '/pantry',
   path: '/pantry',
@@ -35,6 +42,11 @@ const PantryRoute = PantryRouteImport.update({
 const RecipesRoute = RecipesRouteImport.update({
   id: '/recipes',
   path: '/recipes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ShoppingRoute = ShoppingRouteImport.update({
@@ -56,8 +68,10 @@ const RecipesIdRoute = RecipesIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/basket': typeof BasketRoute
+  '/login': typeof LoginRoute
   '/pantry': typeof PantryRoute
   '/recipes': typeof RecipesRouteWithChildren
+  '/register': typeof RegisterRoute
   '/shopping': typeof ShoppingRoute
   '/recipes/$id': typeof RecipesIdRoute
   '/recipes/': typeof RecipesIndexRoute
@@ -65,7 +79,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/basket': typeof BasketRoute
+  '/login': typeof LoginRoute
   '/pantry': typeof PantryRoute
+  '/register': typeof RegisterRoute
   '/shopping': typeof ShoppingRoute
   '/recipes/$id': typeof RecipesIdRoute
   '/recipes': typeof RecipesIndexRoute
@@ -74,8 +90,10 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/basket': typeof BasketRoute
+  '/login': typeof LoginRoute
   '/pantry': typeof PantryRoute
   '/recipes': typeof RecipesRouteWithChildren
+  '/register': typeof RegisterRoute
   '/shopping': typeof ShoppingRoute
   '/recipes/$id': typeof RecipesIdRoute
   '/recipes/': typeof RecipesIndexRoute
@@ -85,19 +103,31 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/basket'
+    | '/login'
     | '/pantry'
     | '/recipes'
+    | '/register'
     | '/shopping'
     | '/recipes/$id'
     | '/recipes/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/basket' | '/pantry' | '/shopping' | '/recipes/$id' | '/recipes'
+  to:
+    | '/'
+    | '/basket'
+    | '/login'
+    | '/pantry'
+    | '/register'
+    | '/shopping'
+    | '/recipes/$id'
+    | '/recipes'
   id:
     | '__root__'
     | '/'
     | '/basket'
+    | '/login'
     | '/pantry'
     | '/recipes'
+    | '/register'
     | '/shopping'
     | '/recipes/$id'
     | '/recipes/'
@@ -106,8 +136,10 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BasketRoute: typeof BasketRoute
+  LoginRoute: typeof LoginRoute
   PantryRoute: typeof PantryRoute
   RecipesRoute: typeof RecipesRouteWithChildren
+  RegisterRoute: typeof RegisterRoute
   ShoppingRoute: typeof ShoppingRoute
 }
 
@@ -127,6 +159,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BasketRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pantry': {
       id: '/pantry'
       path: '/pantry'
@@ -139,6 +178,13 @@ declare module '@tanstack/react-router' {
       path: '/recipes'
       fullPath: '/recipes'
       preLoaderRoute: typeof RecipesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/shopping': {
@@ -181,8 +227,10 @@ const RecipesRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BasketRoute: BasketRoute,
+  LoginRoute: LoginRoute,
   PantryRoute: PantryRoute,
   RecipesRoute: RecipesRouteWithChildren,
+  RegisterRoute: RegisterRoute,
   ShoppingRoute: ShoppingRoute,
 }
 export const routeTree = rootRouteImport

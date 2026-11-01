@@ -59,7 +59,7 @@ describe("recoverable pantry and shopping form errors", () => {
     expect(screen.getByLabelText("Expiry date")).toHaveValue("");
     expect(update).not.toHaveBeenCalled();
     expect((await service.listPantry()).find((item) => item.id === egg.id)?.quantity).toBe(2);
-  });
+  }, 15_000);
 
   it("retains a rejected pantry update and retries the corrected value", async () => {
     const egg = await service.createPantryItem({

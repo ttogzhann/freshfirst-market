@@ -159,6 +159,21 @@ export interface Dashboard {
   recent_history: CookingRecord[];
 }
 
+export interface AuthUser {
+  id: string;
+  email: string;
+}
+
+export interface AuthSession {
+  authenticated: boolean;
+  user: AuthUser | null;
+}
+
+export interface AuthCredentials {
+  email: string;
+  password: string;
+}
+
 export class ServiceError extends Error {
   constructor(
     public status: number,
@@ -223,4 +238,11 @@ export interface FreshService {
   listHistory(): Promise<CookingRecord[]>;
 
   getDashboard(): Promise<Dashboard>;
+}
+
+export interface AuthService {
+  restoreSession(): Promise<AuthSession>;
+  registerAccount(credentials: AuthCredentials): Promise<AuthUser>;
+  loginAccount(credentials: AuthCredentials): Promise<AuthUser>;
+  logoutAccount(): Promise<void>;
 }

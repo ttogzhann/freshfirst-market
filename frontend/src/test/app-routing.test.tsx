@@ -18,4 +18,9 @@ describe("App routing", () => {
       expect(matches.at(-1)?.pathname.replace(/\/$/, "")).toBe(path.replace(/\/$/, ""));
     },
   );
+
+  it.each(["/login", "/register"])("matches the auth screen %s", (path) => {
+    const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
+    expect(router.matchRoutes(path).at(-1)?.pathname).toBe(path);
+  });
 });

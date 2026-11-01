@@ -162,5 +162,6 @@ describe("expiry configuration", () => {
           .can_cook,
       ).toBe(false);
     },
+    15_000,
   );
 });

@@ -4,7 +4,6 @@ import os
 import sys
 from datetime import date
 from pathlib import Path
-from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -44,16 +43,15 @@ class Source:
 
 
 if __name__ == "__main__":
-    with TemporaryDirectory(prefix="freshfirst-http-") as directory:
-        os.environ["DATABASE_URL"] = f"sqlite:///{Path(directory) / 'http.db'}"
-        service = FreshService(source=Source(), seed=False, today=lambda: date(2026, 10, 20))
-        service.import_recipes()
-        try:
-            uvicorn.run(
-                create_app(service, startup_import=False),
-                host="127.0.0.1",
-                port=int(sys.argv[1]),
-                log_level="warning",
-            )
-        finally:
-            service.store.close()
+    os.environ["DATABASE_URL"] = "sqlite:///:memory:"
+    service = FreshService(source=Source(), seed=False, today=lambda: date(2026, 10, 20))
+    service.import_recipes()
+    try:
+        uvicorn.run(
+            create_app(service, startup_import=False),
+            host="127.0.0.1",
+            port=int(sys.argv[1]),
+            log_level="warning",
+        )
+    finally:
+        service.store.close()

@@ -5,11 +5,22 @@ import { createServer } from "node:net";
 import { resolve } from "node:path";
 import { beforeAll, afterAll, describe, expect, it } from "vitest";
 import { createHttpService } from "./httpService";
-import type { FreshService } from "./types";
+import type { AuthService, FreshService } from "./types";
 
 let process: ChildProcess;
-let service: FreshService;
+let service: FreshService & AuthService;
 let base: string;
+let sessionCookie = "";
+const browserFetch: typeof fetch = async (input, init = {}) => {
+  const headers = new Headers(init.headers);
+  if (sessionCookie) headers.set("Cookie", sessionCookie);
+  const response = await fetch(input, { ...init, headers });
+  const setCookie = response.headers.get("set-cookie");
+  if (setCookie?.startsWith("freshfirst_session=")) {
+    sessionCookie = setCookie.includes("Max-Age=0") ? "" : setCookie.split(";", 1)[0]!;
+  }
+  return response;
+};
 beforeAll(async () => {
   const socket = createServer();
   socket.listen(0, "127.0.0.1");
@@ -32,7 +43,7 @@ beforeAll(async () => {
   process.on("error", (error) => {
     output += error.message;
   });
-  service = createHttpService(base);
+  service = createHttpService(base, browserFetch);
   for (let attempt = 0; attempt < 100; attempt++) {
     try {
       await service.listIngredients();
@@ -56,6 +67,28 @@ describe("real HTTP frontend to FastAPI integration", () => {
     const expiry_date = "2026-11-01";
     expect((await service.listIngredients()).length).toBeGreaterThan(20);
     expect((await service.listSubstitutionRules()).length).toBeGreaterThan(0);
+    await expect(service.listPantry()).rejects.toMatchObject({
+      status: 401,
+      code: "AUTH_REQUIRED",
+    });
+    expect(await service.restoreSession()).toEqual({ authenticated: false, user: null });
+    const registered = await service.registerAccount({
+      email: "integration@example.com",
+      password: "a long enough integration password",
+    });
+    expect(registered.email).toBe("integration@example.com");
+    expect((await service.restoreSession()).user?.id).toBe(registered.id);
+    await service.logoutAccount();
+    expect(await service.restoreSession()).toEqual({ authenticated: false, user: null });
+    expect(
+      (
+        await service.loginAccount({
+          email: "INTEGRATION@example.com",
+          password: "a long enough integration password",
+        })
+      ).id,
+    ).toBe(registered.id);
+
     await expect(
       service.createPantryItem({ ingredient_id: "pasta", quantity: -1, unit: "g", expiry_date }),
     ).rejects.toMatchObject({ status: 422, code: "VALIDATION_ERROR" });
@@ -168,9 +201,11 @@ describe("real HTTP frontend to FastAPI integration", () => {
     ).toBe(50);
     await service.removeBasketItem(basket.id);
     expect((await service.getBasket()).items).toHaveLength(0);
-  });
+  }, 20_000);
 
   it("allows Vite preflight and actual responses, rejecting other origins", async () => {
+    const anonymous = await service.restoreSession();
+    expect(anonymous.authenticated).toBe(true);
     const response = await fetch(`${base}/pantry`, {
       method: "OPTIONS",
       headers: {

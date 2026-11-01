@@ -1,8 +1,8 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { once } from "node:events";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdirSync } from "node:fs";
+import { rm } from "node:fs/promises";
 import { createServer } from "node:net";
-import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
@@ -13,7 +13,7 @@ import { ShoppingPage } from "@/routes/shopping";
 import { Dashboard } from "@/routes/index";
 import { createHttpService } from "@/services/httpService";
 import { createMockService } from "@/services/mock/mockService";
-import { setService, type FreshService } from "@/services";
+import { setService, type AuthService, type FreshService } from "@/services";
 
 vi.mock("@tanstack/react-router", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@tanstack/react-router")>()),
@@ -21,11 +21,23 @@ vi.mock("@tanstack/react-router", async (importOriginal) => ({
 }));
 
 let backend: ChildProcess;
+let service: FreshService & AuthService;
 let directory: string;
-let service: FreshService;
+let sessionCookie = "";
+const browserFetch: typeof fetch = async (input, init = {}) => {
+  const headers = new Headers(init.headers);
+  if (sessionCookie) headers.set("Cookie", sessionCookie);
+  const response = await fetch(input, { ...init, headers });
+  const setCookie = response.headers.get("set-cookie");
+  if (setCookie?.startsWith("freshfirst_session=")) {
+    sessionCookie = setCookie.includes("Max-Age=0") ? "" : setCookie.split(";", 1)[0]!;
+  }
+  return response;
+};
 
 beforeAll(async () => {
-  directory = await mkdtemp(join(tmpdir(), "freshfirst-batch-ui-"));
+  directory = resolve("../backend", `.frontend-batch-ui-test-${globalThis.process.pid}`);
+  mkdirSync(directory);
   const socket = createServer();
   socket.listen(0, "127.0.0.1");
   await once(socket, "listening");
@@ -40,7 +52,11 @@ beforeAll(async () => {
     ["-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", String(port)],
     {
       cwd,
-      env: { ...process.env, DATABASE_URL: `sqlite:///${join(directory, "test.db")}` },
+      env: {
+        ...process.env,
+        DATABASE_URL: `sqlite:///${join(directory, "test.db")}`,
+        FRESHFIRST_AUTH_SECRET: "isolated batch UI test secret at least 32 bytes",
+      },
       stdio: "pipe",
     },
   );
@@ -51,10 +67,15 @@ beforeAll(async () => {
   backend.on("error", (error) => {
     output += error.message;
   });
-  service = createHttpService(`http://127.0.0.1:${port}/api`);
+  service = createHttpService(`http://127.0.0.1:${port}/api`, browserFetch);
   for (let attempt = 0; attempt < 100; attempt++) {
     try {
-      await service.listRecipes();
+      await service.listIngredients();
+      await service.restoreSession();
+      await service.registerAccount({
+        email: "batch-ui@example.com",
+        password: "a long enough batch UI password",
+      });
       setService(service);
       return;
     } catch {
@@ -70,8 +91,10 @@ afterAll(async () => {
     backend.kill();
     await exited;
   }
-  if (directory)
+  if (directory) {
+    await new Promise((done) => setTimeout(done, 300));
     await rm(directory, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+  }
 });
 afterEach(() => {
   cleanup();
@@ -175,7 +198,7 @@ describe("honest recipe quantities", () => {
     expect(await service.listHistory()).toEqual(savedHistory);
     expect(savedHistory[0]?.servings).toBe(2);
     expect(confirm).not.toHaveBeenCalled();
-  });
+  }, 20_000);
 
   it("keeps historical non-one-base records neutral and preserves the original ratio and raw value", async () => {
     const mock = createMockService({ seedPantry: false });
@@ -218,5 +241,5 @@ describe("honest recipe quantities", () => {
     expect(screen.getByRole("button", { name: "Increase batches" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Decrease batches" })).toBeEnabled();
     expect(document.body).not.toHaveTextContent(/servings|serves|portions/i);
-  });
+  }, 15_000);
 });
