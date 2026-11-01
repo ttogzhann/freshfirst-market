@@ -24,7 +24,7 @@ from app.models import (
     TransferInput,
 )
 from app.services.fresh import FreshService
-from app.store import SQLiteStore, ingredients, pantry, recipe_ingredients, recipes, rules
+from app.store import SQLiteStore, ingredients, pantry, recipe_ingredients, recipes, rules, users
 
 
 def open_service(seed=False):
@@ -250,11 +250,22 @@ def test_database_constraints_enforce_inventory_invariants():
                 expiry_date=date(2026, 11, 1),
             )
         )
+    with store.engine.begin() as connection:
+        connection.execute(
+            users.insert().values(
+                id="u_constraint",
+                email="constraint@example.com",
+                email_key="constraint@example.com",
+                password_hash="unused",
+                created_at=1,
+            )
+        )
     with pytest.raises(IntegrityError), store.engine.begin() as connection:
         for item_id in ["first", "duplicate"]:
             connection.execute(
                 pantry.insert().values(
                     id=item_id,
+                    owner_id="u_constraint",
                     ingredient_id="egg",
                     quantity_canonical=1,
                     expiry_date=date(2026, 11, 1),

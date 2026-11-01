@@ -13,21 +13,27 @@ from fastapi.responses import JSONResponse
 from starlette.concurrency import run_in_threadpool
 from starlette.exceptions import HTTPException
 
+from .auth import AuthFailure, AuthService
 from .config import expiry_days
 from .errors import ServiceError
-from .routers import basket, catalog, cooking, pantry, shopping
+from .routers import auth, basket, catalog, cooking, pantry, shopping
 from .services.fresh import FreshService
 
 logger = logging.getLogger(__name__)
 CONTRACT = Path(__file__).resolve().parents[2] / "openapi.yaml"
 
 
-def create_app(service: FreshService | None = None, startup_import: bool = True):
+def create_app(
+    service: FreshService | None = None,
+    startup_import: bool = True,
+    auth_secret: str | bytes | None = None,
+    trusted_origins: tuple[str, ...] | str | None = None,
+):
     owns_service = service is None
     service = (
         service
         if service is not None
-        else FreshService(expiry_days=expiry_days(os.getenv("FRESHFIRST_EXPIRY_DAYS")))
+        else FreshService(expiry_days=expiry_days(os.getenv("FRESHFIRST_EXPIRY_DAYS")), seed=False)
     )
 
     @asynccontextmanager
@@ -41,13 +47,16 @@ def create_app(service: FreshService | None = None, startup_import: bool = True)
                 await run_in_threadpool(service.store.close)
 
     app = FastAPI(title="FreshFirst API", version="1.0.0", lifespan=lifespan)
+    auth_service = AuthService(service.store, secret=auth_secret, origins=trusted_origins)
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+        allow_origins=list(auth_service.origins),
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
-        allow_headers=["Content-Type", "Accept"],
+        allow_headers=["Content-Type", "Accept", "X-CSRF-Token"],
+        allow_credentials=True,
     )
     app.state.service = service
+    app.state.auth = auth_service
 
     @app.exception_handler(ServiceError)
     async def service_error(request: Request, exc: ServiceError):
@@ -65,13 +74,38 @@ def create_app(service: FreshService | None = None, startup_import: bool = True)
 
     @app.exception_handler(HTTPException)
     async def http_error(request: Request, exc: HTTPException):
-        return JSONResponse(
+        detail = exc.detail
+        if isinstance(detail, dict) and {"code", "message"} <= detail.keys():
+            code, message = detail["code"], detail["message"]
+        else:
+            code = "NOT_FOUND" if exc.status_code == 404 else "HTTP_ERROR"
+            message = str(detail)
+        response = JSONResponse(
             status_code=exc.status_code,
+            content={"status": exc.status_code, "code": code, "message": message},
+            headers=exc.headers,
+        )
+        if getattr(request.state, "clear_auth_cookie", False):
+            response.delete_cookie(
+                "freshfirst_session",
+                path="/api",
+                secure=request.url.scheme == "https"
+                or os.getenv("FRESHFIRST_ENV", "").casefold() in {"production", "prod"},
+                samesite="lax",
+            )
+        return response
+
+    @app.exception_handler(AuthFailure)
+    async def auth_error(request: Request, exc: AuthFailure):
+        headers = {"Retry-After": str(max(1, exc.retry_after))} if exc.retry_after else None
+        return JSONResponse(
+            status_code=exc.status,
             content={
-                "status": exc.status_code,
-                "code": "NOT_FOUND" if exc.status_code == 404 else "HTTP_ERROR",
-                "message": str(exc.detail),
+                "status": exc.status,
+                "code": exc.code,
+                "message": exc.message,
             },
+            headers=headers,
         )
 
     @app.exception_handler(Exception)
@@ -87,7 +121,14 @@ def create_app(service: FreshService | None = None, startup_import: bool = True)
             },
         )
 
-    for router in (catalog.router, pantry.router, basket.router, shopping.router, cooking.router):
+    for router in (
+        auth.router,
+        catalog.router,
+        pantry.router,
+        basket.router,
+        shopping.router,
+        cooking.router,
+    ):
         app.include_router(router, prefix="/api")
 
     # Serve the authored 3.0.3 contract, including the shared error envelopes,

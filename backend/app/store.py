@@ -9,6 +9,7 @@ from contextlib import contextmanager
 from copy import deepcopy
 from dataclasses import dataclass, field
 from threading import RLock, local
+from uuid import uuid4
 
 from sqlalchemy import (
     JSON,
@@ -17,6 +18,7 @@ from sqlalchemy import (
     Column,
     Date,
     ForeignKey,
+    Index,
     Integer,
     MetaData,
     Numeric,
@@ -31,6 +33,7 @@ from sqlalchemy.pool import StaticPool
 
 from . import models
 from .catalog import CATALOG, RULES
+from .migrations import migrate
 
 metadata = MetaData()
 
@@ -56,10 +59,13 @@ pantry = Table(
     "pantry_items",
     metadata,
     identity(),
-    ingredient_ref(nullable=False, unique=True),
+    Column("owner_id", String, ForeignKey("users.id", ondelete="CASCADE")),
+    ingredient_ref(nullable=False),
     Column("quantity_canonical", Numeric(14, 2), nullable=False),
     Column("expiry_date", Date, nullable=False),
     CheckConstraint("quantity_canonical >= 0"),
+    Index("uq_pantry_owner_ingredient", "owner_id", "ingredient_id", unique=True),
+    Index("ix_pantry_items_owner_id", "owner_id"),
 )
 recipes = Table(
     "recipes",
@@ -98,15 +104,19 @@ basket = Table(
     "basket_items",
     metadata,
     identity(),
-    Column("recipe_id", String, ForeignKey("recipes.id"), nullable=False, unique=True),
+    Column("owner_id", String, ForeignKey("users.id", ondelete="CASCADE")),
+    Column("recipe_id", String, ForeignKey("recipes.id"), nullable=False),
     Column("servings", Integer, nullable=False),
     Column("confirmed_substitutions_json", JSON, nullable=False),
     CheckConstraint("servings BETWEEN 1 AND 8"),
+    Index("uq_basket_owner_recipe", "owner_id", "recipe_id", unique=True),
+    Index("ix_basket_items_owner_id", "owner_id"),
 )
 shopping = Table(
     "shopping_items",
     metadata,
     identity(),
+    Column("owner_id", String, ForeignKey("users.id", ondelete="CASCADE")),
     ingredient_ref(nullable=True),
     Column("label", String, nullable=False),
     Column("quantity_canonical", Numeric(14, 2), nullable=False),
@@ -118,25 +128,58 @@ shopping = Table(
     CheckConstraint("quantity_canonical >= 0"),
     CheckConstraint("origin IN ('generated', 'manual')"),
     CheckConstraint("NOT transferred_to_pantry OR purchased"),
+    Index("ix_shopping_items_owner_id", "owner_id"),
 )
 history = Table(
     "cooking_history",
     metadata,
     identity(),
+    Column("owner_id", String, ForeignKey("users.id", ondelete="CASCADE")),
     Column("recipe_id", String, ForeignKey("recipes.id"), nullable=False),
     Column("recipe_title", String, nullable=False),
     Column("servings", Integer, nullable=False),
     Column("cooked_at", String, nullable=False),
     Column("consumption_snapshot_json", JSON, nullable=False),
     CheckConstraint("servings BETWEEN 1 AND 8"),
+    Index("ix_cooking_history_owner_id", "owner_id"),
 )
 settings = Table(
     "store_settings",
     metadata,
     identity(),
+    Column("owner_id", String, ForeignKey("users.id", ondelete="CASCADE")),
     Column("seq", Integer, nullable=False),
     Column("removed_generated", Boolean, nullable=False),
     Column("pantry_seeded", Boolean, nullable=False),
+    Index("uq_store_settings_owner", "owner_id", unique=True),
+)
+users = Table(
+    "users",
+    metadata,
+    identity(),
+    Column("email", String, nullable=False),
+    Column("email_key", String, nullable=False, unique=True),
+    Column("password_hash", String, nullable=False),
+    Column("created_at", Integer, nullable=False),
+)
+sessions = Table(
+    "auth_sessions",
+    metadata,
+    Column("token_hash", String, primary_key=True),
+    Column("user_id", String, ForeignKey("users.id", ondelete="CASCADE")),
+    Column("created_at", Integer, nullable=False),
+    Column("last_seen_at", Integer, nullable=False),
+    Column("idle_expires_at", Integer, nullable=False),
+    Column("absolute_expires_at", Integer, nullable=False),
+    Column("revoked_at", Integer),
+    Index("ix_auth_sessions_user_id", "user_id"),
+)
+rate_limits = Table(
+    "auth_rate_limits",
+    metadata,
+    Column("bucket_hash", String, primary_key=True),
+    Column("window_start", Integer, nullable=False),
+    Column("attempts", Integer, nullable=False),
 )
 
 
@@ -153,7 +196,8 @@ class State:
 
 
 class SQLiteStore:
-    def __init__(self, database_url=None):
+    def __init__(self, database_url=None, owner_id=None):
+        self.owner_id = owner_id
         url = database_url or os.getenv("DATABASE_URL", "sqlite:///./freshfirst.db")
         options = {"connect_args": {"check_same_thread": False, "timeout": 30}}
         if url in ("sqlite://", "sqlite:///:memory:"):
@@ -175,6 +219,8 @@ class SQLiteStore:
 
         metadata.create_all(self.engine)
         with self.engine.begin() as connection:
+            migrate(connection)
+        with self.engine.begin() as connection:
             for table, values in ((ingredients, CATALOG.values()), (rules, RULES.values())):
                 for value in values:
                     connection.execute(
@@ -193,6 +239,14 @@ class SQLiteStore:
                 .on_conflict_do_nothing(index_elements=["id"])
             )
 
+    def scoped(self, owner_id):
+        scoped = object.__new__(SQLiteStore)
+        scoped.engine = self.engine
+        scoped.lock = self.lock
+        scoped.local = self.local
+        scoped.owner_id = owner_id
+        return scoped
+
     @property
     def state(self):
         if getattr(self.local, "state", None) is not None:
@@ -200,18 +254,28 @@ class SQLiteStore:
         with self.lock, self.engine.begin() as connection:
             return self._load(connection)
 
-    def next_id(self, prefix):
-        if getattr(self.local, "state", None) is None:
-            raise RuntimeError("IDs must be allocated inside a transaction")
-        self.local.state.seq += 1
-        return f"{prefix}_{self.local.state.seq}"
-
-    @staticmethod
-    def _load(connection):
+    def _load(self, connection):
         def rows(table):
-            return [dict(row) for row in connection.execute(select(table)).mappings()]
+            query = select(table)
+            if "owner_id" in table.c:
+                owner = (
+                    table.c.owner_id.is_(None)
+                    if self.owner_id is None
+                    else (table.c.owner_id == self.owner_id)
+                )
+                query = query.where(owner)
+            return [dict(row) for row in connection.execute(query).mappings()]
 
-        config = rows(settings)[0]
+        config_rows = rows(settings)
+        config = (
+            config_rows[0]
+            if config_rows
+            else {
+                "seq": 0,
+                "removed_generated": False,
+                "pantry_seeded": False,
+            }
+        )
         state = State(**{key: config[key] for key in ("seq", "removed_generated", "pantry_seeded")})
         for row in rows(pantry):
             row["quantity"] = row.pop("quantity_canonical")
@@ -236,8 +300,7 @@ class SQLiteStore:
         state.history.sort(key=lambda record: record.cooked_at, reverse=True)
         return state
 
-    @staticmethod
-    def _rows(state):
+    def _rows(self, state):
         result = {table.name: {} for table in metadata.tables.values()}
         for name, table in (
             ("pantry", pantry),
@@ -249,6 +312,8 @@ class SQLiteStore:
             collection = getattr(state, name)
             for item in collection.values() if isinstance(collection, dict) else collection:
                 row = item.model_dump(mode="json")
+                if "owner_id" in table.c:
+                    row["owner_id"] = self.owner_id
                 if table is pantry:
                     row["expiry_date"] = item.expiry_date
                 if table in (pantry, shopping):
@@ -268,8 +333,9 @@ class SQLiteStore:
                 if table is history:
                     row["consumption_snapshot_json"] = row.pop("consumed")
                 result[table.name][item.id] = row
-        result[settings.name]["state"] = dict(
-            id="state",
+        result[settings.name][self.owner_id or "state"] = dict(
+            id=f"state:{self.owner_id}" if self.owner_id else "state",
+            owner_id=self.owner_id,
             seq=state.seq,
             removed_generated=state.removed_generated,
             pantry_seeded=state.pantry_seeded,
@@ -289,7 +355,7 @@ class SQLiteStore:
                 if old is None:
                     connection.execute(table.insert().values(**row))
                 elif row != old:
-                    connection.execute(table.update().where(table.c.id == key).values(**row))
+                    connection.execute(table.update().where(table.c.id == row["id"]).values(**row))
 
     @contextmanager
     def transaction(self):
@@ -307,3 +373,9 @@ class SQLiteStore:
 
     def close(self):
         self.engine.dispose()
+
+    def next_id(self, prefix):
+        if getattr(self.local, "state", None) is None:
+            raise RuntimeError("IDs must be allocated inside a transaction")
+        self.local.state.seq += 1
+        return f"{prefix}_{uuid4().hex}"

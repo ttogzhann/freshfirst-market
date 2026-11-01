@@ -14,7 +14,7 @@ from ..models import (
     RecipeSummary,
     SubstitutionRule,
 )
-from .dependencies import ItemId, Service
+from .dependencies import Csrf, ItemId, PublicService, Service
 
 router = APIRouter()
 
@@ -25,7 +25,7 @@ router = APIRouter()
     operation_id="listIngredients",
     tags=["Catalog"],
 )
-def ingredients(service: Service):
+def ingredients(service: PublicService):
     return service.list_ingredients()
 
 
@@ -35,7 +35,7 @@ def ingredients(service: Service):
     operation_id="listSubstitutionRules",
     tags=["Catalog"],
 )
-def rules(service: Service):
+def rules(service: PublicService):
     return service.list_rules()
 
 
@@ -54,7 +54,7 @@ def recipes(
 @router.post(
     "/recipes/import", response_model=ImportReport, operation_id="importRecipes", tags=["Recipes"]
 )
-def import_recipes(service: Service):
+def import_recipes(service: Service, csrf: Csrf):
     return service.import_recipes()
 
 

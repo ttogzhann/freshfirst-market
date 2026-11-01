@@ -4,7 +4,7 @@ from pathlib import Path
 
 import httpx
 import pytest
-from conftest import ContractClient, Source, meal
+from conftest import ContractClient, Source, meal, register_test_account
 
 from app.errors import ServiceError
 from app.main import create_app
@@ -182,7 +182,8 @@ def test_startup_seeds_offline_baseline_without_live_import_or_page_read_fetches
     source = CountingSource([meal()])
     service = FreshService(source=source)
     with ContractClient(create_app(service)) as client:
-        assert len(client.get("/api/pantry").json()) == 12
+        register_test_account(client)
+        assert client.get("/api/pantry").json() == []
         for _ in range(3):
             assert len(client.get("/api/recipes").json()) == 15
     assert source.calls == 0

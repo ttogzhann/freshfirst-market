@@ -1,21 +1,27 @@
-# FreshFirst v1.0 backend contract. All endpoints are public (security: []).
+# FreshFirst API contract. Personal state and all mutations require an account session.
 openapi: 3.0.3
 info:
   title: FreshFirst API
   version: 1.0.0
   description: >-
-    Live FastAPI contract for the FreshFirst React/TypeScript application. The frontend's
-    FreshService uses the typed HTTP adapter; the backend implements these unauthenticated `/api`
-    operations. operationId matches each FreshService method. JSON response bodies preserve
-    frontend field names and return bare arrays where the service returns arrays. FreshFirst v1.0
-    is local and single-user, with no login, tokens, API keys, sessions or user tables.
+    Live FastAPI contract for the FreshFirst React/TypeScript application. The original 23 domain
+    operationIds and response semantics remain supported. Account-private reads require an
+    HttpOnly freshfirst_session cookie. Mutating requests also require X-CSRF-Token; this proof is
+    returned by restoreSession and held in application memory, not browser storage. Registration
+    and login use an anonymous pre-auth session and rotate it on success. Session IDs are opaque,
+    server-side hashed, and expire after 12 idle hours or 30 absolute days. Cookie SameSite is Lax
+    and Secure is enabled for HTTPS/production. Credentialed CORS accepts only configured explicit
+    origins; the local defaults are localhost:5173 and 127.0.0.1:5173.
 servers:
   - url: /api
     description: >-
       Relative API base URL served by FastAPI; configure the backend origin separately for local
       cross-origin frontend development.
-security: []
+security:
+  - SessionCookie: []
+    CsrfToken: []
 tags:
+  - name: Authentication
   - name: Catalog
   - name: Pantry
   - name: Recipes
@@ -24,6 +30,109 @@ tags:
   - name: Cooking
   - name: Dashboard
 paths:
+  /auth/session:
+    get:
+      operationId: restoreSession
+      summary: Restore the current session and obtain an in-memory CSRF proof
+      tags:
+        - Authentication
+      security: []
+      responses:
+        '200':
+          description: Current account state and a request-bound CSRF proof. Response is no-store.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSessionResponse'
+        '500':
+          $ref: '#/components/responses/ServerError'
+      description: >-
+        Creates an anonymous pre-auth session when needed. The opaque session identifier is set
+        only as an HttpOnly cookie; the CSRF proof is returned in this response and is never stored
+        by the server.
+  /auth/register:
+    post:
+      operationId: registerAccount
+      summary: Register an account and rotate into its session
+      tags:
+        - Authentication
+      responses:
+        '201':
+          description: Account created and authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: An account with the normalized email already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/ServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthCredentials'
+  /auth/login:
+    post:
+      operationId: loginAccount
+      summary: Authenticate credentials and rotate the session
+      tags:
+        - Authentication
+      responses:
+        '200':
+          description: Authenticated account and a new CSRF proof.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Generic failure for both unknown email and incorrect password.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/ServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthCredentials'
+  /auth/logout:
+    post:
+      operationId: logoutAccount
+      summary: Revoke the current server-side session
+      tags:
+        - Authentication
+      responses:
+        '204':
+          description: Session revoked and cookie cleared.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/ServerError'
   /ingredients:
     get:
       operationId: listIngredients
@@ -66,7 +175,8 @@ paths:
       summary: List pantry entries including expired entries
       tags:
         - Pantry
-      security: []
+      security:
+        - SessionCookie: []
       responses:
         '200':
           description: Success.
@@ -83,7 +193,6 @@ paths:
       summary: Add or merge a pantry entry
       tags:
         - Pantry
-      security: []
       responses:
         '200':
           description: Success.
@@ -116,7 +225,6 @@ paths:
       summary: Replace a pantry entry
       tags:
         - Pantry
-      security: []
       responses:
         '200':
           description: Success.
@@ -155,7 +263,6 @@ paths:
       summary: Delete a pantry entry
       tags:
         - Pantry
-      security: []
       responses:
         '204':
           description: Deleted. No response body.
@@ -179,7 +286,8 @@ paths:
       summary: Search and rank recipes
       tags:
         - Recipes
-      security: []
+      security:
+        - SessionCookie: []
       responses:
         '200':
           description: Success.
@@ -222,7 +330,8 @@ paths:
       summary: Get a recipe with scaled demands and substitute suggestions
       tags:
         - Recipes
-      security: []
+      security:
+        - SessionCookie: []
       responses:
         '200':
           description: Success.
@@ -277,7 +386,6 @@ paths:
       summary: Import supported recipes from TheMealDB
       tags:
         - Recipes
-      security: []
       responses:
         '422':
           $ref: '#/components/responses/ValidationError'
@@ -302,7 +410,8 @@ paths:
       summary: Get the basket and consolidated demands
       tags:
         - Basket
-      security: []
+      security:
+        - SessionCookie: []
       responses:
         '200':
           description: Success.
@@ -321,7 +430,6 @@ paths:
       summary: Add a recipe or update its selected servings
       tags:
         - Basket
-      security: []
       responses:
         '200':
           description: Success.
@@ -351,7 +459,6 @@ paths:
       summary: Update servings or confirmed substitutions
       tags:
         - Basket
-      security: []
       responses:
         '200':
           description: Success.
@@ -384,7 +491,6 @@ paths:
       summary: Remove a basket item
       tags:
         - Basket
-      security: []
       responses:
         '204':
           description: Deleted. No response body.
@@ -408,7 +514,8 @@ paths:
       summary: Get the saved shopping list
       tags:
         - Shopping
-      security: []
+      security:
+        - SessionCookie: []
       responses:
         '200':
           description: Success.
@@ -426,7 +533,6 @@ paths:
       summary: Regenerate shopping needs from the entire basket
       tags:
         - Shopping
-      security: []
       responses:
         '200':
           description: Success.
@@ -466,7 +572,6 @@ paths:
       summary: Add a manual shopping item
       tags:
         - Shopping
-      security: []
       responses:
         '201':
           description: Success.
@@ -490,7 +595,6 @@ paths:
       summary: Update quantity or purchased status
       tags:
         - Shopping
-      security: []
       responses:
         '200':
           description: Success.
@@ -529,7 +633,6 @@ paths:
       summary: Delete a shopping item
       tags:
         - Shopping
-      security: []
       responses:
         '204':
           description: Deleted. No response body.
@@ -553,7 +656,6 @@ paths:
       summary: Confirm received quantity and transfer a purchased item
       tags:
         - Shopping
-      security: []
       responses:
         '200':
           description: Success.
@@ -601,7 +703,6 @@ paths:
       summary: Preview deductions without changing inventory
       tags:
         - Cooking
-      security: []
       responses:
         '200':
           description: Success.
@@ -631,7 +732,6 @@ paths:
       summary: Deduct ingredients and record cooking atomically
       tags:
         - Cooking
-      security: []
       responses:
         '201':
           description: Success.
@@ -670,7 +770,8 @@ paths:
       summary: List cooking history newest first
       tags:
         - Cooking
-      security: []
+      security:
+        - SessionCookie: []
       responses:
         '200':
           description: Success.
@@ -688,7 +789,8 @@ paths:
       summary: Get pantry statistics, recommendations and recent history
       tags:
         - Dashboard
-      security: []
+      security:
+        - SessionCookie: []
       responses:
         '200':
           description: Success.
@@ -703,7 +805,89 @@ paths:
         expired means before today. Up to four recommendations: ranked recipes using expiring stock
         if any, otherwise the overall ranking. Up to five recent cooking records.
 components:
+  securitySchemes:
+    SessionCookie:
+      type: apiKey
+      in: cookie
+      name: freshfirst_session
+      description: >-
+        Opaque HttpOnly session cookie. Invalid or missing sessions return 401. SameSite=Lax;
+        Secure for HTTPS/production; 12-hour idle and 30-day absolute expiry.
+    CsrfToken:
+      type: apiKey
+      in: header
+      name: X-CSRF-Token
+      description: >-
+        Required alongside SessionCookie for all state-changing operations; invalid or missing
+        proofs return 403. The server derives proofs and does not persist them.
   schemas:
+    AuthCredentials:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 3
+          maxLength: 254
+          description: Trimmed, case-insensitive uniqueness/login; no provider-alias rewriting.
+        password:
+          type: string
+          minLength: 12
+          maxLength: 128
+          description: Password is never silently truncated.
+    Account:
+      type: object
+      required:
+        - id
+        - email
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+          format: email
+    AuthSessionResponse:
+      type: object
+      required:
+        - authenticated
+        - user
+        - csrf_token
+      properties:
+        authenticated:
+          type: boolean
+        user:
+          type: object
+          nullable: true
+          required:
+            - id
+            - email
+          properties:
+            id:
+              type: string
+            email:
+              type: string
+              format: email
+        csrf_token:
+          type: string
+          minLength: 40
+          maxLength: 64
+          description: Keep in application memory only; do not persist or log.
+    AuthResponse:
+      type: object
+      required:
+        - user
+        - csrf_token
+      properties:
+        user:
+          $ref: '#/components/schemas/Account'
+        csrf_token:
+          type: string
+          minLength: 40
+          maxLength: 64
+          description: Keep in application memory only; do not persist or log.
     CanonicalUnit:
       type: string
       enum:
@@ -1286,6 +1470,29 @@ components:
         ServiceError(status, code, message). All errors, including request validation errors, use
         this envelope rather than the default FastAPI detail body.
   responses:
+    Unauthorized:
+      description: Missing, expired, or revoked account session (AUTH_REQUIRED).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Invalid CSRF proof or untrusted Origin (CSRF_FAILED).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    TooManyRequests:
+      description: Authentication rate limit exceeded (RATE_LIMITED); includes Retry-After.
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+            minimum: 1
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
     NotFound:
       description: Resource not found (NOT_FOUND).
       content:

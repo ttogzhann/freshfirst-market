@@ -10,7 +10,7 @@ from contextlib import contextmanager
 from pathlib import Path
 
 import httpx
-from conftest import ContractClient
+from conftest import ContractClient, register_test_account
 
 from app.main import create_app
 from app.services.fresh import FreshService
@@ -38,7 +38,11 @@ uvicorn.run('app.main:app', host='127.0.0.1', port=int(sys.argv[1]))
         process = subprocess.Popen(
             [sys.executable, "-c", script, str(port), "offline" if offline else "live"],
             cwd=Path(__file__).resolve().parents[1],
-            env={**os.environ, "DATABASE_URL": database_url},
+            env={
+                **os.environ,
+                "DATABASE_URL": database_url,
+                "FRESHFIRST_AUTH_SECRET": "isolated backend restart test secret 32 bytes",
+            },
             stdout=log,
             stderr=subprocess.STDOUT,
         )
@@ -46,7 +50,7 @@ uvicorn.run('app.main:app', host='127.0.0.1', port=int(sys.argv[1]))
             with httpx.Client(base_url=f"http://127.0.0.1:{port}", timeout=2) as client:
                 while True:
                     try:
-                        response = client.get("/api/recipes")
+                        response = client.get("/api/ingredients")
                         response.raise_for_status()
                         break
                     except httpx.HTTPError:
@@ -76,8 +80,11 @@ def saved_http_state(client):
 def test_normal_http_offline_startup_restart_and_failure(tmp_path):
     database = tmp_path / "normal.db"
     url = f"sqlite:///{database}"
+    session_token = None
     with normal_server(url, tmp_path) as (client, elapsed):
         assert elapsed < 15
+        register_test_account(client, "startup@example.com")
+        session_token = client.cookies.get("freshfirst_session")
         details = saved_http_state(client)["recipes"]
         expected = {
             "53137": {"milk": 1000, "sugar": 300, "baking_powder": 1.25, "vanilla": 5},
@@ -116,6 +123,20 @@ def test_normal_http_offline_startup_restart_and_failure(tmp_path):
         assert saved_http_state(client) == before
     with normal_server(url, tmp_path) as (client, elapsed):
         assert elapsed < 15
+        client.cookies.set(
+            "freshfirst_session",
+            session_token,
+            domain="127.0.0.1",
+            path="/api",
+        )
+        restored = client.get("/api/auth/session")
+        assert restored.json()["authenticated"] is True
+        client.headers.update(
+            {
+                "X-CSRF-Token": restored.json()["csrf_token"],
+                "Origin": "http://localhost:5173",
+            }
+        )
         assert saved_http_state(client) == before
     with sqlite3.connect(database) as connection:
         assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
@@ -139,6 +160,7 @@ def test_actual_adapter_captured_import_preserves_basket_and_ids():
     with httpx.Client(transport=httpx.MockTransport(respond)) as upstream:
         service.source = TheMealDBSource(upstream)
         with ContractClient(create_app(service)) as client:
+            register_test_account(client, "import@example.com")
             assert (
                 client.post(
                     "/api/basket/items", json={"recipe_id": "rec_53137", "servings": 4}

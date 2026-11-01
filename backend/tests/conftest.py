@@ -13,7 +13,13 @@ from referencing.jsonschema import DRAFT4
 
 # Importing app.main constructs its default app. Keep collection isolated from
 # any developer database before per-test DATABASE_URL fixtures are available.
-with patch.dict(os.environ, {"DATABASE_URL": "sqlite:///:memory:"}):
+with patch.dict(
+    os.environ,
+    {
+        "DATABASE_URL": "sqlite:///:memory:",
+        "FRESHFIRST_AUTH_SECRET": "isolated test app auth secret at least 32 bytes",
+    },
+):
     from app.main import create_app
     from app.services.fresh import FreshService
 
@@ -26,9 +32,32 @@ REGISTRY = Registry().with_resource(
 )
 
 
+def register_test_account(client, email="test@example.com", password="correct horse battery"):
+    restored = client.get("/api/auth/session")
+    assert restored.status_code == 200, restored.text
+    response = client.post(
+        "/api/auth/register",
+        json={"email": email, "password": password},
+        headers={
+            "X-CSRF-Token": restored.json()["csrf_token"],
+            "Origin": "http://localhost:5173",
+        },
+    )
+    assert response.status_code == 201, response.text
+    client.user_id = response.json()["user"]["id"]
+    client.headers.update(
+        {
+            "X-CSRF-Token": response.json()["csrf_token"],
+            "Origin": "http://localhost:5173",
+        }
+    )
+    return response.json()
+
+
 @pytest.fixture(autouse=True)
 def isolated_database(monkeypatch, tmp_path):
     monkeypatch.setenv("DATABASE_URL", f"sqlite:///{tmp_path / 'test.db'}")
+    monkeypatch.setenv("FRESHFIRST_AUTH_SECRET", "isolated test app auth secret at least 32 bytes")
 
 
 def contract_refs(schema):
@@ -121,6 +150,7 @@ def client(service):
     with ContractClient(
         create_app(service, startup_import=False), raise_server_exceptions=False
     ) as client:
+        register_test_account(client)
         yield client
 
 

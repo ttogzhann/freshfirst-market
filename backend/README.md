@@ -1,6 +1,6 @@
 # FreshFirst backend
 
-FastAPI implements the 23 operations in root `openapi.yaml`, under `/api`, with no authentication. The frontend uses this server through its existing typed HTTP service.
+FastAPI implements the 23 original domain operations in root `openapi.yaml`, plus registration, login, logout and session restoration. Account-bound API calls use opaque server-side sessions; the frontend auth integration is a separate milestone.
 
 ## Run locally
 
@@ -16,7 +16,7 @@ Swagger UI: <http://127.0.0.1:8000/docs>. Contract: <http://127.0.0.1:8000/opena
 
 For environments that require the operating system's certificate store, set `UV_SYSTEM_CERTS=true` before `uv sync` (PowerShell: `$env:UV_SYSTEM_CERTS = "true"`). The external recipe client uses Python's system trust configuration and never disables TLS verification.
 
-The catalog contains 77 ingredient identities and ten context-limited substitution rules. Twelve sample pantry entries are seeded once per database relative to the initial local date, including an expired entry. Deleting all pantry entries does not re-seed them on restart. `FRESHFIRST_EXPIRY_DAYS` sets the near-expiry threshold before startup; default is three days. Expired items remain visible but supply zero usable stock.
+The catalog contains 77 ingredient identities and ten context-limited substitution rules. Newly registered accounts start with empty pantry, basket, shopping list and cooking history. Existing ownerless personal records are preserved during migration but quarantined and inaccessible to every account; they are never assigned to the first registrant. `FRESHFIRST_EXPIRY_DAYS` sets the near-expiry threshold before startup; default is three days. Expired items remain visible but supply zero usable stock.
 
 Configure matching frontend/backend thresholds before launch. For five days in PowerShell, set `$env:FRESHFIRST_EXPIRY_DAYS="5"` in the backend shell, and set `VITE_FRESHFIRST_EXPIRY_DAYS=5` in `frontend/.env.local` or the frontend shell environment. Restart both applications; rebuild production frontend assets after changing the Vite value. Both must match because this release has no configuration endpoint or automatic mismatch detection. Missing values default to 3; 0 includes today only. Supplied environment values must contain decimal digits only, from 0 through 9007199254740991 (the shared JavaScript exact-integer limit). Blank, negative, fractional, `NaN`, `Infinity` or nonnumeric values fail early with the variable name; injected `FreshService` thresholds are validated too. Today and the threshold day are inclusive; yesterday always supplies zero stock. This only changes urgency/status/counts and does not alter saved dates, stock availability or imply a food-safety guarantee.
 
@@ -87,7 +87,7 @@ uv run ruff format --check app tests
 uv run python -m compileall -q app
 ```
 
-Tests validate the authored OpenAPI document, compare registered operation IDs/methods/paths, and validate actual success and error responses against its schemas for all 23 operations. They cover input errors, matching, scaling, substitutions, expiry boundaries, basket aggregation, shopping edits, purchase idempotence, simultaneous inventory writes, rollback after injected failures, source normalization/upserts and source failures. Unit/API tests use injected sources and do not need network access. Live importing is checked separately.
+Tests validate the authored OpenAPI document, compare registered operation IDs/methods/paths, and validate actual success and error responses against its schemas for all 27 operations (the original 23 domain operations plus four authentication operations). They cover input errors, matching, scaling, substitutions, expiry boundaries, basket aggregation, shopping edits, purchase idempotence, simultaneous inventory writes, rollback after injected failures, account/session lifecycle, CSRF, rate limits, two-account ownership isolation, migration preservation/quarantine and source failures. Unit/API tests use injected sources and do not need network access. Live importing is checked separately.
 
 ## SQLite setup, migration and backups
 
@@ -95,17 +95,23 @@ From `backend/`, install dependencies using `uv sync --locked`. Configure the UR
 
 ```powershell
 $env:DATABASE_URL = "sqlite:///C:/path/to/freshfirst.db"
+$env:FRESHFIRST_AUTH_SECRET = "replace with a stable secret of at least 32 bytes"
+$env:FRESHFIRST_TRUSTED_ORIGINS = "http://localhost:5173"
 uv run uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 The default is `sqlite:///./freshfirst.db`, relative to the process working directory. Use the same URL and working directory after restart; changing them selects a different database. The parent directory must exist and be writable. SQLite files and journals are ignored by Git. `sqlite:///:memory:` is available for isolated tests only; omit it for durable storage. No `.env` loader is added: set the actual environment variable in your shell/process manager.
 
-This is the initial SQLite schema: SQLAlchemy creates the tables automatically on startup. No separate migration command is required. The model includes the eight specification tables plus `store_settings` for durable ID allocation, the one-time pantry seed marker, and removed-generated-line edit protection. Quantities use canonical-unit numeric columns; basket substitutions and history consumption snapshots use JSON. API field names remain unchanged. Catalog and reviewed substitution rules are seeded with conflict-safe inserts. Startup initializes the packaged missing-only baseline through the strict TheMealDB normalizer; explicit live import upserts by unique external ID. No synthetic production recipes are added. Offline restarts preserve all existing recipes and saved state.
+`FRESHFIRST_AUTH_SECRET` is required, must contain at least 32 bytes, and must remain identical across workers and restarts because it derives CSRF proofs. `FRESHFIRST_TRUSTED_ORIGINS` is a comma-separated allowlist of complete browser origins; wildcards are rejected. The local default allows `http://localhost:5173` and `http://127.0.0.1:5173`. Configure the real frontend origin in each deployment. Credentialed CORS is restricted to that list.
 
-The former in-memory store has no disk data to migrate. Existing browser mock/localStorage data is also not migrated. Back up an existing SQLite database with the application stopped before changing schema or moving the file; restore it by pointing `DATABASE_URL` at the copied file. `create_all` initializes missing tables but is not an upgrade engine for future schema changes. Future incompatible schema changes require an explicit versioned migration; do not delete an existing file to upgrade it.
+The server issues an HttpOnly, SameSite=Lax session cookie. HTTPS or `FRESHFIRST_ENV=production`/`prod` enables Secure cookies. Call `GET /api/auth/session` first to restore the current session and receive its CSRF token; send that token as `X-CSRF-Token` and the allowed `Origin` on registration/login and all mutations. Catalog, recipe content and substitution-rule reads are public; account-derived/matching endpoints and all mutations, including recipe import, require authentication. Passwords are hashed with Argon2id; raw session IDs and CSRF proofs are not persisted.
+
+SQLite applies numbered migrations transactionally at startup. Migration v1 adds account/session tables and ownership columns, preserves existing ownerless personal rows as quarantined data, and replaces global pantry/basket uniqueness with owner-scoped constraints. New accounts are initialized with empty personal state. The remaining tables include the shared catalog/recipes/rules, cooking history and account-specific settings. Quantities use canonical-unit numeric columns; basket substitutions and history consumption snapshots use JSON. Catalog and reviewed substitution rules are seeded with conflict-safe inserts. Startup initializes the packaged missing-only recipe baseline through the strict TheMealDB normalizer; explicit live import upserts by unique external ID.
+
+Existing browser mock/localStorage data is not migrated. Back up an existing SQLite database with the application stopped before changing schema or moving the file; restore it by pointing `DATABASE_URL` at the copied file. Do not delete an existing file to upgrade it; future incompatible schema changes require a new versioned migration.
 
 SQLite serializes operations with a 30-second lock timeout. This is appropriate for the local single-user application. Keep the active database on a local disk; avoid simultaneous access to cloud-synced copies from different machines.
 
-Persistence verification: `uv run pytest -q tests/test_persistence.py` checks a new Python process reading the same file, every persisted entity and shopping edit marker, repeated imports and transfer retries after restart, one-time seeds even after pantry deletion, rollback after SQL writes have already modified inventory, and concurrent cooks/transfers through six independent SQLAlchemy engines. The full suite also checks expired-stock exclusion, all 23 API operations and unchanged response schemas.
+Persistence verification: `uv run pytest -q tests/test_persistence.py` checks a new Python process reading the same file, every persisted entity and shopping edit marker, repeated imports and transfer retries after restart, one-time seeds even after pantry deletion, rollback after SQL writes have already modified inventory, and concurrent cooks/transfers through six independent SQLAlchemy engines. The full suite also checks expired-stock exclusion, all 27 API operations and unchanged response schemas for the original domain operations.
 
 Baseline verification: `uv run --locked pytest -q tests/test_offline_baseline.py` checks production bytes/provenance, exact quantities and metadata, offline default startup, separate-process restart, duplicate prevention, newer/extra recipes and user-state preservation, malformed-package rollback and explicit live-import failure. Existing strict negative tests remain in `tests/test_real_recipe_baseline.py`.

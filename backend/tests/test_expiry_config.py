@@ -4,7 +4,7 @@ import sys
 from datetime import date
 
 import pytest
-from conftest import ContractClient, Source, meal, pantry
+from conftest import ContractClient, Source, meal, pantry, register_test_account
 
 from app.config import expiry_days
 from app.main import create_app
@@ -102,6 +102,7 @@ def test_configured_http_boundaries_and_expired_stock(threshold, count, urgent):
     )
     service.import_recipes()
     with ContractClient(create_app(service, startup_import=False)) as client:
+        register_test_account(client)
         for identity, quantity, unit, expiry in [
             ("pasta", 100, "g", "2026-10-19"),
             ("milk", 100, "ml", "2026-10-20"),
@@ -124,9 +125,10 @@ def test_configured_http_boundaries_and_expired_stock(threshold, count, urgent):
         assert [(row["ingredient_id"], row["quantity"]) for row in shopping] == [("pasta", 100)]
         request = {"recipe_id": "rec_boundary", "servings": 1, "substitutions": []}
         assert not client.post("/api/cooking/preview", json=request).json()["can_cook"]
-        before = service.state
+        account_service = service.for_owner(client.user_id)
+        before = account_service.state
         assert client.post("/api/cooking/confirm", json=request).status_code == 409
-        assert service.state == before
+        assert account_service.state == before
         # Still editable; insufficient near-expiry stock must not claim a usable ingredient.
         item = next(
             row for row in client.get("/api/pantry").json() if row["ingredient_id"] == "milk"

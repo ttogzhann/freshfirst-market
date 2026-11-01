@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from ..models import CookingRecord, CookPreview, CookRequest
-from .dependencies import Service
+from .dependencies import Csrf, Service
 
 router = APIRouter(prefix="/cooking", tags=["Cooking"])
 
@@ -17,7 +17,7 @@ def preview(service: Service, data: CookRequest):
 
 
 @router.post("/confirm", response_model=CookingRecord, status_code=201, operation_id="confirmCook")
-def confirm(service: Service, data: CookRequest):
+def confirm(service: Service, data: CookRequest, csrf: Csrf):
     return service.confirm_cook(data)
 
 

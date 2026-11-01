@@ -56,6 +56,15 @@ class FreshService:
     def state(self):
         return self.store.state
 
+    def for_owner(self, owner_id):
+        service = object.__new__(FreshService)
+        service.expiry_days = self.expiry_days
+        service.store = self.store.scoped(owner_id)
+        service.source = self.source
+        service.today = self.today
+        service.import_lock = self.import_lock
+        return service
+
     def seed_pantry(self):
         with self.store.transaction():
             if self.state.pantry_seeded:
@@ -219,11 +228,9 @@ class FreshService:
             ):
                 raise invalid("The selected substitute has insufficient usable stock")
 
-    @atomic
     def list_ingredients(self):
         return list(CATALOG.values())
 
-    @atomic
     def list_rules(self):
         return list(RULES.values())
 

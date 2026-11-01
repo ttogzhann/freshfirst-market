@@ -8,9 +8,16 @@ from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+os.environ.setdefault("FRESHFIRST_AUTH_SECRET", "isolated frontend HTTP test secret 32 bytes")
 import uvicorn
 
-with patch.dict(os.environ, {"DATABASE_URL": "sqlite:///:memory:"}):
+with patch.dict(
+    os.environ,
+    {
+        "DATABASE_URL": "sqlite:///:memory:",
+        "FRESHFIRST_AUTH_SECRET": "isolated frontend HTTP test secret 32 bytes",
+    },
+):
     from app.main import create_app
     from app.services.fresh import FreshService
 

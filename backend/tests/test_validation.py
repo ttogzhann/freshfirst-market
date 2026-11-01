@@ -123,10 +123,10 @@ def test_null_patch_rejected_and_empty_patch_kept(client):
 
 
 def test_unexpected_errors_use_contract_envelope(client, service, monkeypatch):
-    def fail():
+    def fail(_service):
         raise RuntimeError("Private failure detail")
 
-    monkeypatch.setattr(service, "dashboard", fail)
+    monkeypatch.setattr(type(service), "dashboard", fail)
     response = client.get("/api/dashboard")
     assert response.status_code == 500
     assert response.json()["code"] == "INTERNAL_ERROR"

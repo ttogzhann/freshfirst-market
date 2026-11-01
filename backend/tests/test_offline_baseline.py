@@ -7,7 +7,7 @@ import sys
 from copy import deepcopy
 
 import pytest
-from conftest import ContractClient, Source, meal
+from conftest import ContractClient, Source, meal, register_test_account
 from sqlalchemy import func, select
 from test_real_recipe_baseline import EXPECTED_LINES, FIXTURES
 
@@ -51,6 +51,7 @@ def test_packaged_bytes_and_exact_recipe_metadata():
 def test_default_offline_startup_and_separate_process_restart(monkeypatch):
     monkeypatch.setattr(TheMealDBSource, "meals", blocked_source)
     with ContractClient(create_app()) as client:
+        register_test_account(client, "offline@example.com")
         details = [client.get(f"/api/recipes/rec_{i}").json() for i in EXPECTED_LINES]
         assert all(d["ingredients"] and d["instructions"] for d in details)
         service = client.app.state.service
@@ -173,6 +174,7 @@ def test_malformed_second_record_is_visible_and_atomic(monkeypatch, tmp_path, co
 def test_explicit_live_import_upsert_and_source_failure(monkeypatch):
     service = FreshService(seed=False)
     with ContractClient(create_app(service)) as client:
+        register_test_account(client, "import-offline@example.com")
         before = service.state
         service.source = Source(list(PackagedMealSource().meals()))
         for _ in range(2):

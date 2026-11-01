@@ -4,6 +4,10 @@ from openapi_spec_validator import validate
 
 from app.main import create_app
 from app.models import (
+    Account,
+    AuthCredentials,
+    AuthResponse,
+    AuthSessionResponse,
     BasketInput,
     BasketItem,
     BasketItemWithRecipe,
@@ -52,11 +56,22 @@ def test_authored_contract_valid_and_all_operations_registered(service):
         for method, op in methods.items()
     }
     assert actual == expected
-    assert len(actual) == 23
-    assert CONTRACT["security"] == []
-    assert "securitySchemes" not in generated.get("components", {})
-    assert all(
-        not op.get("security") for methods in generated["paths"].values() for op in methods.values()
+    assert len(actual) == 27
+    expected_domain_ids = {
+        op["operationId"]
+        for path, methods in CONTRACT["paths"].items()
+        if not path.startswith("/auth/")
+        for op in methods.values()
+    }
+    assert len(expected_domain_ids) == 23
+    assert CONTRACT["security"] == [{"SessionCookie": [], "CsrfToken": []}]
+    assert set(CONTRACT["components"]["securitySchemes"]) == {"SessionCookie", "CsrfToken"}
+    assert CONTRACT["paths"]["/ingredients"]["get"]["security"] == []
+    assert CONTRACT["paths"]["/substitution-rules"]["get"]["security"] == []
+    assert CONTRACT["paths"]["/recipes"]["get"]["security"] == [{"SessionCookie": []}]
+    assert (
+        CONTRACT["paths"]["/pantry"]["post"].get("security", CONTRACT["security"])
+        == CONTRACT["security"]
     )
 
 
@@ -92,10 +107,16 @@ def test_every_object_schema_has_a_transport_model():
         SubstitutionRule,
         SubstitutionSuggestion,
         TransferInput,
+        Account,
+        AuthCredentials,
+        AuthResponse,
+        AuthSessionResponse,
     ]
-    assert set(CONTRACT["components"]["schemas"]) - {"InputUnit", "CanonicalUnit", "Servings"} <= {
-        m.__name__ for m in models
-    }
+    assert set(CONTRACT["components"]["schemas"]) - {
+        "InputUnit",
+        "CanonicalUnit",
+        "Servings",
+    } <= {m.__name__ for m in models}
 
 
 def test_all_23_endpoints_with_real_response_schema_validation(client):
@@ -148,4 +169,11 @@ def test_all_23_endpoints_with_real_response_schema_validation(client):
     assert client.post("/api/cooking/confirm", json=req).status_code == 201
     assert len(client.get("/api/cooking/history").json()) == 1
     assert client.get("/api/dashboard").status_code == 200
-    assert len(client.operations) == 23
+    domain_ids = {
+        operation["operationId"]
+        for path, methods in CONTRACT["paths"].items()
+        if not path.startswith("/auth/")
+        for operation in methods.values()
+    }
+    assert len(domain_ids) == 23
+    assert domain_ids <= client.operations

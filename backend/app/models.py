@@ -3,7 +3,9 @@
 from datetime import date, datetime
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StrictBool, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, field_validator, model_validator
+
+from .validation import normalize_email
 
 CanonicalUnit = Literal["g", "ml", "pcs"]
 InputUnit = Literal["g", "kg", "ml", "l", "tsp", "tbsp", "pcs"]
@@ -243,3 +245,29 @@ class Error(Model):
     status: Annotated[int, Field(ge=400, le=599)]
     code: str
     message: str
+
+
+class AuthCredentials(Model):
+    email: Annotated[str, Field(strict=True, min_length=3, max_length=254)]
+    password: Annotated[str, Field(strict=True, min_length=12, max_length=128)]
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def valid_email(cls, value):
+        return normalize_email(value)[0]
+
+
+class Account(Model):
+    id: str
+    email: str
+
+
+class AuthSessionResponse(Model):
+    authenticated: StrictBool
+    user: Account | None
+    csrf_token: Annotated[str, Field(min_length=40, max_length=64)]
+
+
+class AuthResponse(Model):
+    user: Account
+    csrf_token: Annotated[str, Field(min_length=40, max_length=64)]
