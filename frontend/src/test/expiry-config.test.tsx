@@ -1,7 +1,9 @@
+import type { Context } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { parseExpiryDays } from "@/expiry-config";
+import type { AuthContextValue } from "@/auth/AuthContext";
 
 vi.mock("@tanstack/react-router", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@tanstack/react-router")>()),
@@ -15,12 +17,24 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-function show(page: React.ReactNode) {
+function show(page: React.ReactNode, authContext: Context<AuthContextValue | null>) {
+  const Provider = authContext.Provider;
   return render(
     <QueryClientProvider
       client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
     >
-      {page}
+      <Provider
+        value={{
+          status: "authenticated",
+          user: { id: "test-account", email: "test@example.com" },
+          restoreSession: async () => {},
+          register: async () => {},
+          login: async () => {},
+          logout: async () => {},
+        }}
+      >
+        {page}
+      </Provider>
     </QueryClientProvider>,
   );
 }
@@ -52,6 +66,7 @@ describe("expiry configuration", () => {
       vi.setSystemTime(new Date(2026, 9, 20, 12));
       const { createMockService } = await import("@/services/mock/mockService");
       const { setService } = await import("@/services");
+      const { AuthContext } = await import("@/auth/AuthContext");
       const { Pantry } = await import("@/routes/pantry");
       const { Dashboard } = await import("@/routes/index");
       const { RecipePage, Route } = await import("@/routes/recipes.$id");
@@ -103,7 +118,7 @@ describe("expiry configuration", () => {
           ? ["expired", "expiring", "expiring", "fresh", "fresh", "fresh"]
           : ["expired", "expiring", "expiring", "expiring", "expiring", "fresh"],
       );
-      const pantry = show(<Pantry />);
+      const pantry = show(<Pantry />, AuthContext);
       await screen.findByRole("button", { name: "Edit Pasta" });
       expect(screen.getByRole("button", { name: "Edit Pasta" })).toBeEnabled();
       expect(screen.getByText("Pasta").closest(".shadow-card")).toHaveTextContent("Expired");
@@ -136,13 +151,13 @@ describe("expiry configuration", () => {
       pantry.unmount();
       const dashboard = await service.getDashboard();
       expect([dashboard.expired, dashboard.expiring_soon]).toEqual([1, threshold === 3 ? 2 : 4]);
-      const dash = show(<Dashboard />);
+      const dash = show(<Dashboard />, AuthContext);
       const label = await screen.findByText(`Expiring in ${threshold} days`);
       expect(label.parentElement).toHaveTextContent(String(threshold === 3 ? 2 : 4));
       expect(screen.getByText("Expired").parentElement).toHaveTextContent("1");
       dash.unmount();
       vi.spyOn(Route, "useParams").mockReturnValue({ id: "rec_boundary" });
-      show(<RecipePage />);
+      show(<RecipePage />, AuthContext);
       const urgent = threshold === 3 ? ["Milk", "Butter"] : ["Milk", "Butter", "Sugar", "Flour"];
       expect(
         await screen.findByText(

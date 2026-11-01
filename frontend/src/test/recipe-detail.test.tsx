@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-li
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { RecipePage, Route } from "@/routes/recipes.$id";
 import { Toaster } from "@/components/ui/sonner";
+import { AuthenticatedTestProvider } from "@/test/authenticated-test-provider";
 import { createMockService } from "@/services/mock/mockService";
 import { setService, type ConfirmedSubstitution, type FreshService } from "@/services";
 
@@ -31,8 +32,10 @@ function show() {
   });
   const page = render(
     <QueryClientProvider client={client}>
-      <RecipePage />
-      <Toaster />
+      <AuthenticatedTestProvider>
+        <RecipePage />
+        <Toaster />
+      </AuthenticatedTestProvider>
     </QueryClientProvider>,
   );
   return {
@@ -40,8 +43,10 @@ function show() {
     rerenderRoute: () =>
       page.rerender(
         <QueryClientProvider client={client}>
-          <RecipePage />
-          <Toaster />
+          <AuthenticatedTestProvider>
+            <RecipePage />
+            <Toaster />
+          </AuthenticatedTestProvider>
         </QueryClientProvider>,
       ),
   };

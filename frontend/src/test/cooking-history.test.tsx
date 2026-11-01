@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Dashboard } from "@/routes/index";
+import { AuthenticatedTestProvider } from "@/test/authenticated-test-provider";
 import { createMockService } from "@/services/mock/mockService";
 import { setService, type CookingRecord, type FreshService } from "@/services";
 import { recipeQuantity } from "@/components/fresh/recipe-quantity";
@@ -28,7 +29,9 @@ function show() {
     <QueryClientProvider
       client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
     >
-      <Dashboard />
+      <AuthenticatedTestProvider>
+        <Dashboard />
+      </AuthenticatedTestProvider>
     </QueryClientProvider>,
   );
 }

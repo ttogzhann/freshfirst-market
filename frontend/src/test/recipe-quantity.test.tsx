@@ -13,6 +13,7 @@ import { ShoppingPage } from "@/routes/shopping";
 import { Dashboard } from "@/routes/index";
 import { createHttpService } from "@/services/httpService";
 import { createMockService } from "@/services/mock/mockService";
+import { AuthenticatedTestProvider } from "@/test/authenticated-test-provider";
 import { setService, type AuthService, type FreshService } from "@/services";
 
 vi.mock("@tanstack/react-router", async (importOriginal) => ({
@@ -110,7 +111,7 @@ function show(page: React.ReactNode) {
         })
       }
     >
-      {page}
+      <AuthenticatedTestProvider>{page}</AuthenticatedTestProvider>
     </QueryClientProvider>,
   );
 }

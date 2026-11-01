@@ -58,6 +58,19 @@ curl -X POST http://127.0.0.1:8000/api/recipes/import
 
 Create/merge pantry and basket operations return 200; manual shopping creation and confirmed cooking return 201; deletes return an empty 204. Errors use `{status, code, message}` for 404, 409, 422, 500 and source-failure 502 responses as specified. Recipe detail accepts a URL-encoded JSON `substitutions` array and optional servings 1–8. `GET /recipes` supports query, category and match/title sorting.
 
+## Authentication rate limits
+
+Authentication uses fixed windows and returns HTTP `429` with the stable error code
+`RATE_LIMITED` when a limit is exceeded:
+
+- Registration: **5 attempts per client IP per hour**.
+- Login: **20 attempts per client IP per 15 minutes** and **10 attempts per normalized account per
+  15 minutes**. The account key is the trimmed, case-insensitive email identity used for login.
+
+The `Retry-After` response header is the number of seconds remaining until the exceeded window(s)
+reset and a retry may be permitted. These limits are enforced by the backend and do not depend on
+the frontend.
+
 ## Calculations and transactions
 
 - Models validate positive finite quantities, calendar dates, nonblank required text, compatible units and integer servings 1–8. Omitted patch fields are unchanged; explicit null is rejected where the contract does not allow it.

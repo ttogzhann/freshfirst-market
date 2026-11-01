@@ -54,6 +54,9 @@ paths:
     post:
       operationId: registerAccount
       summary: Register an account and rotate into its session
+      description: >-
+        Registration permits 5 attempts per client IP in each fixed one-hour window. Exceeding
+        this limit returns HTTP 429 with code RATE_LIMITED and a Retry-After header.
       tags:
         - Authentication
       responses:
@@ -89,6 +92,10 @@ paths:
     post:
       operationId: loginAccount
       summary: Authenticate credentials and rotate the session
+      description: >-
+        Login permits 20 attempts per client IP and 10 attempts per normalized account in each
+        fixed 15-minute window. Exceeding either limit returns HTTP 429 with code RATE_LIMITED and
+        a Retry-After header.
       tags:
         - Authentication
       responses:
@@ -1483,7 +1490,9 @@ components:
           schema:
             $ref: '#/components/schemas/Error'
     TooManyRequests:
-      description: Authentication rate limit exceeded (RATE_LIMITED); includes Retry-After.
+      description: >-
+        Authentication rate limit exceeded (RATE_LIMITED). Retry-After is the number of seconds
+        until the applicable fixed-window limit resets and retry may be permitted.
       headers:
         Retry-After:
           schema:

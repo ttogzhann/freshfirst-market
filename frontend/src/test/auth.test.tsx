@@ -12,6 +12,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { AuthBoundary } from "@/auth/AuthBoundary";
 import { AuthForm } from "@/auth/AuthForm";
 import { AuthProvider } from "@/auth/AuthProvider";
+import { Dashboard } from "@/routes/index";
 import { setService } from "@/services";
 import { createMockService } from "@/services/mock/mockService";
 import type { AuthService, AuthUser, FreshService } from "@/services";
@@ -42,7 +43,7 @@ const homeRoute = createRoute({
 const privateRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/private",
-  component: () => <p>Private account data</p>,
+  component: Dashboard,
 });
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -120,17 +121,58 @@ describe("authentication screens and route state", () => {
         }),
     );
     const service = authService(restore);
-    const listPantry = vi.spyOn(service, "listPantry");
+    const getDashboard = vi.spyOn(service, "getDashboard");
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    queryClient.setQueryData(["dashboard"], {
+      total_items: 999,
+      expiring_soon: 999,
+      expired: 999,
+      recommendations: [],
+      recent_history: [],
+    });
 
-    await renderAt("/private", service);
+    await renderAt("/private", service, queryClient);
 
     expect(await screen.findByRole("status")).toHaveTextContent("Restoring your session");
-    expect(screen.queryByText("Private account data")).not.toBeInTheDocument();
-    expect(listPantry).not.toHaveBeenCalled();
+    expect(screen.queryByText("Good to see you")).not.toBeInTheDocument();
+    expect(screen.queryByText("999")).not.toBeInTheDocument();
+    expect(getDashboard).not.toHaveBeenCalled();
 
     await act(async () => resolveSession({ authenticated: false, user: null }));
     expect(await screen.findByRole("heading", { name: "Welcome back" })).toBeVisible();
-    expect(listPantry).not.toHaveBeenCalled();
+    expect(screen.queryByText("999")).not.toBeInTheDocument();
+    expect(getDashboard).not.toHaveBeenCalled();
+  });
+
+  it("starts the dashboard request only after authenticated session restoration", async () => {
+    let resolveSession!: (session: { authenticated: boolean; user: AuthUser | null }) => void;
+    const restore = vi.fn(
+      () =>
+        new Promise<{ authenticated: boolean; user: AuthUser | null }>((resolve) => {
+          resolveSession = resolve;
+        }),
+    );
+    const service = authService(restore);
+    const getDashboard = vi.spyOn(service, "getDashboard");
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    queryClient.setQueryData(["dashboard"], {
+      total_items: 999,
+      expiring_soon: 999,
+      expired: 999,
+      recommendations: [],
+      recent_history: [],
+    });
+
+    await renderAt("/private", service, queryClient);
+    expect(await screen.findByRole("status")).toHaveTextContent("Restoring your session");
+    expect(screen.queryByText("999")).not.toBeInTheDocument();
+    expect(getDashboard).not.toHaveBeenCalled();
+
+    await act(async () => resolveSession({ authenticated: true, user: account }));
+    expect(await screen.findByText("Good to see you")).toBeVisible();
+    await waitFor(() => expect(getDashboard).toHaveBeenCalledOnce());
+    expect(screen.queryByText("999")).not.toBeInTheDocument();
+    expect(queryClient.getQueryData(["dashboard"])).not.toMatchObject({ total_items: 999 });
   });
 
   it("restores the account, clears cached data, and clears it again on logout", async () => {

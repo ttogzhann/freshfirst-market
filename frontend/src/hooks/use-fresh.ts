@@ -1,8 +1,18 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, type QueryKey } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useAuth } from "@/auth/useAuth";
 import { getService, ServiceError, type ConfirmedSubstitution } from "@/services";
 
 const svc = () => getService();
+
+function usePrivateQuery<TData>(queryKey: QueryKey, queryFn: () => Promise<TData>) {
+  const { status } = useAuth();
+  return useQuery({
+    queryKey,
+    queryFn,
+    enabled: status === "authenticated",
+  });
+}
 
 export function errorMessage(e: unknown): string {
   if (e instanceof ServiceError) return e.message;
@@ -16,26 +26,17 @@ export const useIngredients = () =>
     queryFn: () => svc().listIngredients(),
     staleTime: Infinity,
   });
-export const usePantry = () =>
-  useQuery({ queryKey: ["pantry"], queryFn: () => svc().listPantry() });
+export const usePantry = () => usePrivateQuery(["pantry"], () => svc().listPantry());
 export const useRecipes = (query?: string, category?: string, sort: "match" | "title" = "match") =>
-  useQuery({
-    queryKey: ["recipes", query, category, sort],
-    queryFn: () =>
-      svc().listRecipes({ ...(query ? { query } : {}), ...(category ? { category } : {}), sort }),
-  });
+  usePrivateQuery(["recipes", query, category, sort], () =>
+    svc().listRecipes({ ...(query ? { query } : {}), ...(category ? { category } : {}), sort }),
+  );
 export const useRecipe = (id: string, servings?: number, subs: ConfirmedSubstitution[] = []) =>
-  useQuery({
-    queryKey: ["recipe", id, servings, subs],
-    queryFn: () => svc().getRecipe(id, servings, subs),
-  });
-export const useBasket = () => useQuery({ queryKey: ["basket"], queryFn: () => svc().getBasket() });
-export const useShopping = () =>
-  useQuery({ queryKey: ["shopping"], queryFn: () => svc().getShoppingList() });
-export const useHistory = () =>
-  useQuery({ queryKey: ["history"], queryFn: () => svc().listHistory() });
-export const useDashboard = () =>
-  useQuery({ queryKey: ["dashboard"], queryFn: () => svc().getDashboard() });
+  usePrivateQuery(["recipe", id, servings, subs], () => svc().getRecipe(id, servings, subs));
+export const useBasket = () => usePrivateQuery(["basket"], () => svc().getBasket());
+export const useShopping = () => usePrivateQuery(["shopping"], () => svc().getShoppingList());
+export const useHistory = () => usePrivateQuery(["history"], () => svc().listHistory());
+export const useDashboard = () => usePrivateQuery(["dashboard"], () => svc().getDashboard());
 
 /** Mutation that toasts only after the service confirms, then refreshes every view. */
 export function useAction<TArgs, TOut>(

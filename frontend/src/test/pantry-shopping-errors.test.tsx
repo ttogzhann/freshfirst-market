@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { toast } from "sonner";
 import { Pantry } from "@/routes/pantry";
 import { ShoppingPage } from "@/routes/shopping";
+import { AuthenticatedTestProvider } from "@/test/authenticated-test-provider";
 import { createMockService } from "@/services/mock/mockService";
 import { ServiceError, setService, type FreshService } from "@/services";
 
@@ -23,7 +24,7 @@ function show(page: React.ReactNode) {
         })
       }
     >
-      {page}
+      <AuthenticatedTestProvider>{page}</AuthenticatedTestProvider>
     </QueryClientProvider>,
   );
 }

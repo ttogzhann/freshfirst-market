@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BasketPage } from "@/routes/basket";
 import { ShoppingPage } from "@/routes/shopping";
+import { AuthenticatedTestProvider } from "@/test/authenticated-test-provider";
 import { createMockService } from "@/services/mock/mockService";
 import { setService, type FreshService } from "@/services";
 
@@ -21,7 +22,7 @@ function show(page: React.ReactNode) {
         })
       }
     >
-      {page}
+      <AuthenticatedTestProvider>{page}</AuthenticatedTestProvider>
     </QueryClientProvider>,
   );
 }
