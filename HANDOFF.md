@@ -139,7 +139,7 @@ Do not start #56–#62 or create cloud resources in this step. The delivered ima
 
 ## Part 3 Issue #60 status - approval-gated AWS EC2 architecture
 
-- Candidate `6e34d8d89f9631f1e2e545c9d07d1c3e05a4691d5` adds only the allowed static architecture files: `deploy/aws/freshfirst-ec2.yaml` and `deploy/aws/README.md`.
+- Candidate `6e34d8d89f963f1e2e545c9d07d1c3e05a4691d5` adds only the allowed static architecture files: `deploy/aws/freshfirst-ec2.yaml` and `deploy/aws/README.md`.
 - The design is a single EC2 proof of concept with Caddy terminating HTTPS, private Compose app/PostgreSQL networking, health-gated startup, encrypted gp3 EBS persistence, generated Secrets Manager values, backup/restore guidance, scoped runtime IAM, and conditional GitHub OIDC deployment permissions for future Issue #61.
 - Public ingress is limited to HTTP/HTTPS 80/443. SSH and PostgreSQL are not exposed. No AWS resources, stacks, DNS, certificates, budgets, roles, credentials, or paid services were created or changed.
 - Static verification: `C:\Users\User\AppData\Roaming\Python\Python312\Scripts\uv.exe --system-certs tool run --from cfn-lint cfn-lint deploy/aws/freshfirst-ec2.yaml` exited 0 with no diagnostics; direct security assertions and `git diff --check` passed. Cost assumptions are region-explicit for `us-east-1`, with low/expected/high ranges, variable-cost caveats, source links, and a proposed $35 alert threshold.
