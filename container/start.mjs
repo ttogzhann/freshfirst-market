@@ -24,8 +24,14 @@ if (Buffer.byteLength(process.env.FRESHFIRST_AUTH_SECRET, "utf8") < 32) {
 }
 
 const dataDirectoryUrl = dataDirectory.replaceAll("\\", "/").replace(/\/+$/, "");
-if (!process.env.DATABASE_URL.startsWith(`sqlite:///${dataDirectoryUrl}/`)) {
-  console.error("DATABASE_URL must point to a SQLite file under the configured data directory.");
+const isSqlite = process.env.DATABASE_URL.startsWith("sqlite:");
+const isPostgres = /^(postgres|postgresql)(\+psycopg)?:\/\//.test(process.env.DATABASE_URL);
+if (isSqlite && !process.env.DATABASE_URL.startsWith(`sqlite:///${dataDirectoryUrl}/`)) {
+  console.error("SQLite DATABASE_URL must point to a file under the configured data directory.");
+  process.exit(1);
+}
+if (!isSqlite && !isPostgres) {
+  console.error("DATABASE_URL must use SQLite or PostgreSQL.");
   process.exit(1);
 }
 

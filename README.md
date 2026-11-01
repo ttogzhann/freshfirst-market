@@ -85,6 +85,34 @@ docker run --name freshfirst `
 
 Open `http://localhost:8000`. The image runs as an unprivileged user, exposes port `8000`, and has a `/healthz` check that requires both the SSR frontend and API to respond. `DATABASE_URL` defaults to the mounted `/data/freshfirst.db`. Supply a unique secret of at least 32 bytes at runtime; do not put it in a Dockerfile, image build argument, source file, or committed env file. Keep the same secret and named volume when recreating the container so persisted sessions and user data remain usable. `FRESHFIRST_TRUSTED_ORIGINS` must contain the exact browser origin(s); use `http://localhost:8000` for the local example and replace it with the real origin for a future TLS-terminated deployment. Only port `8000` is published; the internal Node SSR and FastAPI ports are loopback-only.
 
-To verify persistence, register and log in, add a pantry item, and reload the page. Stop and remove only the container (`docker stop freshfirst; docker rm freshfirst`), then rerun the same `docker run` command with the same secret and `freshfirst-data` volume. The session and pantry item should restore. Do not remove the named volume. These commands do not configure PostgreSQL, Compose, HTTPS, cloud resources, or deployment; those are later Part 3 stages and require their own issues and authorization. Local development commands above remain unchanged.
+To verify persistence, register and log in, add a pantry item, and reload the page. Stop and remove only the container (`docker stop freshfirst; docker rm freshfirst`), then rerun the same `docker run` command with the same secret and `freshfirst-data` volume. The session and pantry item should restore. Do not remove the named volume. These commands do not configure Compose, HTTPS, cloud resources, or deployment; those require their own issues and authorization. Local development commands above remain unchanged.
+
+## Run the production app with PostgreSQL (Part 3, stage 2)
+
+Compose runs the existing production image as `app` and PostgreSQL 16 as `db`. It does not start Vite or any development server. PostgreSQL is private to the Compose network; only the app port is published.
+
+From the repository root, create the ignored local environment file and replace both placeholder secrets:
+
+```powershell
+Copy-Item .env.example .env
+notepad .env
+docker compose up --build -d
+docker compose ps
+```
+
+The `db` service must show `healthy` before the app starts, and the app must eventually show `healthy` after its SSR and API checks pass. Open `http://localhost:8000`. The app uses the same-origin production gateway, PostgreSQL through `DATABASE_URL`, and the configured `FRESHFIRST_AUTH_SECRET` for sessions and CSRF proofs.
+
+Useful operational commands:
+
+```powershell
+docker compose logs --follow db app
+docker compose stop
+docker compose start
+docker compose down
+```
+
+`docker compose down` preserves the named `freshfirst-postgres-data` volume. To recreate the containers and verify persistence, run `docker compose down`, then `docker compose up -d`; registered accounts, sessions and application data remain available when `.env` retains the same secret and database credentials. For an intentional test-only reset, use `docker compose down -v`; this permanently deletes the Compose PostgreSQL volume and all data in it. Never use that reset against a database containing user data.
+
+The committed `.env.example` contains placeholders only. `.env` is ignored and must never be committed. Do not print `docker compose config` with live values, publish the `db` port, or put secrets in the Dockerfile, image build arguments, or source files. SQLite remains the default independent local-development option; Compose is optional and does not change the documented backend/frontend development commands.
 
 The owner's supplied partial original [brainstorming history](docs/brainstorming.md) preserves the earlier FreshRescue discussion and its original gaps; the current specification governs implementation.

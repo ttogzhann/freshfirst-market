@@ -1,0 +1,49 @@
+name: freshfirst
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-freshfirst}
+      POSTGRES_USER: ${POSTGRES_USER:-freshfirst}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
+    volumes:
+      - freshfirst-postgres-data:/var/lib/postgresql/data
+    networks:
+      - freshfirst
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-freshfirst}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-freshfirst}
+      FRESHFIRST_AUTH_SECRET: ${FRESHFIRST_AUTH_SECRET:?Set FRESHFIRST_AUTH_SECRET in .env}
+      FRESHFIRST_TRUSTED_ORIGINS: ${FRESHFIRST_TRUSTED_ORIGINS:-http://localhost:8000,http://127.0.0.1:8000}
+      PORT: 8000
+    ports:
+      - "${FRESHFIRST_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "node", "/app/container/healthcheck.mjs"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 45s
+    networks:
+      - freshfirst
+
+networks:
+  freshfirst:
+    driver: bridge
+
+volumes:
+  freshfirst-postgres-data:
