@@ -2,18 +2,25 @@
 
 Updated: 2026-11-01, Asia/Qyzylorda. Deadline: 2026-11-03.
 
+## Latest milestone - FF-20 accepted
+
+- Independent QA passed all seven FF20-PM-r1/r1a criteria on `606615f446afbe87cfe4b1230bf36ff7dac34ae2` (tree `10d52696a0da91b611a7804075c20bcde76913c9`); this exact SHA was verified on `origin/main`.
+- Issue [#20](https://github.com/ttogzhann/freshfirst-market/issues/20) was closed after that verification. The QA report is [here](https://github.com/ttogzhann/freshfirst-market/issues/20#issuecomment-6552669734).
+- The accepted corpus has 15 reviewed genuine recipes. Contradictory source record 53100 remains excluded with its unchanged capture/rejection evidence; 53321 is the independently reviewed replacement.
+- No historical aggregate effort is asserted; the total remains unknown. No deployment was started.
+
 ## Delivered and verified
 
 - MVP issues #46, #47 and #48 closed after independent QA on `dc8957845af0402486b9eb115bb2e39d72a6a72e`; PR #49 merged. Backend 153 tests and frontend 89 tests passed, plus static/build/API checks and real persistence/UI workflows.
 - Older-history issue #43 closed on delivered main `4f39482a994f295c2231527c3223336a2a8569eb`; PR #50 merged. Frontend 93 tests passed, plus static/build/API checks. Independent QA verified seven real cooks, loading/error recovery, keyboard at both viewports and actual same-file backend restart. [QA report](https://github.com/ttogzhann/freshfirst-market/issues/43#issuecomment-6547829731).
 
-## Current issue: #20 recipe breadth
+## Completed issue: #20 recipe breadth
 
-Only [#20](https://github.com/ttogzhann/freshfirst-market/issues/20) is open. Branch: `feature/ff20-source-breadth`, in `freshfirst-market-final`. [Acceptance criteria](https://github.com/ttogzhann/freshfirst-market/issues/20#issuecomment-6547855239), [local PM handoff](docs/evidence/ff20-pm-2026-11-01.md).
+[#20](https://github.com/ttogzhann/freshfirst-market/issues/20) is closed after independent QA PASS. Branch: `feature/ff20-source-breadth`, in `freshfirst-market-final`. [Acceptance criteria](https://github.com/ttogzhann/freshfirst-market/issues/20#issuecomment-6547855239), [local PM handoff](docs/evidence/ff20-pm-2026-11-01.md), and [QA report](https://github.com/ttogzhann/freshfirst-market/issues/20#issuecomment-6552669734).
 
 - Implemented 15 reviewed genuine recipes/6 actual categories, including unchanged original 53137/52776. Replaced contradictory 53100 with independently reviewed 53321; rejected capture/reason remain checked-in audit evidence. All300slots/105quantifiedlines are covered by independent expectations; repeated lines reconcile to 102 canonical rows.
 - Added 36 exact catalog identities and 3 aliases; existing 41 identities/old aliases/rules preserved. All purpose flour reuses existing flour. Parser, frontend, schema, 23-operation API and dependencies unchanged.
-- Source implementation commits `b214642184b9c0cdde67dcee3a412bfda2c7ac76` and formatter correction `5c07123cb4f687f9b9ba752990e6f63f760c66dc`; the final evidence/HANDOFF commit contains no application changes (candidate is the commit containing this record; exact SHA is supplied in the engineering delivery message). This is engineering completion pending independent QA, not a delivered/closed issue.
+- Source implementation commits `b214642184b9c0cdde67dcee3a412bfda2c7ac76` and formatter correction `5c07123cb4f687f9b9ba752990e6f63f760c66dc`; final tested candidate `606615f446afbe87cfe4b1230bf36ff7dac34ae2` contains the evidence/HANDOFF record and is the verified delivered `origin/main` SHA.
 - Actual new-pair stock journey passed 1/8scaling/shared deduction/explicit purchase/repeat transfer/exact cook/409 no mutation/same-file backend process restart and frontend discovery/history at1280x800 and375x812. Details and logs: [source-breadth evidence](docs/evidence/ff20-source-breadth.md).
 - Full required matrix passed on committed `5c07123cb4f687f9b9ba752990e6f63f760c66dc`: backend 187 tests/one known warning, frontend 93 tests, Ruff/32-file formatting,typecheck, API 23,lint zero errors/six known warnings,build passed. Initial formatter-only failure was corrected and the complete matrix rerun; failed logs preserved. Final evidence commit changes no application code.
 - Actual live import2026-11-01T02:54:54–02:54:59UTC: HTTP 200, starting 15, imported 0, updated 15, total 15, skipped 775; complete public-source report is checked in. No fallback/source-success fabrication.
@@ -21,7 +28,7 @@ Only [#20](https://github.com/ttogzhann/freshfirst-market/issues/20) is open. Br
 
 ## Exact next task
 
-Independent QA reviews the final candidate commit containing this handoff (exact SHA supplied in the engineering delivery message; confirm `git rev-parse HEAD`) against all seven FF20-PM-r1/r1a criteria. Re-run required full matrix, inspect all source slots/provenance/old-entry projections, verify network-blocked missing-only seeds/corruption rollback/upsert references and real two-new-recipe purchase/cook/restart/UI. If any criterion is unverified or fails, return #20 to engineering without closure. After independent PASS, orchestrator verifies exact delivered SHA, coordinates delivery and closes #20, then updates this handoff. Do not deploy or start paid resources before verified functionality.
+FF-20 is complete and closed. Do not repeat its acquisition, implementation, full matrix, or QA. The user explicitly requested no deployment yet; wait for a separate deployment authorization before preparing or launching deployment resources.
 
 ## Preservation and environment
 
