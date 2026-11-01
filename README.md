@@ -1,10 +1,10 @@
 # FreshFirst Market
 
-FreshFirst is a local, single-user recipe and pantry application. Its React/TypeScript
-frontend communicates with a FastAPI backend over HTTP; SQLAlchemy and SQLite persist
-pantry, recipes, basket selections, shopping changes, purchase transfers and cooking
-history. The backend is the source of truth for recipe matching, quantities, shopping
-and cooking calculations.
+FreshFirst is a recipe and pantry application with per-account data isolation. Its
+React/TypeScript frontend communicates with a FastAPI backend over HTTP; SQLAlchemy
+and SQLite persist pantry, recipes, basket selections, shopping changes, purchase
+transfers and cooking history. The backend is the source of truth for recipe matching,
+quantities, shopping and cooking calculations.
 
 ## Development
 
@@ -62,5 +62,29 @@ The near-expiry threshold defaults to **3 days** in both applications. To use 5 
 Values must contain only decimal digits for a nonnegative whole-day integer. Missing values default to 3; **0 means today only**. Explicit blank, negative, fractional, `NaN`, `Infinity` or other text fail early with the responsible variable name (frontend dev/build and backend startup). The technical maximum is 9007199254740991, JavaScript's largest exact integer, shared by both apps; this is a numeric representation limit, not a recommended food-storage interval. The threshold includes today and the final configured day. Yesterday is always expired and supplies zero stock, while today is usable. Configuration changes urgency, badges and counts only, never stored expiry dates or food-safety guarantees.
 
 Run `npm test` after `uv sync --locked`: the frontend suite starts and stops an isolated FastAPI subprocess on a free local port and exercises the actual TypeScript HTTP adapter through all 23 operations. It uses a strictly normalized synthetic source only within tests and requires the backend `.venv` Python executable. Set `FRESHFIRST_TEST_PYTHON` to override that executable. Other frontend tests retain their injected mocks. Run `uv run pytest -q` from `backend/` for the backend suite. See [integration verification](docs/integration.md) for results and limitations.
+
+## Run the production container (Part 3, stage 1)
+
+The frontend is TanStack Start with server-side rendering. Its production build is a Node/Nitro server, not a static site; the image builds it with the `node-server` preset and runs that server alongside FastAPI. A small same-origin gateway publishes only port `8000`, proxies `/api` to FastAPI, and sends browser routes/assets to the SSR server. No Vite development or preview server is used.
+
+From the repository root, build the image and create a persistent SQLite volume:
+
+```powershell
+docker build -t freshfirst:local .
+docker volume create freshfirst-data
+$secret = python -c "import secrets; print(secrets.token_urlsafe(48))"
+docker run --name freshfirst `
+  --publish 8000:8000 `
+  --mount source=freshfirst-data,target=/data `
+  --env "DATABASE_URL=sqlite:////data/freshfirst.db" `
+  --env "FRESHFIRST_AUTH_SECRET=$secret" `
+  --env "FRESHFIRST_TRUSTED_ORIGINS=http://localhost:8000,http://127.0.0.1:8000" `
+  --env "FRESHFIRST_ENV=production" `
+  freshfirst:local
+```
+
+Open `http://localhost:8000`. The image runs as an unprivileged user, exposes port `8000`, and has a `/healthz` check that requires both the SSR frontend and API to respond. `DATABASE_URL` defaults to the mounted `/data/freshfirst.db`. Supply a unique secret of at least 32 bytes at runtime; do not put it in a Dockerfile, image build argument, source file, or committed env file. Keep the same secret and named volume when recreating the container so persisted sessions and user data remain usable. `FRESHFIRST_TRUSTED_ORIGINS` must contain the exact browser origin(s); use `http://localhost:8000` for the local example and replace it with the real origin for a future TLS-terminated deployment. Only port `8000` is published; the internal Node SSR and FastAPI ports are loopback-only.
+
+To verify persistence, register and log in, add a pantry item, and reload the page. Stop and remove only the container (`docker stop freshfirst; docker rm freshfirst`), then rerun the same `docker run` command with the same secret and `freshfirst-data` volume. The session and pantry item should restore. Do not remove the named volume. These commands do not configure PostgreSQL, Compose, HTTPS, cloud resources, or deployment; those are later Part 3 stages and require their own issues and authorization. Local development commands above remain unchanged.
 
 The owner's supplied partial original [brainstorming history](docs/brainstorming.md) preserves the earlier FreshRescue discussion and its original gaps; the current specification governs implementation.
