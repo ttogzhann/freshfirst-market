@@ -115,4 +115,16 @@ docker compose down
 
 The committed `.env.example` contains placeholders only. `.env` is ignored and must never be committed. Do not print `docker compose config` with live values, publish the `db` port, or put secrets in the Dockerfile, image build arguments, or source files. SQLite remains the default independent local-development option; Compose is optional and does not change the documented backend/frontend development commands.
 
+## Run the real Compose integration test (Part 3, stage 3)
+
+From the repository root, run the repeatable integration test with Docker Desktop running:
+
+```powershell
+uv run --project backend --locked pytest -q tests/test_compose_integration.py
+```
+
+The runner creates a unique Compose project, PostgreSQL database, named volume, host port and temporary environment file for each run. It builds the production image, verifies PostgreSQL readiness and the app’s PostgreSQL `DATABASE_URL`, then exercises HTTP registration/login/session handling, account isolation, pantry, recipes, basket, shopping, cooking success and rollback. It recreates the app container and verifies the session and persisted application state afterward. Cleanup runs in a `finally` block and removes only that run’s project, containers, network, volume and temporary environment file. Secrets and response data are redacted from failures; no developer database or shared Compose volume is used.
+
+This is an HTTP integration test, not browser automation. Existing SQLite backend/frontend checks remain separate and must still be run with their documented commands. The runner fails when Docker, Compose or PostgreSQL is unavailable; a skipped or SQLite-only run is not a passing integration result.
+
 The owner's supplied partial original [brainstorming history](docs/brainstorming.md) preserves the earlier FreshRescue discussion and its original gaps; the current specification governs implementation.
