@@ -2,6 +2,15 @@
 
 Updated: 2026-11-01, Asia/Qyzylorda. Deadline: 2026-11-03.
 
+## New feature milestone - authentication issue groomed
+
+- PM created [FF-49 / #53](https://github.com/ttogzhann/freshfirst-market/issues/53) for registration, persistent server-side sessions, CSRF, per-account data isolation, safe legacy-data quarantine and frontend integration. PM-R1a records the accepted email identity clarification: [comment](https://github.com/ttogzhann/freshfirst-market/issues/53#issuecomment-6554357199).
+- This is an explicitly authorized product scope change from the prior single-user/no-auth non-goal. No previous MVP scope or completion evidence is retroactively changed.
+- Architecture review found ownerless SQLite domain state, no migration framework, unprotected API routes, and a frontend service that does not send credentials. The issue's migration decision is conservative: preserve legacy personal records as unclaimed and inaccessible to all new accounts; never assign them to the first registrant. New accounts start empty; shared catalog/recipe data remains global.
+- The dedicated engineering worktree is `C:\Users\User\OneDrive\FreshFirst\freshfirst-market-auth`, branch `feature/ff49-auth`, based on `57051e4913beb9e19a24bd1e483ae78e7b8b741c` (`origin/main` at setup). Original dirty checkout, prior feature worktree, sibling worktrees and ignored/untracked QA artifacts remain preserved.
+- Status: PM grooming complete; engineering not yet handed off. Issue #53 remains open. Next: implement only the groomed acceptance criteria in the dedicated worktree, test incrementally, then obtain independent QA on exact commits. No deployment or paid resources.
+- Historical aggregate effort remains unknown. No 12-hour completion claim is made.
+
 ## Latest milestone - FF-20 accepted
 
 - Independent QA passed all seven FF20-PM-r1/r1a criteria on `606615f446afbe87cfe4b1230bf36ff7dac34ae2` (tree `10d52696a0da91b611a7804075c20bcde76913c9`); this exact SHA was verified on `origin/main`.
