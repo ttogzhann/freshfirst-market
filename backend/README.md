@@ -79,7 +79,7 @@ the frontend.
 - Basket insertion updates an existing selection rather than duplicating it. Shopping aggregates the entire basket, applies its confirmed substitutions and subtracts usable pantry stock once per ingredient.
 - Regeneration preserves manual entries unless `resetAll=true`. Edited, purchased or removed generated entries, or deletion of manual entries by reset, require confirmation with `force=true`. Purchase checkboxes alone never modify the pantry.
 - Transfer requires a catalog-linked purchased line, actual canonical quantity and expiry date. Its completion flag and pantry merge are atomic and repeated requests cannot add stock twice. Any differing stored expiry date returns `EXPIRY_CONFLICT`, including expired entries, so the existing entry must be edited first.
-- Each operation loads a transaction-local working set from SQLite and writes only changed rows through SQLAlchemy Core. `BEGIN IMMEDIATE` reserves the SQLite writer before stock is read, serializing independent connections/processes; a local `RLock` also protects shared test connections. Database exceptions roll back all SQL changes, including ID allocation and shopping edit flags. Foreign keys, unique ingredient/external recipe/basket recipe constraints, and nonnegative inventory checks provide database-level safeguards. Cooking rechecks current aggregate demands inside that transaction, rejects shortages without deductions, removes depleted entries and writes consumption history atomically. Returned values are detached copies. Concurrent purchases and cooks cannot double-transfer or make stock negative.
+- Each operation loads a transaction-local working set from SQLAlchemy Core and writes only changed rows. SQLite uses `BEGIN IMMEDIATE` to reserve its writer before stock is read; PostgreSQL locks the owner state row with `FOR UPDATE`; a local `RLock` also protects shared test connections. Database exceptions roll back all SQL changes, including ID allocation and shopping edit flags. Foreign keys, unique ingredient/external recipe/basket recipe constraints, and nonnegative inventory checks provide database-level safeguards. Cooking rechecks current aggregate demands inside that transaction, rejects shortages without deductions, removes depleted entries and writes consumption history atomically. Returned values are detached copies. Concurrent purchases and cooks cannot double-transfer or make stock negative.
 
 ## Import policy and current limitation
 
@@ -102,7 +102,7 @@ uv run python -m compileall -q app
 
 Tests validate the authored OpenAPI document, compare registered operation IDs/methods/paths, and validate actual success and error responses against its schemas for all 27 operations (the original 23 domain operations plus four authentication operations). They cover input errors, matching, scaling, substitutions, expiry boundaries, basket aggregation, shopping edits, purchase idempotence, simultaneous inventory writes, rollback after injected failures, account/session lifecycle, CSRF, rate limits, two-account ownership isolation, migration preservation/quarantine and source failures. Unit/API tests use injected sources and do not need network access. Live importing is checked separately.
 
-## SQLite setup, migration and backups
+## Database setup, migration and backups
 
 From `backend/`, install dependencies using `uv sync --locked`. Configure the URL in the server environment before starting Uvicorn. PowerShell example:
 
@@ -115,6 +115,17 @@ uv run uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 
 The default is `sqlite:///./freshfirst.db`, relative to the process working directory. Use the same URL and working directory after restart; changing them selects a different database. The parent directory must exist and be writable. SQLite files and journals are ignored by Git. `sqlite:///:memory:` is available for isolated tests only; omit it for durable storage. No `.env` loader is added: set the actual environment variable in your shell/process manager.
 
+PostgreSQL is supported through the same SQLAlchemy store. Install the locked backend dependencies with `uv sync --locked`, then set a `postgresql+psycopg://` URL (the `postgresql://` and `postgres://` forms are normalized to the psycopg driver) before startup:
+
+```powershell
+$env:DATABASE_URL = "postgresql+psycopg://freshfirst:password@127.0.0.1:5432/freshfirst"
+$env:FRESHFIRST_AUTH_SECRET = "replace with a stable secret of at least 32 bytes"
+$env:FRESHFIRST_TRUSTED_ORIGINS = "http://localhost:5173"
+uv run uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
+
+SQLite remains the default and is unchanged for local development. PostgreSQL initialization creates the same tables, constraints, indexes, catalog seeds, auth/session state and account-owned data through the existing SQLAlchemy metadata and startup migration. Existing SQLite files are never opened, altered, or migrated by a PostgreSQL URL; choose the intended database explicitly and back up an existing database before any schema change.
+
 `FRESHFIRST_AUTH_SECRET` is required, must contain at least 32 bytes, and must remain identical across workers and restarts because it derives CSRF proofs. `FRESHFIRST_TRUSTED_ORIGINS` is a comma-separated allowlist of complete browser origins; wildcards are rejected. The local default allows `http://localhost:5173` and `http://127.0.0.1:5173`. Configure the real frontend origin in each deployment. Credentialed CORS is restricted to that list.
 
 The server issues an HttpOnly, SameSite=Lax session cookie. HTTPS or `FRESHFIRST_ENV=production`/`prod` enables Secure cookies. Call `GET /api/auth/session` first to restore the current session and receive its CSRF token; send that token as `X-CSRF-Token` and the allowed `Origin` on registration/login and all mutations. Catalog, recipe content and substitution-rule reads are public; account-derived/matching endpoints and all mutations, including recipe import, require authentication. Passwords are hashed with Argon2id; raw session IDs and CSRF proofs are not persisted.
@@ -123,7 +134,7 @@ SQLite applies numbered migrations transactionally at startup. Migration v1 adds
 
 Existing browser mock/localStorage data is not migrated. Back up an existing SQLite database with the application stopped before changing schema or moving the file; restore it by pointing `DATABASE_URL` at the copied file. Do not delete an existing file to upgrade it; future incompatible schema changes require a new versioned migration.
 
-SQLite serializes operations with a 30-second lock timeout. This is appropriate for the local single-user application. Keep the active database on a local disk; avoid simultaneous access to cloud-synced copies from different machines.
+SQLite serializes operations with a 30-second lock timeout. PostgreSQL uses database transactions and owner-row locks for domain operations. Keep SQLite active databases on a local disk; avoid simultaneous access to cloud-synced copies from different machines.
 
 Persistence verification: `uv run pytest -q tests/test_persistence.py` checks a new Python process reading the same file, every persisted entity and shopping edit marker, repeated imports and transfer retries after restart, one-time seeds even after pantry deletion, rollback after SQL writes have already modified inventory, and concurrent cooks/transfers through six independent SQLAlchemy engines. The full suite also checks expired-stock exclusion, all 27 API operations and unchanged response schemas for the original domain operations.
 

@@ -1,4 +1,4 @@
-"""SQLite unit of work: transaction-local domain objects, relational SQLAlchemy storage.
+"""Dialect-neutral unit of work: transaction-local domain objects, relational SQLAlchemy storage.
 
 BEGIN IMMEDIATE reserves the writer before reading stock, even across processes.
 Only changed rows are written; any failure rolls back the whole unit of work.
@@ -28,7 +28,7 @@ from sqlalchemy import (
     event,
     select,
 )
-from sqlalchemy.dialects.sqlite import insert
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.pool import StaticPool
 
 from . import models
@@ -36,6 +36,15 @@ from .catalog import CATALOG, RULES
 from .migrations import migrate
 
 metadata = MetaData()
+
+
+def dialect_insert(table, engine):
+    """Return an INSERT with the conflict methods supported by the active database."""
+    if engine.dialect.name == "postgresql":
+        from sqlalchemy.dialects.postgresql import insert as postgresql_insert
+
+        return postgresql_insert(table)
+    return sqlite_insert(table)
 
 
 def identity():
@@ -196,26 +205,36 @@ class State:
 
 
 class SQLiteStore:
+    """SQLAlchemy store supporting the default SQLite and configured PostgreSQL dialects."""
+
     def __init__(self, database_url=None, owner_id=None):
         self.owner_id = owner_id
         url = database_url or os.getenv("DATABASE_URL", "sqlite:///./freshfirst.db")
-        options = {"connect_args": {"check_same_thread": False, "timeout": 30}}
+        if url.startswith("postgres://"):
+            url = "postgresql+psycopg://" + url.removeprefix("postgres://")
+        elif url.startswith("postgresql://"):
+            url = "postgresql+psycopg://" + url.removeprefix("postgresql://")
+        options = {}
+        if url.startswith("sqlite"):
+            options["connect_args"] = {"check_same_thread": False, "timeout": 30}
         if url in ("sqlite://", "sqlite:///:memory:"):
             options["poolclass"] = StaticPool
         self.engine = create_engine(url, **options)
-        if self.engine.dialect.name != "sqlite":
-            raise ValueError("FreshFirst v1.0 requires a SQLite DATABASE_URL")
+        if self.engine.dialect.name not in {"sqlite", "postgresql"}:
+            raise ValueError("FreshFirst supports only SQLite and PostgreSQL DATABASE_URL values")
         self.lock, self.local = RLock(), local()
 
-        @event.listens_for(self.engine, "connect")
-        def configure(connection, record):
-            connection.isolation_level = None
-            connection.execute("PRAGMA foreign_keys=ON")
-            connection.execute("PRAGMA busy_timeout=30000")
+        if self.engine.dialect.name == "sqlite":
 
-        @event.listens_for(self.engine, "begin")
-        def begin(connection):
-            connection.exec_driver_sql("BEGIN IMMEDIATE")
+            @event.listens_for(self.engine, "connect")
+            def configure(connection, record):
+                connection.isolation_level = None
+                connection.execute("PRAGMA foreign_keys=ON")
+                connection.execute("PRAGMA busy_timeout=30000")
+
+            @event.listens_for(self.engine, "begin")
+            def begin(connection):
+                connection.exec_driver_sql("BEGIN IMMEDIATE")
 
         metadata.create_all(self.engine)
         with self.engine.begin() as connection:
@@ -224,12 +243,12 @@ class SQLiteStore:
             for table, values in ((ingredients, CATALOG.values()), (rules, RULES.values())):
                 for value in values:
                     connection.execute(
-                        insert(table)
+                        dialect_insert(table, self.engine)
                         .values(**value.model_dump())
                         .on_conflict_do_nothing(index_elements=["id"])
                     )
             connection.execute(
-                insert(settings)
+                dialect_insert(settings, self.engine)
                 .values(
                     id="state",
                     seq=0,
@@ -364,6 +383,11 @@ class SQLiteStore:
                 raise RuntimeError("Nested store transactions are not supported")
             try:
                 with self.engine.begin() as connection:
+                    if self.engine.dialect.name == "postgresql":
+                        state_id = f"state:{self.owner_id}" if self.owner_id else "state"
+                        connection.execute(
+                            select(settings.c.id).where(settings.c.id == state_id).with_for_update()
+                        )
                     self.local.state = self._load(connection)
                     previous = deepcopy(self.local.state)
                     yield self.local.state

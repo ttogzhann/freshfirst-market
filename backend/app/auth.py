@@ -13,9 +13,8 @@ from uuid import uuid4
 from argon2 import PasswordHasher, Type
 from argon2.exceptions import InvalidHashError, VerificationError, VerifyMismatchError
 from sqlalchemy import case, select, update
-from sqlalchemy.dialects.sqlite import insert
 
-from .store import rate_limits, sessions, settings, users
+from .store import dialect_insert, rate_limits, sessions, settings, users
 
 SESSION_COOKIE = "freshfirst_session"
 CSRF_HEADER = "X-CSRF-Token"
@@ -228,7 +227,7 @@ class AuthService:
                 window_start = now - now % window
                 bucket = self._bucket_hash(scope, key)
                 statement = (
-                    insert(rate_limits)
+                    dialect_insert(rate_limits, self.store.engine)
                     .values(bucket_hash=bucket, window_start=window_start, attempts=1)
                     .on_conflict_do_update(
                         index_elements=[rate_limits.c.bucket_hash],

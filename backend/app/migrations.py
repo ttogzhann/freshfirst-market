@@ -1,6 +1,8 @@
-"""Forward-only SQLite schema migration for account ownership."""
+"""Forward-only schema migration for account ownership."""
 
-from sqlalchemy import inspect
+import time
+
+from sqlalchemy import inspect, text
 
 VERSION = 1
 
@@ -18,8 +20,13 @@ def migrate(connection):
 
     for table in ("pantry_items", "basket_items"):
         columns = {column["name"] for column in inspect(connection).get_columns(table)}
-        if "owner_id" not in columns:
+        if "owner_id" not in columns and connection.dialect.name == "sqlite":
             _rebuild_owned_table(connection, table)
+        elif "owner_id" not in columns:
+            connection.exec_driver_sql(
+                f"ALTER TABLE {table} ADD COLUMN owner_id VARCHAR "
+                "REFERENCES users(id) ON DELETE CASCADE"
+            )
 
     for table in ("shopping_items", "cooking_history", "store_settings"):
         columns = {column["name"] for column in inspect(connection).get_columns(table)}
@@ -44,9 +51,11 @@ def migrate(connection):
     connection.exec_driver_sql(
         "CREATE UNIQUE INDEX IF NOT EXISTS uq_store_settings_owner ON store_settings(owner_id)"
     )
-    connection.exec_driver_sql(
-        "INSERT INTO schema_migrations(version, applied_at) VALUES (?, strftime('%s','now'))",
-        (VERSION,),
+    connection.execute(
+        text(
+            "INSERT INTO schema_migrations(version, applied_at) VALUES (:version, :applied_at)",
+        ),
+        {"version": VERSION, "applied_at": int(time.time())},
     )
 
 
