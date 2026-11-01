@@ -24,11 +24,16 @@ def blocked_source(self):
 
 
 def test_packaged_bytes_and_exact_recipe_metadata():
-    for filename in ("53137.json", "52776.json", "provenance.json"):
+    for filename in ("53137.json", "52776.json"):
         assert (PackagedMealSource.DIRECTORY / filename).read_bytes() == (
             FIXTURES / filename
         ).read_bytes()
+    original_manifest = json.loads((FIXTURES / "provenance.json").read_bytes())
+    current_manifest = json.loads((PackagedMealSource.DIRECTORY / "provenance.json").read_bytes())
+    assert current_manifest["records"][:2] == original_manifest["records"]
     for raw in PackagedMealSource().meals():
+        if raw["idMeal"] not in EXPECTED_LINES:
+            continue
         recipe = normalize_meal(raw)
         assert {i.ingredient_id: i.quantity for i in recipe.ingredients} == {
             identity: quantity for _, _, identity, _, quantity in EXPECTED_LINES[raw["idMeal"]]
@@ -98,13 +103,18 @@ def test_partial_baseline_retains_newer_live_and_every_saved_entity():
     before = deepcopy(service.state)
     service.seed_recipes()
     after = service.state
-    assert set(after.recipes) == {*before.recipes, "rec_52776"}
-    del after.recipes["rec_52776"]
+    assert set(after.recipes) == {
+        *before.recipes,
+        *(f"rec_{i}" for i in PackagedMealSource.REVIEWED_IDS),
+    }
+    for key in set(after.recipes) - set(before.recipes):
+        del after.recipes[key]
     assert after == before
     service.seed_recipes()
     with service.store.engine.connect() as connection:
-        assert connection.scalar(select(func.count()).select_from(recipes)) == 3
-        assert connection.scalar(select(func.count()).select_from(recipe_ingredients)) == 13
+        assert connection.scalar(select(func.count()).select_from(recipes)) == 16
+        # 102 canonical corpus lines plus the existing three-line strict test recipe.
+        assert connection.scalar(select(func.count()).select_from(recipe_ingredients)) == 105
     expected = json.loads(json.dumps(service.store._rows(service.state), default=str))
     service.store.close()
     script = """
@@ -167,7 +177,7 @@ def test_explicit_live_import_upsert_and_source_failure(monkeypatch):
         service.source = Source(list(PackagedMealSource().meals()))
         for _ in range(2):
             report = client.post("/api/recipes/import").json()
-            assert (report["imported"], report["updated"], report["total_recipes"]) == (0, 2, 2)
+            assert (report["imported"], report["updated"], report["total_recipes"]) == (0, 15, 15)
         assert service.state == before
         service.source = TheMealDBSource()
         monkeypatch.setattr(TheMealDBSource, "meals", blocked_source)

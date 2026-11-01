@@ -5,7 +5,7 @@ import json
 import ssl
 import string
 from collections.abc import Iterable
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Protocol
 
@@ -23,23 +23,45 @@ class MealSource(Protocol):
 
 
 class PackagedMealSource:
-    """Reviewed FF-18 raw responses; corruption is a startup failure, never a skip."""
+    """Reviewed genuine raw responses; corruption is a startup failure, never a skip."""
 
     DIRECTORY = Path(__file__).resolve().parents[1] / "data" / "mealdb-source"
+    REVIEWED_IDS = frozenset(
+        {
+            "53137",
+            "52776",
+            "53396",
+            "53316",
+            "53321",
+            "53452",
+            "53293",
+            "52901",
+            "53308",
+            "53177",
+            "53075",
+            "53150",
+            "53252",
+            "53403",
+            "53409",
+        }
+    )
 
     def meals(self):
         try:
             manifest = json.loads((self.DIRECTORY / "provenance.json").read_bytes())
             records = manifest["records"]
-            if {r["external_id"] for r in records} != {"53137", "52776"} or len(records) != 2:
-                raise ValueError("Invalid baseline IDs")
+            if {r["external_id"] for r in records} != self.REVIEWED_IDS or len(records) != len(
+                self.REVIEWED_IDS
+            ):
+                raise ValueError("Invalid reviewed corpus IDs")
             for record in records:
                 external_id = record["external_id"]
                 if (
                     record["raw_file"] != f"{external_id}.json"
                     or record["lookup_url"]
                     != f"https://www.themealdb.com/api/json/v1/1/lookup.php?i={external_id}"
-                    or datetime.fromisoformat(record["captured_at_utc"]).tzinfo is None
+                    or datetime.fromisoformat(record["captured_at_utc"]).utcoffset()
+                    != timedelta(0)
                 ):
                     raise ValueError("Invalid baseline provenance")
                 raw = (self.DIRECTORY / record["raw_file"]).read_bytes()

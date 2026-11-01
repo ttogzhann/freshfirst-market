@@ -1,0 +1,110 @@
+{
+  "source": "https://www.themealdb.com/api/json/v1/1/",
+  "records": [
+    {
+      "external_id": "53137",
+      "lookup_url": "https://www.themealdb.com/api/json/v1/1/lookup.php?i=53137",
+      "raw_file": "53137.json",
+      "sha256": "2d032ad24e25a2ca8137a3019fd7a6878e8835214ceff9dbdf61255488fd402c",
+      "captured_at_utc": "2026-10-20T02:09:37.641283+00:00"
+    },
+    {
+      "external_id": "52776",
+      "lookup_url": "https://www.themealdb.com/api/json/v1/1/lookup.php?i=52776",
+      "raw_file": "52776.json",
+      "sha256": "718fa6ad455236d5a81de755ca4190725025e510041182e55f68a1124a049814",
+      "captured_at_utc": "2026-10-20T02:09:37.788460+00:00"
+    },
+    {
+      "external_id": "53396",
+      "lookup_url": "https://www.themealdb.com/api/json/v1/1/lookup.php?i=53396",
+      "raw_file": "53396.json",
+      "sha256": "f243f55412aa644b4c68df30292f0aa8eeead58061812123dcce9fa87ac8a7d7",
+      "captured_at_utc": "2026-10-31T19:07:39.191662+00:00"
+    },
+    {
+      "external_id": "53316",
+      "lookup_url": "https://www.themealdb.com/api/json/v1/1/lookup.php?i=53316",
+      "raw_file": "53316.json",
+      "sha256": "1248ef0cecf3c460f2d7b3932b1f0494aeeee70479cca36c1a4850b4655769f1",
+      "captured_at_utc": "2026-10-31T19:07:39.435246+00:00"
+    },
+    {
+      "external_id": "53321",
+      "lookup_url": "https://www.themealdb.com/api/json/v1/1/lookup.php?i=53321",
+      "raw_file": "53321.json",
+      "sha256": "d6d28b71d7dce400276bdc102ca53dbd13c190ce5213fd1bfb9ff8251e674cc1",
+      "captured_at_utc": "2026-11-01T02:47:16.309782+00:00"
+    },
+    {
+      "external_id": "53452",
+      "lookup_url": "https://www.themealdb.com/api/json/v1/1/lookup.php?i=53452",
+      "raw_file": "53452.json",
+      "sha256": "c446946c9b076638a31dc03532040a34b61bfd3bb21915c68746bf3cc8c3a116",
+      "captured_at_utc": "2026-10-31T19:07:39.937941+00:00"
+    },
+    {
+      "external_id": "53293",
+      "lookup_url": "https://www.themealdb.com/api/json/v1/1/lookup.php?i=53293",
+      "raw_file": "53293.json",
+      "sha256": "6da07a687e4cd9991c4d7f947ca24f84b587fea0a39b8fbba5a576f641f6f7da",
+      "captured_at_utc": "2026-10-31T19:07:40.196401+00:00"
+    },
+    {
+      "external_id": "52901",
+      "lookup_url": "https://www.themealdb.com/api/json/v1/1/lookup.php?i=52901",
+      "raw_file": "52901.json",
+      "sha256": "163f3b441e2c3497704fde98516a1ffbba1472a2384677e48321aa00003157d3",
+      "captured_at_utc": "2026-10-31T19:07:40.455908+00:00"
+    },
+    {
+      "external_id": "53308",
+      "lookup_url": "https://www.themealdb.com/api/json/v1/1/lookup.php?i=53308",
+      "raw_file": "53308.json",
+      "sha256": "c4092637e082384cab45827043c7f49ba0424416e4da14c113b08f47d15a3208",
+      "captured_at_utc": "2026-10-31T19:07:40.663595+00:00"
+    },
+    {
+      "external_id": "53177",
+      "lookup_url": "https://www.themealdb.com/api/json/v1/1/lookup.php?i=53177",
+      "raw_file": "53177.json",
+      "sha256": "57840670b7559fa56975e9b3b414d3406edf09ae215ad2feb99a02b02220438d",
+      "captured_at_utc": "2026-10-31T19:07:40.863092+00:00"
+    },
+    {
+      "external_id": "53075",
+      "lookup_url": "https://www.themealdb.com/api/json/v1/1/lookup.php?i=53075",
+      "raw_file": "53075.json",
+      "sha256": "cf92008fbd97dab228c4be93fa035af6079293a245a3c09729a6b6af57efa1f5",
+      "captured_at_utc": "2026-10-31T19:07:41.105286+00:00"
+    },
+    {
+      "external_id": "53150",
+      "lookup_url": "https://www.themealdb.com/api/json/v1/1/lookup.php?i=53150",
+      "raw_file": "53150.json",
+      "sha256": "3f4c5aeaebbe72d9ee39a3d102abfe65970000ed0a2824561349efaef2905bf1",
+      "captured_at_utc": "2026-10-31T19:07:41.385874+00:00"
+    },
+    {
+      "external_id": "53252",
+      "lookup_url": "https://www.themealdb.com/api/json/v1/1/lookup.php?i=53252",
+      "raw_file": "53252.json",
+      "sha256": "0565d757876c0fe6d91bdf373fc7931ba1910951788b63d5b3dd45e96a1c66ea",
+      "captured_at_utc": "2026-10-31T19:07:41.641809+00:00"
+    },
+    {
+      "external_id": "53403",
+      "lookup_url": "https://www.themealdb.com/api/json/v1/1/lookup.php?i=53403",
+      "raw_file": "53403.json",
+      "sha256": "bc3fd19b263992a3b5f1656247cedc1e96385f06b410775f208965cacaf08b08",
+      "captured_at_utc": "2026-10-31T19:07:41.897098+00:00"
+    },
+    {
+      "external_id": "53409",
+      "lookup_url": "https://www.themealdb.com/api/json/v1/1/lookup.php?i=53409",
+      "raw_file": "53409.json",
+      "sha256": "01d133d93dba8e3e162d3180cc013b5daa42a071e3206f63c57493477d15f87f",
+      "captured_at_utc": "2026-10-31T19:07:42.133692+00:00"
+    }
+  ]
+}

@@ -114,13 +114,22 @@ def test_additive_identity_preserves_existing_catalog_aliases_and_rules():
     # Frozen independently before the single additive catalog row, at baseline
     # 66dbf65f176cc4174d5c184a3e6d9de43f240e67. Covers all old fields and aliases,
     # not just the count, plus every rule/category eligibility restriction.
+    frozen = json.loads(
+        (Path(__file__).parent / "fixtures" / "mealdb-breadth" / "previous-catalog.json").read_text(
+            encoding="utf8"
+        )
+    )
     previous = {
         "catalog": {
             key: value.model_dump(mode="json")
             for key, value in CATALOG.items()
-            if key != "plain_chocolate"
+            if key in frozen["catalog"] and key != "plain_chocolate"
         },
-        "aliases": {key: value for key, value in ALIASES.items() if value != "plain_chocolate"},
+        "aliases": {
+            key: ALIASES[key]
+            for key, value in frozen["aliases"].items()
+            if value != "plain_chocolate"
+        },
         "rules": {key: value.model_dump(mode="json") for key, value in RULES.items()},
         "rule_categories": {key: sorted(value) for key, value in RULE_CATEGORIES.items()},
     }

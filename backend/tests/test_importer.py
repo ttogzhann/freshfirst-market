@@ -184,5 +184,5 @@ def test_startup_seeds_offline_baseline_without_live_import_or_page_read_fetches
     with ContractClient(create_app(service)) as client:
         assert len(client.get("/api/pantry").json()) == 12
         for _ in range(3):
-            assert len(client.get("/api/recipes").json()) == 2
+            assert len(client.get("/api/recipes").json()) == 15
     assert source.calls == 0

@@ -1,0 +1,447 @@
+{
+  "aliases": {
+    "apple": "apple",
+    "apples": "apple",
+    "bacon": "bacon",
+    "baking powder": "baking_powder",
+    "banana": "banana",
+    "bananas": "banana",
+    "beef mince": "beef",
+    "bell pepper": "pepper",
+    "black pepper": "black_pepper",
+    "bread": "bread",
+    "butter": "butter",
+    "carrot": "carrot",
+    "carrots": "carrot",
+    "caster sugar": "sugar",
+    "cheddar": "cheese",
+    "cheddar cheese": "cheese",
+    "chicken breast": "chicken",
+    "chicken breasts": "chicken",
+    "chicken stock": "stock",
+    "cocoa powder": "cocoa",
+    "double cream": "cream",
+    "egg": "egg",
+    "eggs": "egg",
+    "flour": "flour",
+    "garlic": "garlic",
+    "garlic clove": "garlic",
+    "garlic cloves": "garlic",
+    "granulated sugar": "sugar",
+    "greek yogurt": "yogurt",
+    "green pepper": "pepper",
+    "ground beef": "beef",
+    "heavy cream": "cream",
+    "honey": "honey",
+    "lemon": "lemon",
+    "lemons": "lemon",
+    "milk": "milk",
+    "minced beef": "beef",
+    "mushroom": "mushroom",
+    "mushrooms": "mushroom",
+    "olive oil": "olive_oil",
+    "onion": "onion",
+    "onions": "onion",
+    "parmesan": "parmesan",
+    "parmesan cheese": "parmesan",
+    "passata": "tomato_sauce",
+    "pasta": "pasta",
+    "penne rigate": "pasta",
+    "plain chocolate": "plain_chocolate",
+    "plain flour": "flour",
+    "potato": "potato",
+    "potatoes": "potato",
+    "red pepper": "pepper",
+    "rice": "rice",
+    "rolled oats": "oats",
+    "salmon fillet": "salmon",
+    "salt": "salt",
+    "soy sauce": "soy_sauce",
+    "spaghetti": "pasta",
+    "spinach": "spinach",
+    "sugar": "sugar",
+    "tomato": "tomato",
+    "tomato passata": "tomato_sauce",
+    "tomatoes": "tomato",
+    "vanilla essence": "vanilla",
+    "vanilla extract": "vanilla",
+    "vegetable oil": "vegetable_oil",
+    "water": "water"
+  },
+  "catalog": {
+    "apple": {
+      "canonical_unit": "pcs",
+      "category": "Fruit",
+      "id": "apple",
+      "name": "Apple"
+    },
+    "bacon": {
+      "canonical_unit": "g",
+      "category": "Meat & Fish",
+      "id": "bacon",
+      "name": "Bacon"
+    },
+    "baking_powder": {
+      "canonical_unit": "ml",
+      "category": "Pantry staples",
+      "id": "baking_powder",
+      "name": "Baking powder"
+    },
+    "banana": {
+      "canonical_unit": "pcs",
+      "category": "Fruit",
+      "id": "banana",
+      "name": "Banana"
+    },
+    "beef": {
+      "canonical_unit": "g",
+      "category": "Meat & Fish",
+      "id": "beef",
+      "name": "Ground beef"
+    },
+    "black_pepper": {
+      "canonical_unit": "ml",
+      "category": "Seasonings",
+      "id": "black_pepper",
+      "name": "Black pepper"
+    },
+    "bread": {
+      "canonical_unit": "pcs",
+      "category": "Bakery",
+      "id": "bread",
+      "name": "Bread"
+    },
+    "butter": {
+      "canonical_unit": "g",
+      "category": "Dairy & Eggs",
+      "id": "butter",
+      "name": "Butter"
+    },
+    "carrot": {
+      "canonical_unit": "pcs",
+      "category": "Vegetables",
+      "id": "carrot",
+      "name": "Carrot"
+    },
+    "cheese": {
+      "canonical_unit": "g",
+      "category": "Dairy & Eggs",
+      "id": "cheese",
+      "name": "Cheddar cheese"
+    },
+    "chicken": {
+      "canonical_unit": "g",
+      "category": "Meat & Fish",
+      "id": "chicken",
+      "name": "Chicken breast"
+    },
+    "cocoa": {
+      "canonical_unit": "g",
+      "category": "Pantry staples",
+      "id": "cocoa",
+      "name": "Cocoa powder"
+    },
+    "cream": {
+      "canonical_unit": "ml",
+      "category": "Dairy & Eggs",
+      "id": "cream",
+      "name": "Heavy cream"
+    },
+    "egg": {
+      "canonical_unit": "pcs",
+      "category": "Dairy & Eggs",
+      "id": "egg",
+      "name": "Eggs"
+    },
+    "flour": {
+      "canonical_unit": "g",
+      "category": "Pantry staples",
+      "id": "flour",
+      "name": "Flour"
+    },
+    "garlic": {
+      "canonical_unit": "pcs",
+      "category": "Vegetables",
+      "id": "garlic",
+      "name": "Garlic clove"
+    },
+    "honey": {
+      "canonical_unit": "ml",
+      "category": "Pantry staples",
+      "id": "honey",
+      "name": "Honey"
+    },
+    "lemon": {
+      "canonical_unit": "pcs",
+      "category": "Fruit",
+      "id": "lemon",
+      "name": "Lemon"
+    },
+    "milk": {
+      "canonical_unit": "ml",
+      "category": "Dairy & Eggs",
+      "id": "milk",
+      "name": "Milk"
+    },
+    "mushroom": {
+      "canonical_unit": "g",
+      "category": "Vegetables",
+      "id": "mushroom",
+      "name": "Mushrooms"
+    },
+    "oats": {
+      "canonical_unit": "g",
+      "category": "Pantry staples",
+      "id": "oats",
+      "name": "Rolled oats"
+    },
+    "olive_oil": {
+      "canonical_unit": "ml",
+      "category": "Pantry staples",
+      "id": "olive_oil",
+      "name": "Olive oil"
+    },
+    "onion": {
+      "canonical_unit": "pcs",
+      "category": "Vegetables",
+      "id": "onion",
+      "name": "Onion"
+    },
+    "parmesan": {
+      "canonical_unit": "g",
+      "category": "Dairy & Eggs",
+      "id": "parmesan",
+      "name": "Parmesan"
+    },
+    "pasta": {
+      "canonical_unit": "g",
+      "category": "Pantry staples",
+      "id": "pasta",
+      "name": "Pasta"
+    },
+    "pepper": {
+      "canonical_unit": "pcs",
+      "category": "Vegetables",
+      "id": "pepper",
+      "name": "Bell pepper"
+    },
+    "plain_chocolate": {
+      "canonical_unit": "g",
+      "category": "Pantry staples",
+      "id": "plain_chocolate",
+      "name": "Plain chocolate"
+    },
+    "potato": {
+      "canonical_unit": "g",
+      "category": "Vegetables",
+      "id": "potato",
+      "name": "Potato"
+    },
+    "rice": {
+      "canonical_unit": "g",
+      "category": "Pantry staples",
+      "id": "rice",
+      "name": "Rice"
+    },
+    "salmon": {
+      "canonical_unit": "g",
+      "category": "Meat & Fish",
+      "id": "salmon",
+      "name": "Salmon fillet"
+    },
+    "salt": {
+      "canonical_unit": "ml",
+      "category": "Seasonings",
+      "id": "salt",
+      "name": "Salt"
+    },
+    "soy_sauce": {
+      "canonical_unit": "ml",
+      "category": "Pantry staples",
+      "id": "soy_sauce",
+      "name": "Soy sauce"
+    },
+    "spinach": {
+      "canonical_unit": "g",
+      "category": "Vegetables",
+      "id": "spinach",
+      "name": "Spinach"
+    },
+    "stock": {
+      "canonical_unit": "ml",
+      "category": "Pantry staples",
+      "id": "stock",
+      "name": "Chicken stock"
+    },
+    "sugar": {
+      "canonical_unit": "g",
+      "category": "Pantry staples",
+      "id": "sugar",
+      "name": "Sugar"
+    },
+    "tomato": {
+      "canonical_unit": "pcs",
+      "category": "Vegetables",
+      "id": "tomato",
+      "name": "Tomato"
+    },
+    "tomato_sauce": {
+      "canonical_unit": "ml",
+      "category": "Pantry staples",
+      "id": "tomato_sauce",
+      "name": "Tomato passata"
+    },
+    "vanilla": {
+      "canonical_unit": "ml",
+      "category": "Pantry staples",
+      "id": "vanilla",
+      "name": "Vanilla extract"
+    },
+    "vegetable_oil": {
+      "canonical_unit": "ml",
+      "category": "Pantry staples",
+      "id": "vegetable_oil",
+      "name": "Vegetable oil"
+    },
+    "water": {
+      "canonical_unit": "ml",
+      "category": "Pantry staples",
+      "id": "water",
+      "name": "Water"
+    },
+    "yogurt": {
+      "canonical_unit": "g",
+      "category": "Dairy & Eggs",
+      "id": "yogurt",
+      "name": "Greek yogurt"
+    }
+  },
+  "rule_categories": {
+    "r1": [
+      "Pasta",
+      "Seafood",
+      "Soup"
+    ],
+    "r10": [
+      "Bowl"
+    ],
+    "r2": [
+      "Pasta",
+      "Side"
+    ],
+    "r3": [
+      "Pasta",
+      "Side"
+    ],
+    "r4": [
+      "Beef",
+      "Chicken",
+      "Pasta",
+      "Side",
+      "Vegetarian"
+    ],
+    "r5": [
+      "Beef",
+      "Chicken",
+      "Pasta",
+      "Side",
+      "Vegetarian"
+    ],
+    "r6": [
+      "Stir-fry"
+    ],
+    "r7": [
+      "Soup"
+    ],
+    "r8": [
+      "Breakfast",
+      "Pasta"
+    ],
+    "r9": [
+      "Pasta",
+      "Soup"
+    ]
+  },
+  "rules": {
+    "r1": {
+      "context": "Sauces & soups",
+      "id": "r1",
+      "note": "Milk makes a thinner sauce.",
+      "original_ingredient_id": "cream",
+      "ratio": 1.0,
+      "substitute_ingredient_id": "milk"
+    },
+    "r10": {
+      "context": "Bowls",
+      "id": "r10",
+      "note": "Cook as a rice bowl instead.",
+      "original_ingredient_id": "pasta",
+      "ratio": 0.8,
+      "substitute_ingredient_id": "rice"
+    },
+    "r2": {
+      "context": "Topping",
+      "id": "r2",
+      "note": "Use less Parmesan for a stronger topping.",
+      "original_ingredient_id": "cheese",
+      "ratio": 0.75,
+      "substitute_ingredient_id": "parmesan"
+    },
+    "r3": {
+      "context": "Topping",
+      "id": "r3",
+      "note": "Cheddar gives a milder topping.",
+      "original_ingredient_id": "parmesan",
+      "ratio": 1.0,
+      "substitute_ingredient_id": "cheese"
+    },
+    "r4": {
+      "context": "Frying",
+      "id": "r4",
+      "note": "Neutral oil changes the flavour.",
+      "original_ingredient_id": "olive_oil",
+      "ratio": 1.0,
+      "substitute_ingredient_id": "vegetable_oil"
+    },
+    "r5": {
+      "context": "Frying",
+      "id": "r5",
+      "note": "Olive oil adds flavour.",
+      "original_ingredient_id": "vegetable_oil",
+      "ratio": 1.0,
+      "substitute_ingredient_id": "olive_oil"
+    },
+    "r6": {
+      "context": "Stir-fries",
+      "id": "r6",
+      "note": "Use ground beef and brown fully.",
+      "original_ingredient_id": "chicken",
+      "ratio": 1.0,
+      "substitute_ingredient_id": "beef"
+    },
+    "r7": {
+      "context": "Soups",
+      "id": "r7",
+      "note": "Water gives a milder broth.",
+      "original_ingredient_id": "stock",
+      "ratio": 1.0,
+      "substitute_ingredient_id": "water"
+    },
+    "r8": {
+      "context": "Pasta & eggs",
+      "id": "r8",
+      "note": "Cook mushrooms fully before adding eggs.",
+      "original_ingredient_id": "spinach",
+      "ratio": 1.0,
+      "substitute_ingredient_id": "mushroom"
+    },
+    "r9": {
+      "context": "Sauces",
+      "id": "r9",
+      "note": "Cream gives a richer sauce.",
+      "original_ingredient_id": "milk",
+      "ratio": 1.0,
+      "substitute_ingredient_id": "cream"
+    }
+  }
+}

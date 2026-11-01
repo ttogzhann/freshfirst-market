@@ -1,0 +1,8 @@
+{
+  "external_id": "53100",
+  "lookup_url": "https://www.themealdb.com/api/json/v1/1/lookup.php?i=53100",
+  "raw_file": "rejected-53100.json",
+  "sha256": "aee73a23f9fd873c395f429fd210e9c5c5e97be136466bcc12bb44c0f40e5e20",
+  "captured_at_utc": "2026-10-31T19:07:39.689342+00:00",
+  "reason": "Excluded: title/instructions say blueberries; ingredient slot7 says Blackberries85g. No berry equivalence or omitted quantity inferred."
+}

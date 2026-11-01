@@ -1,0 +1,2280 @@
+{
+  "review_method": "Expected amounts transcribed before normalizer comparison; g1 kg1000 ml1 l1000 tsp5 tbsp15; no new syntax or density factors. Blank slots all checked; repeated sugar in53409 sums300+220=520g. Replacement53321 reviewed independently: every12 nonblank slot retained, repeated dulce de leche150+150=300g and coconutflakes50+50=100g; excluded53100 contradiction retained only acquisition audit.",
+  "new_catalog": [
+    [
+      "ground_walnuts",
+      "Ground walnuts",
+      "Pantry staples",
+      "g"
+    ],
+    [
+      "cardamom",
+      "Cardamom",
+      "Seasonings",
+      "g"
+    ],
+    [
+      "beetroot",
+      "Beetroot",
+      "Vegetables",
+      "pcs"
+    ],
+    [
+      "self_raising_flour",
+      "Self-raising flour",
+      "Pantry staples",
+      "g"
+    ],
+    [
+      "maple_syrup",
+      "Maple syrup",
+      "Pantry staples",
+      "ml"
+    ],
+    [
+      "frozen_mixed_berries",
+      "Frozen mixed berries",
+      "Fruit",
+      "g"
+    ],
+    [
+      "blackcurrant_jam",
+      "Blackcurrant jam",
+      "Pantry staples",
+      "ml"
+    ],
+    [
+      "unsalted_butter",
+      "Unsalted butter",
+      "Dairy & Eggs",
+      "g"
+    ],
+    [
+      "icing_sugar",
+      "Icing sugar",
+      "Pantry staples",
+      "g"
+    ],
+    [
+      "date_molasses",
+      "Date molasses",
+      "Pantry staples",
+      "g"
+    ],
+    [
+      "rice_flour",
+      "Rice flour",
+      "Pantry staples",
+      "g"
+    ],
+    [
+      "ground_cinnamon",
+      "Ground cinnamon",
+      "Seasonings",
+      "ml"
+    ],
+    [
+      "ground_cardamom",
+      "Ground cardamom",
+      "Seasonings",
+      "ml"
+    ],
+    [
+      "pistachio",
+      "Pistachio",
+      "Pantry staples",
+      "g"
+    ],
+    [
+      "mascarpone",
+      "Mascarpone",
+      "Dairy & Eggs",
+      "g"
+    ],
+    [
+      "pistachio_paste",
+      "Pistachio paste",
+      "Pantry staples",
+      "g"
+    ],
+    [
+      "raspberries",
+      "Raspberries",
+      "Fruit",
+      "g"
+    ],
+    [
+      "unwaxed_lime",
+      "Unwaxed lime",
+      "Fruit",
+      "pcs"
+    ],
+    [
+      "dried_fruit",
+      "Dried fruit",
+      "Fruit",
+      "g"
+    ],
+    [
+      "rye",
+      "Rye",
+      "Pantry staples",
+      "g"
+    ],
+    [
+      "strong_white_bread_flour",
+      "Strong white bread flour",
+      "Pantry staples",
+      "g"
+    ],
+    [
+      "yeast",
+      "Yeast",
+      "Pantry staples",
+      "g"
+    ],
+    [
+      "caraway_seed",
+      "Caraway seed",
+      "Seasonings",
+      "ml"
+    ],
+    [
+      "chorizo",
+      "Chorizo",
+      "Meat & Fish",
+      "g"
+    ],
+    [
+      "parsley",
+      "Parsley",
+      "Seasonings",
+      "g"
+    ],
+    [
+      "eggplant",
+      "Egg plants",
+      "Vegetables",
+      "pcs"
+    ],
+    [
+      "padron_peppers",
+      "Padron peppers",
+      "Vegetables",
+      "g"
+    ],
+    [
+      "vermicelli_pasta",
+      "Vermicelli pasta",
+      "Pantry staples",
+      "g"
+    ],
+    [
+      "pumpkin",
+      "Pumpkin",
+      "Vegetables",
+      "g"
+    ],
+    [
+      "orange",
+      "Orange",
+      "Fruit",
+      "g"
+    ],
+    [
+      "melted_butter",
+      "Melted butter",
+      "Dairy & Eggs",
+      "g"
+    ],
+    [
+      "walnuts",
+      "Walnuts",
+      "Pantry staples",
+      "g"
+    ],
+    [
+      "dulce_de_leche",
+      "Dulce de leche",
+      "Pantry staples",
+      "g"
+    ],
+    [
+      "coconut_flakes",
+      "Coconut flakes",
+      "Pantry staples",
+      "g"
+    ],
+    [
+      "egg_yolk",
+      "Egg yolks",
+      "Dairy & Eggs",
+      "pcs"
+    ],
+    [
+      "cornstarch",
+      "Cornstarch",
+      "Pantry staples",
+      "g"
+    ]
+  ],
+  "aliases": {
+    "warm water": "water",
+    "ground cardomom": "ground_cardamom",
+    "all purpose flour": "flour"
+  },
+  "records": [
+    {
+      "external_id": "53137",
+      "title": "Dulce de Leche",
+      "category": "Dessert",
+      "slots": [
+        {
+          "slot": 1,
+          "raw_ingredient": "Milk",
+          "raw_measure": "1 Litre",
+          "ingredient_id": "milk",
+          "unit": "ml",
+          "expected_quantity": 1000
+        },
+        {
+          "slot": 2,
+          "raw_ingredient": "Sugar",
+          "raw_measure": "300g",
+          "ingredient_id": "sugar",
+          "unit": "g",
+          "expected_quantity": 300
+        },
+        {
+          "slot": 3,
+          "raw_ingredient": "Baking Powder",
+          "raw_measure": "1/4 tsp",
+          "ingredient_id": "baking_powder",
+          "unit": "ml",
+          "expected_quantity": 1.25
+        },
+        {
+          "slot": 4,
+          "raw_ingredient": "Vanilla Extract",
+          "raw_measure": "1 teaspoon",
+          "ingredient_id": "vanilla",
+          "unit": "ml",
+          "expected_quantity": 5
+        },
+        {
+          "slot": 5,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 6,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 7,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 8,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 9,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 10,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 11,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 12,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 13,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 14,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 15,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 16,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 17,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 18,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 19,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 20,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        }
+      ],
+      "expected_totals": {
+        "milk": 1000,
+        "sugar": 300,
+        "baking_powder": 1.25,
+        "vanilla": 5
+      }
+    },
+    {
+      "external_id": "52776",
+      "title": "Chocolate Gateau",
+      "category": "Dessert",
+      "slots": [
+        {
+          "slot": 1,
+          "raw_ingredient": "Plain chocolate",
+          "raw_measure": "250g",
+          "ingredient_id": "plain_chocolate",
+          "unit": "g",
+          "expected_quantity": 250
+        },
+        {
+          "slot": 2,
+          "raw_ingredient": "Butter",
+          "raw_measure": "175g",
+          "ingredient_id": "butter",
+          "unit": "g",
+          "expected_quantity": 175
+        },
+        {
+          "slot": 3,
+          "raw_ingredient": "Milk",
+          "raw_measure": "2 tablespoons",
+          "ingredient_id": "milk",
+          "unit": "ml",
+          "expected_quantity": 30
+        },
+        {
+          "slot": 4,
+          "raw_ingredient": "Eggs",
+          "raw_measure": "5",
+          "ingredient_id": "egg",
+          "unit": "pcs",
+          "expected_quantity": 5
+        },
+        {
+          "slot": 5,
+          "raw_ingredient": "Granulated Sugar",
+          "raw_measure": "175g",
+          "ingredient_id": "sugar",
+          "unit": "g",
+          "expected_quantity": 175
+        },
+        {
+          "slot": 6,
+          "raw_ingredient": "Flour",
+          "raw_measure": "125g",
+          "ingredient_id": "flour",
+          "unit": "g",
+          "expected_quantity": 125
+        },
+        {
+          "slot": 7,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 8,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 9,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 10,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 11,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 12,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 13,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 14,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 15,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 16,
+          "raw_ingredient": null,
+          "raw_measure": null
+        },
+        {
+          "slot": 17,
+          "raw_ingredient": null,
+          "raw_measure": null
+        },
+        {
+          "slot": 18,
+          "raw_ingredient": null,
+          "raw_measure": null
+        },
+        {
+          "slot": 19,
+          "raw_ingredient": null,
+          "raw_measure": null
+        },
+        {
+          "slot": 20,
+          "raw_ingredient": null,
+          "raw_measure": null
+        }
+      ],
+      "expected_totals": {
+        "plain_chocolate": 250,
+        "butter": 175,
+        "milk": 30,
+        "egg": 5,
+        "sugar": 175,
+        "flour": 125
+      }
+    },
+    {
+      "external_id": "53396",
+      "title": "Baghlaw-e-Khanagi",
+      "category": "Dessert",
+      "slots": [
+        {
+          "slot": 1,
+          "raw_ingredient": "Flour",
+          "raw_measure": "600g",
+          "ingredient_id": "flour",
+          "unit": "g",
+          "expected_quantity": 600
+        },
+        {
+          "slot": 2,
+          "raw_ingredient": "Eggs",
+          "raw_measure": "3",
+          "ingredient_id": "egg",
+          "unit": "pcs",
+          "expected_quantity": 3
+        },
+        {
+          "slot": 3,
+          "raw_ingredient": "Milk",
+          "raw_measure": "450ml",
+          "ingredient_id": "milk",
+          "unit": "ml",
+          "expected_quantity": 450
+        },
+        {
+          "slot": 4,
+          "raw_ingredient": "Vegetable Oil",
+          "raw_measure": "75 ml ",
+          "ingredient_id": "vegetable_oil",
+          "unit": "ml",
+          "expected_quantity": 75
+        },
+        {
+          "slot": 5,
+          "raw_ingredient": "Baking Powder",
+          "raw_measure": "1 tsp",
+          "ingredient_id": "baking_powder",
+          "unit": "ml",
+          "expected_quantity": 5
+        },
+        {
+          "slot": 6,
+          "raw_ingredient": "Ground Walnuts",
+          "raw_measure": "50g",
+          "ingredient_id": "ground_walnuts",
+          "unit": "g",
+          "expected_quantity": 50
+        },
+        {
+          "slot": 7,
+          "raw_ingredient": "Cardamom",
+          "raw_measure": "10g",
+          "ingredient_id": "cardamom",
+          "unit": "g",
+          "expected_quantity": 10
+        },
+        {
+          "slot": 8,
+          "raw_ingredient": "Sugar",
+          "raw_measure": "300g",
+          "ingredient_id": "sugar",
+          "unit": "g",
+          "expected_quantity": 300
+        },
+        {
+          "slot": 9,
+          "raw_ingredient": "Water",
+          "raw_measure": "1 L ",
+          "ingredient_id": "water",
+          "unit": "ml",
+          "expected_quantity": 1000
+        },
+        {
+          "slot": 10,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 11,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 12,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 13,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 14,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 15,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 16,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 17,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 18,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 19,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 20,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        }
+      ],
+      "expected_totals": {
+        "flour": 600,
+        "egg": 3,
+        "milk": 450,
+        "vegetable_oil": 75,
+        "baking_powder": 5,
+        "ground_walnuts": 50,
+        "cardamom": 10,
+        "sugar": 300,
+        "water": 1000
+      }
+    },
+    {
+      "external_id": "53316",
+      "title": "Beetroot pancakes",
+      "category": "Dessert",
+      "slots": [
+        {
+          "slot": 1,
+          "raw_ingredient": "Beetroot",
+          "raw_measure": "3",
+          "ingredient_id": "beetroot",
+          "unit": "pcs",
+          "expected_quantity": 3
+        },
+        {
+          "slot": 2,
+          "raw_ingredient": "Milk",
+          "raw_measure": "50 ml ",
+          "ingredient_id": "milk",
+          "unit": "ml",
+          "expected_quantity": 50
+        },
+        {
+          "slot": 3,
+          "raw_ingredient": "Self-raising Flour",
+          "raw_measure": "200g",
+          "ingredient_id": "self_raising_flour",
+          "unit": "g",
+          "expected_quantity": 200
+        },
+        {
+          "slot": 4,
+          "raw_ingredient": "Baking Powder",
+          "raw_measure": "1 tsp",
+          "ingredient_id": "baking_powder",
+          "unit": "ml",
+          "expected_quantity": 5
+        },
+        {
+          "slot": 5,
+          "raw_ingredient": "Maple Syrup",
+          "raw_measure": "2 tablespoons",
+          "ingredient_id": "maple_syrup",
+          "unit": "ml",
+          "expected_quantity": 30
+        },
+        {
+          "slot": 6,
+          "raw_ingredient": "Vanilla Extract",
+          "raw_measure": "1/2 teaspoon",
+          "ingredient_id": "vanilla",
+          "unit": "ml",
+          "expected_quantity": 2.5
+        },
+        {
+          "slot": 7,
+          "raw_ingredient": "Egg",
+          "raw_measure": "3",
+          "ingredient_id": "egg",
+          "unit": "pcs",
+          "expected_quantity": 3
+        },
+        {
+          "slot": 8,
+          "raw_ingredient": "Butter",
+          "raw_measure": "25g",
+          "ingredient_id": "butter",
+          "unit": "g",
+          "expected_quantity": 25
+        },
+        {
+          "slot": 9,
+          "raw_ingredient": "Frozen Mixed Berries",
+          "raw_measure": "200g",
+          "ingredient_id": "frozen_mixed_berries",
+          "unit": "g",
+          "expected_quantity": 200
+        },
+        {
+          "slot": 10,
+          "raw_ingredient": "Blackcurrant Jam",
+          "raw_measure": "2 tablespoons",
+          "ingredient_id": "blackcurrant_jam",
+          "unit": "ml",
+          "expected_quantity": 30
+        },
+        {
+          "slot": 11,
+          "raw_ingredient": "Greek Yogurt",
+          "raw_measure": "100g ",
+          "ingredient_id": "yogurt",
+          "unit": "g",
+          "expected_quantity": 100
+        },
+        {
+          "slot": 12,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 13,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 14,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 15,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 16,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 17,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 18,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 19,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 20,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        }
+      ],
+      "expected_totals": {
+        "beetroot": 3,
+        "milk": 50,
+        "self_raising_flour": 200,
+        "baking_powder": 5,
+        "maple_syrup": 30,
+        "vanilla": 2.5,
+        "egg": 3,
+        "butter": 25,
+        "frozen_mixed_berries": 200,
+        "blackcurrant_jam": 30,
+        "yogurt": 100
+      }
+    },
+    {
+      "external_id": "53321",
+      "title": "Vanilla alfajores",
+      "category": "Dessert",
+      "slots": [
+        {
+          "slot": 1,
+          "raw_ingredient": "Dulce de leche",
+          "raw_measure": "150g",
+          "ingredient_id": "dulce_de_leche",
+          "unit": "g",
+          "expected_quantity": 150
+        },
+        {
+          "slot": 2,
+          "raw_ingredient": "Coconut Flakes",
+          "raw_measure": "50g",
+          "ingredient_id": "coconut_flakes",
+          "unit": "g",
+          "expected_quantity": 50
+        },
+        {
+          "slot": 3,
+          "raw_ingredient": "Butter",
+          "raw_measure": "100g ",
+          "ingredient_id": "butter",
+          "unit": "g",
+          "expected_quantity": 100
+        },
+        {
+          "slot": 4,
+          "raw_ingredient": "Sugar",
+          "raw_measure": "100g ",
+          "ingredient_id": "sugar",
+          "unit": "g",
+          "expected_quantity": 100
+        },
+        {
+          "slot": 5,
+          "raw_ingredient": "Egg",
+          "raw_measure": "1",
+          "ingredient_id": "egg",
+          "unit": "pcs",
+          "expected_quantity": 1
+        },
+        {
+          "slot": 6,
+          "raw_ingredient": "Egg Yolks",
+          "raw_measure": "1",
+          "ingredient_id": "egg_yolk",
+          "unit": "pcs",
+          "expected_quantity": 1
+        },
+        {
+          "slot": 7,
+          "raw_ingredient": "Cornstarch",
+          "raw_measure": "200g",
+          "ingredient_id": "cornstarch",
+          "unit": "g",
+          "expected_quantity": 200
+        },
+        {
+          "slot": 8,
+          "raw_ingredient": "All purpose flour",
+          "raw_measure": "100g ",
+          "ingredient_id": "flour",
+          "unit": "g",
+          "expected_quantity": 100
+        },
+        {
+          "slot": 9,
+          "raw_ingredient": "Baking Powder",
+          "raw_measure": "1 tsp",
+          "ingredient_id": "baking_powder",
+          "unit": "ml",
+          "expected_quantity": 5
+        },
+        {
+          "slot": 10,
+          "raw_ingredient": "Vanilla Extract",
+          "raw_measure": "1 tsp",
+          "ingredient_id": "vanilla",
+          "unit": "ml",
+          "expected_quantity": 5
+        },
+        {
+          "slot": 11,
+          "raw_ingredient": "Dulce de leche",
+          "raw_measure": "150g",
+          "ingredient_id": "dulce_de_leche",
+          "unit": "g",
+          "expected_quantity": 150
+        },
+        {
+          "slot": 12,
+          "raw_ingredient": "Coconut Flakes",
+          "raw_measure": "50g",
+          "ingredient_id": "coconut_flakes",
+          "unit": "g",
+          "expected_quantity": 50
+        },
+        {
+          "slot": 13,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 14,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 15,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 16,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 17,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 18,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 19,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 20,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        }
+      ],
+      "expected_totals": {
+        "dulce_de_leche": 300,
+        "coconut_flakes": 100,
+        "butter": 100,
+        "sugar": 100,
+        "egg": 1,
+        "egg_yolk": 1,
+        "cornstarch": 200,
+        "baking_powder": 5,
+        "vanilla": 5,
+        "flour": 100
+      }
+    },
+    {
+      "external_id": "53452",
+      "title": "Handesh – Bangladeshi rice flour and date molasses cakes",
+      "category": "Dessert",
+      "slots": [
+        {
+          "slot": 1,
+          "raw_ingredient": "Date Molasses",
+          "raw_measure": "250g",
+          "ingredient_id": "date_molasses",
+          "unit": "g",
+          "expected_quantity": 250
+        },
+        {
+          "slot": 2,
+          "raw_ingredient": "Warm Water",
+          "raw_measure": "400ml",
+          "ingredient_id": "water",
+          "unit": "ml",
+          "expected_quantity": 400
+        },
+        {
+          "slot": 3,
+          "raw_ingredient": "Rice Flour",
+          "raw_measure": "250g",
+          "ingredient_id": "rice_flour",
+          "unit": "g",
+          "expected_quantity": 250
+        },
+        {
+          "slot": 4,
+          "raw_ingredient": "Flour",
+          "raw_measure": "150g",
+          "ingredient_id": "flour",
+          "unit": "g",
+          "expected_quantity": 150
+        },
+        {
+          "slot": 5,
+          "raw_ingredient": "Ground Cinnamon",
+          "raw_measure": "1/4 tsp",
+          "ingredient_id": "ground_cinnamon",
+          "unit": "ml",
+          "expected_quantity": 1.25
+        },
+        {
+          "slot": 6,
+          "raw_ingredient": "Ground Cardomom",
+          "raw_measure": "1/4 tsp",
+          "ingredient_id": "ground_cardamom",
+          "unit": "ml",
+          "expected_quantity": 1.25
+        },
+        {
+          "slot": 7,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 8,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 9,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 10,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 11,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 12,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 13,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 14,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 15,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 16,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 17,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 18,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 19,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 20,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        }
+      ],
+      "expected_totals": {
+        "date_molasses": 250,
+        "water": 400,
+        "rice_flour": 250,
+        "flour": 150,
+        "ground_cinnamon": 1.25,
+        "ground_cardamom": 1.25
+      }
+    },
+    {
+      "external_id": "53293",
+      "title": "Pistachio cake",
+      "category": "Dessert",
+      "slots": [
+        {
+          "slot": 1,
+          "raw_ingredient": "Butter",
+          "raw_measure": "250g",
+          "ingredient_id": "butter",
+          "unit": "g",
+          "expected_quantity": 250
+        },
+        {
+          "slot": 2,
+          "raw_ingredient": "Pistachio",
+          "raw_measure": "200g",
+          "ingredient_id": "pistachio",
+          "unit": "g",
+          "expected_quantity": 200
+        },
+        {
+          "slot": 3,
+          "raw_ingredient": "Plain Flour",
+          "raw_measure": "80g",
+          "ingredient_id": "flour",
+          "unit": "g",
+          "expected_quantity": 80
+        },
+        {
+          "slot": 4,
+          "raw_ingredient": "Baking Powder",
+          "raw_measure": "1 tsp",
+          "ingredient_id": "baking_powder",
+          "unit": "ml",
+          "expected_quantity": 5
+        },
+        {
+          "slot": 5,
+          "raw_ingredient": "Caster Sugar",
+          "raw_measure": "225g",
+          "ingredient_id": "sugar",
+          "unit": "g",
+          "expected_quantity": 225
+        },
+        {
+          "slot": 6,
+          "raw_ingredient": "Egg",
+          "raw_measure": "4",
+          "ingredient_id": "egg",
+          "unit": "pcs",
+          "expected_quantity": 4
+        },
+        {
+          "slot": 7,
+          "raw_ingredient": "Vanilla Extract",
+          "raw_measure": "1 tsp",
+          "ingredient_id": "vanilla",
+          "unit": "ml",
+          "expected_quantity": 5
+        },
+        {
+          "slot": 8,
+          "raw_ingredient": "Icing Sugar",
+          "raw_measure": "100g ",
+          "ingredient_id": "icing_sugar",
+          "unit": "g",
+          "expected_quantity": 100
+        },
+        {
+          "slot": 9,
+          "raw_ingredient": "Mascarpone",
+          "raw_measure": "250g",
+          "ingredient_id": "mascarpone",
+          "unit": "g",
+          "expected_quantity": 250
+        },
+        {
+          "slot": 10,
+          "raw_ingredient": "Double Cream",
+          "raw_measure": "200ml",
+          "ingredient_id": "cream",
+          "unit": "ml",
+          "expected_quantity": 200
+        },
+        {
+          "slot": 11,
+          "raw_ingredient": "Pistachio Paste",
+          "raw_measure": "100g ",
+          "ingredient_id": "pistachio_paste",
+          "unit": "g",
+          "expected_quantity": 100
+        },
+        {
+          "slot": 12,
+          "raw_ingredient": "Raspberries",
+          "raw_measure": "400g",
+          "ingredient_id": "raspberries",
+          "unit": "g",
+          "expected_quantity": 400
+        },
+        {
+          "slot": 13,
+          "raw_ingredient": "Unwaxed Lime",
+          "raw_measure": "1",
+          "ingredient_id": "unwaxed_lime",
+          "unit": "pcs",
+          "expected_quantity": 1
+        },
+        {
+          "slot": 14,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 15,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 16,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 17,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 18,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 19,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 20,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        }
+      ],
+      "expected_totals": {
+        "butter": 250,
+        "pistachio": 200,
+        "flour": 80,
+        "baking_powder": 5,
+        "sugar": 225,
+        "egg": 4,
+        "vanilla": 5,
+        "icing_sugar": 100,
+        "mascarpone": 250,
+        "cream": 200,
+        "pistachio_paste": 100,
+        "raspberries": 400,
+        "unwaxed_lime": 1
+      }
+    },
+    {
+      "external_id": "52901",
+      "title": "Rock Cakes",
+      "category": "Dessert",
+      "slots": [
+        {
+          "slot": 1,
+          "raw_ingredient": "Self-raising Flour",
+          "raw_measure": "225g",
+          "ingredient_id": "self_raising_flour",
+          "unit": "g",
+          "expected_quantity": 225
+        },
+        {
+          "slot": 2,
+          "raw_ingredient": "Caster Sugar",
+          "raw_measure": "75g",
+          "ingredient_id": "sugar",
+          "unit": "g",
+          "expected_quantity": 75
+        },
+        {
+          "slot": 3,
+          "raw_ingredient": "Baking Powder",
+          "raw_measure": "1 tsp ",
+          "ingredient_id": "baking_powder",
+          "unit": "ml",
+          "expected_quantity": 5
+        },
+        {
+          "slot": 4,
+          "raw_ingredient": "Butter",
+          "raw_measure": "125g",
+          "ingredient_id": "butter",
+          "unit": "g",
+          "expected_quantity": 125
+        },
+        {
+          "slot": 5,
+          "raw_ingredient": "Dried Fruit",
+          "raw_measure": "150g",
+          "ingredient_id": "dried_fruit",
+          "unit": "g",
+          "expected_quantity": 150
+        },
+        {
+          "slot": 6,
+          "raw_ingredient": "Eggs",
+          "raw_measure": "1",
+          "ingredient_id": "egg",
+          "unit": "pcs",
+          "expected_quantity": 1
+        },
+        {
+          "slot": 7,
+          "raw_ingredient": "Milk",
+          "raw_measure": "1 tbs",
+          "ingredient_id": "milk",
+          "unit": "ml",
+          "expected_quantity": 15
+        },
+        {
+          "slot": 8,
+          "raw_ingredient": "Vanilla Extract",
+          "raw_measure": "2 tsp",
+          "ingredient_id": "vanilla",
+          "unit": "ml",
+          "expected_quantity": 10
+        },
+        {
+          "slot": 9,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 10,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 11,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 12,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 13,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 14,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 15,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 16,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 17,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 18,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 19,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 20,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        }
+      ],
+      "expected_totals": {
+        "self_raising_flour": 225,
+        "sugar": 75,
+        "baking_powder": 5,
+        "butter": 125,
+        "dried_fruit": 150,
+        "egg": 1,
+        "milk": 15,
+        "vanilla": 10
+      }
+    },
+    {
+      "external_id": "53308",
+      "title": "Rye bread",
+      "category": "Side",
+      "slots": [
+        {
+          "slot": 1,
+          "raw_ingredient": "Rye",
+          "raw_measure": "200g",
+          "ingredient_id": "rye",
+          "unit": "g",
+          "expected_quantity": 200
+        },
+        {
+          "slot": 2,
+          "raw_ingredient": "Strong white bread flour",
+          "raw_measure": "200g",
+          "ingredient_id": "strong_white_bread_flour",
+          "unit": "g",
+          "expected_quantity": 200
+        },
+        {
+          "slot": 3,
+          "raw_ingredient": "Yeast",
+          "raw_measure": "10g",
+          "ingredient_id": "yeast",
+          "unit": "g",
+          "expected_quantity": 10
+        },
+        {
+          "slot": 4,
+          "raw_ingredient": "Salt",
+          "raw_measure": "1/2 tsp",
+          "ingredient_id": "salt",
+          "unit": "ml",
+          "expected_quantity": 2.5
+        },
+        {
+          "slot": 5,
+          "raw_ingredient": "Honey",
+          "raw_measure": "1 tablespoon",
+          "ingredient_id": "honey",
+          "unit": "ml",
+          "expected_quantity": 15
+        },
+        {
+          "slot": 6,
+          "raw_ingredient": "Caraway Seed",
+          "raw_measure": "1 tsp",
+          "ingredient_id": "caraway_seed",
+          "unit": "ml",
+          "expected_quantity": 5
+        },
+        {
+          "slot": 7,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 8,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 9,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 10,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 11,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 12,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 13,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 14,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 15,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 16,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 17,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 18,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 19,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 20,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        }
+      ],
+      "expected_totals": {
+        "rye": 200,
+        "strong_white_bread_flour": 200,
+        "yeast": 10,
+        "salt": 2.5,
+        "honey": 15,
+        "caraway_seed": 5
+      }
+    },
+    {
+      "external_id": "53177",
+      "title": "Spaghetti with Spanish flavours",
+      "category": "Pork",
+      "slots": [
+        {
+          "slot": 1,
+          "raw_ingredient": "Chorizo",
+          "raw_measure": "80g",
+          "ingredient_id": "chorizo",
+          "unit": "g",
+          "expected_quantity": 80
+        },
+        {
+          "slot": 2,
+          "raw_ingredient": "Spaghetti",
+          "raw_measure": "300g",
+          "ingredient_id": "pasta",
+          "unit": "g",
+          "expected_quantity": 300
+        },
+        {
+          "slot": 3,
+          "raw_ingredient": "Parsley",
+          "raw_measure": "20g",
+          "ingredient_id": "parsley",
+          "unit": "g",
+          "expected_quantity": 20
+        },
+        {
+          "slot": 4,
+          "raw_ingredient": "Red Pepper",
+          "raw_measure": "2",
+          "ingredient_id": "pepper",
+          "unit": "pcs",
+          "expected_quantity": 2
+        },
+        {
+          "slot": 5,
+          "raw_ingredient": "Olive Oil",
+          "raw_measure": "2 tbsp",
+          "ingredient_id": "olive_oil",
+          "unit": "ml",
+          "expected_quantity": 30
+        },
+        {
+          "slot": 6,
+          "raw_ingredient": "Parmesan Cheese",
+          "raw_measure": "50g",
+          "ingredient_id": "parmesan",
+          "unit": "g",
+          "expected_quantity": 50
+        },
+        {
+          "slot": 7,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 8,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 9,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 10,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 11,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 12,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 13,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 14,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 15,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 16,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 17,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 18,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 19,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 20,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        }
+      ],
+      "expected_totals": {
+        "chorizo": 80,
+        "pasta": 300,
+        "parsley": 20,
+        "pepper": 2,
+        "olive_oil": 30,
+        "parmesan": 50
+      }
+    },
+    {
+      "external_id": "53075",
+      "title": "Tortang Talong",
+      "category": "Vegetarian",
+      "slots": [
+        {
+          "slot": 1,
+          "raw_ingredient": "Egg Plants",
+          "raw_measure": "4",
+          "ingredient_id": "eggplant",
+          "unit": "pcs",
+          "expected_quantity": 4
+        },
+        {
+          "slot": 2,
+          "raw_ingredient": "Eggs",
+          "raw_measure": "2",
+          "ingredient_id": "egg",
+          "unit": "pcs",
+          "expected_quantity": 2
+        },
+        {
+          "slot": 3,
+          "raw_ingredient": "Salt",
+          "raw_measure": "1 tsp ",
+          "ingredient_id": "salt",
+          "unit": "ml",
+          "expected_quantity": 5
+        },
+        {
+          "slot": 4,
+          "raw_ingredient": "Olive Oil",
+          "raw_measure": "4 tsp",
+          "ingredient_id": "olive_oil",
+          "unit": "ml",
+          "expected_quantity": 20
+        },
+        {
+          "slot": 5,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 6,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 7,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 8,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 9,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 10,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 11,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 12,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 13,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 14,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 15,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 16,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 17,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 18,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 19,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 20,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        }
+      ],
+      "expected_totals": {
+        "eggplant": 4,
+        "egg": 2,
+        "salt": 5,
+        "olive_oil": 20
+      }
+    },
+    {
+      "external_id": "53150",
+      "title": "Padron peppers",
+      "category": "Vegan",
+      "slots": [
+        {
+          "slot": 1,
+          "raw_ingredient": "Olive Oil",
+          "raw_measure": "1 tablespoon",
+          "ingredient_id": "olive_oil",
+          "unit": "ml",
+          "expected_quantity": 15
+        },
+        {
+          "slot": 2,
+          "raw_ingredient": "Padron peppers",
+          "raw_measure": "500g",
+          "ingredient_id": "padron_peppers",
+          "unit": "g",
+          "expected_quantity": 500
+        },
+        {
+          "slot": 3,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 4,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 5,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 6,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 7,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 8,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 9,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 10,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 11,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 12,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 13,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 14,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 15,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 16,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 17,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 18,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 19,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 20,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        }
+      ],
+      "expected_totals": {
+        "olive_oil": 15,
+        "padron_peppers": 500
+      }
+    },
+    {
+      "external_id": "53252",
+      "title": "Turkish rice (vermicelli rice)",
+      "category": "Miscellaneous",
+      "slots": [
+        {
+          "slot": 1,
+          "raw_ingredient": "Rice",
+          "raw_measure": "300g",
+          "ingredient_id": "rice",
+          "unit": "g",
+          "expected_quantity": 300
+        },
+        {
+          "slot": 2,
+          "raw_ingredient": "Vegetable Oil",
+          "raw_measure": "3  tablespoons",
+          "ingredient_id": "vegetable_oil",
+          "unit": "ml",
+          "expected_quantity": 45
+        },
+        {
+          "slot": 3,
+          "raw_ingredient": "Vermicelli Pasta",
+          "raw_measure": "70g",
+          "ingredient_id": "vermicelli_pasta",
+          "unit": "g",
+          "expected_quantity": 70
+        },
+        {
+          "slot": 4,
+          "raw_ingredient": "Unsalted Butter",
+          "raw_measure": "30g",
+          "ingredient_id": "unsalted_butter",
+          "unit": "g",
+          "expected_quantity": 30
+        },
+        {
+          "slot": 5,
+          "raw_ingredient": "Chicken Stock",
+          "raw_measure": "600ml",
+          "ingredient_id": "stock",
+          "unit": "ml",
+          "expected_quantity": 600
+        },
+        {
+          "slot": 6,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 7,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 8,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 9,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 10,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 11,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 12,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 13,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 14,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 15,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 16,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 17,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 18,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 19,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        },
+        {
+          "slot": 20,
+          "raw_ingredient": "",
+          "raw_measure": " "
+        }
+      ],
+      "expected_totals": {
+        "rice": 300,
+        "vegetable_oil": 45,
+        "vermicelli_pasta": 70,
+        "unsalted_butter": 30,
+        "stock": 600
+      }
+    },
+    {
+      "external_id": "53403",
+      "title": "Muraba-E-Kadu (Pumpkin Jam)",
+      "category": "Miscellaneous",
+      "slots": [
+        {
+          "slot": 1,
+          "raw_ingredient": "Pumpkin",
+          "raw_measure": "1 kg",
+          "ingredient_id": "pumpkin",
+          "unit": "g",
+          "expected_quantity": 1000
+        },
+        {
+          "slot": 2,
+          "raw_ingredient": "Orange",
+          "raw_measure": "1 kg",
+          "ingredient_id": "orange",
+          "unit": "g",
+          "expected_quantity": 1000
+        },
+        {
+          "slot": 3,
+          "raw_ingredient": "Sugar",
+          "raw_measure": "750g",
+          "ingredient_id": "sugar",
+          "unit": "g",
+          "expected_quantity": 750
+        },
+        {
+          "slot": 4,
+          "raw_ingredient": "Cardamom",
+          "raw_measure": "60g",
+          "ingredient_id": "cardamom",
+          "unit": "g",
+          "expected_quantity": 60
+        },
+        {
+          "slot": 5,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 6,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 7,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 8,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 9,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 10,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 11,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 12,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 13,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 14,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 15,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 16,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 17,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 18,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 19,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 20,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        }
+      ],
+      "expected_totals": {
+        "pumpkin": 1000,
+        "orange": 1000,
+        "sugar": 750,
+        "cardamom": 60
+      }
+    },
+    {
+      "external_id": "53409",
+      "title": "Shendetlie Honey and Nut Cake",
+      "category": "Dessert",
+      "slots": [
+        {
+          "slot": 1,
+          "raw_ingredient": "Sugar",
+          "raw_measure": "300g",
+          "ingredient_id": "sugar",
+          "unit": "g",
+          "expected_quantity": 300
+        },
+        {
+          "slot": 2,
+          "raw_ingredient": "Eggs",
+          "raw_measure": "3",
+          "ingredient_id": "egg",
+          "unit": "pcs",
+          "expected_quantity": 3
+        },
+        {
+          "slot": 3,
+          "raw_ingredient": "Melted Butter",
+          "raw_measure": "180g",
+          "ingredient_id": "melted_butter",
+          "unit": "g",
+          "expected_quantity": 180
+        },
+        {
+          "slot": 4,
+          "raw_ingredient": "Flour",
+          "raw_measure": "700g",
+          "ingredient_id": "flour",
+          "unit": "g",
+          "expected_quantity": 700
+        },
+        {
+          "slot": 5,
+          "raw_ingredient": "Walnuts",
+          "raw_measure": "100g ",
+          "ingredient_id": "walnuts",
+          "unit": "g",
+          "expected_quantity": 100
+        },
+        {
+          "slot": 6,
+          "raw_ingredient": "Honey",
+          "raw_measure": "4 tablespoons",
+          "ingredient_id": "honey",
+          "unit": "ml",
+          "expected_quantity": 60
+        },
+        {
+          "slot": 7,
+          "raw_ingredient": "Baking Powder",
+          "raw_measure": "1 tsp",
+          "ingredient_id": "baking_powder",
+          "unit": "ml",
+          "expected_quantity": 5
+        },
+        {
+          "slot": 8,
+          "raw_ingredient": "Sugar",
+          "raw_measure": "220g",
+          "ingredient_id": "sugar",
+          "unit": "g",
+          "expected_quantity": 220
+        },
+        {
+          "slot": 9,
+          "raw_ingredient": "Water",
+          "raw_measure": "450ml",
+          "ingredient_id": "water",
+          "unit": "ml",
+          "expected_quantity": 450
+        },
+        {
+          "slot": 10,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 11,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 12,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 13,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 14,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 15,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 16,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 17,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 18,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 19,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        },
+        {
+          "slot": 20,
+          "raw_ingredient": "",
+          "raw_measure": ""
+        }
+      ],
+      "expected_totals": {
+        "sugar": 520,
+        "egg": 3,
+        "melted_butter": 180,
+        "flour": 700,
+        "walnuts": 100,
+        "honey": 60,
+        "baking_powder": 5,
+        "water": 450
+      }
+    }
+  ]
+}
