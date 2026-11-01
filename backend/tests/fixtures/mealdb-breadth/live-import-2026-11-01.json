@@ -1,0 +1,3888 @@
+{
+  "started_at_utc": "2026-11-01T02:54:54.050127+00:00",
+  "starting_count": 15,
+  "completed_at_utc": "2026-11-01T02:54:59.199259+00:00",
+  "http_status": 200,
+  "report": {
+    "imported": 0,
+    "updated": 15,
+    "skipped": [
+      {
+        "external_id": "53483",
+        "title": "Acaraje black-eyed pea fritters with shrimp filling",
+        "reason": "Unsupported ingredient identity 'Black Eyed Peas'"
+      },
+      {
+        "external_id": "53527",
+        "title": "Achiote Oil (Aceite Achiotado) Recipe",
+        "reason": "Unsupported quantity '2 cups'"
+      },
+      {
+        "external_id": "53262",
+        "title": "Adana kebab",
+        "reason": "Unsupported ingredient identity 'Romano Pepper'"
+      },
+      {
+        "external_id": "53373",
+        "title": "Air Fryer Egg Rolls",
+        "reason": "Unsupported ingredient identity 'Ground Pork'"
+      },
+      {
+        "external_id": "53158",
+        "title": "Air fryer patatas bravas",
+        "reason": "Unsupported quantity '1 chopped'"
+      },
+      {
+        "external_id": "53525",
+        "title": "Ají de Aguacate Recipe (Colombian Spicy Avocado Sauce)",
+        "reason": "Unsupported ingredient identity 'Avocado'"
+      },
+      {
+        "external_id": "53169",
+        "title": "Ajo blanco",
+        "reason": "Unsupported ingredient identity 'White bread'"
+      },
+      {
+        "external_id": "53138",
+        "title": "Alfajores",
+        "reason": "Unsupported ingredient identity 'Lemon Zest'"
+      },
+      {
+        "external_id": "53284",
+        "title": "Algerian Bouzgene Berber Bread with Roasted Pepper Sauce",
+        "reason": "Unsupported quantity '4 Cloves Chopped': no exact conversion"
+      },
+      {
+        "external_id": "53282",
+        "title": "Algerian Carrots",
+        "reason": "Unsupported quantity '1 1/2 cup '"
+      },
+      {
+        "external_id": "53288",
+        "title": "Algerian Flafla (Bell Pepper Salad)",
+        "reason": "Unsupported ingredient identity 'Red Onions'"
+      },
+      {
+        "external_id": "53281",
+        "title": "Algerian Kefta (Meatballs)",
+        "reason": "Unsupported quantity '1 lb'"
+      },
+      {
+        "external_id": "53529",
+        "title": "Almojábanas (Colombian Cheese Bread)",
+        "reason": "Unsupported ingredient identity 'Cornmeal'"
+      },
+      {
+        "external_id": "53495",
+        "title": "Amok Trey – Cambodian Fish Curry",
+        "reason": "Unsupported ingredient identity 'Fish fillet'"
+      },
+      {
+        "external_id": "53430",
+        "title": "Antiguan Breakfast (Chop Up and ‘Saltfish’)",
+        "reason": "Unsupported ingredient identity 'Callaloo'"
+      },
+      {
+        "external_id": "53111",
+        "title": "Anzac biscuits",
+        "reason": "Unsupported ingredient identity 'Porridge oats'"
+      },
+      {
+        "external_id": "53049",
+        "title": "Apam balik",
+        "reason": "Unsupported ingredient identity 'Oil'"
+      },
+      {
+        "external_id": "52893",
+        "title": "Apple & Blackberry Crumble",
+        "reason": "Unsupported ingredient identity 'Braeburn Apples'"
+      },
+      {
+        "external_id": "53380",
+        "title": "Apple cake",
+        "reason": "Unsupported quantity 'Pinch': no exact conversion"
+      },
+      {
+        "external_id": "52768",
+        "title": "Apple Frangipan Tart",
+        "reason": "Unsupported ingredient identity 'digestive biscuits'"
+      },
+      {
+        "external_id": "53575",
+        "title": "Apple Pie",
+        "reason": "Unit 'ml' is not compatible with g"
+      },
+      {
+        "external_id": "53568",
+        "title": "Apple pie pops",
+        "reason": "Unit 'tbsp' is not compatible with g"
+      },
+      {
+        "external_id": "53389",
+        "title": "Apple Potato Mash (Hete bliksem) ",
+        "reason": "Unit 'g' is not compatible with pcs"
+      },
+      {
+        "external_id": "53276",
+        "title": "Apricot & Turkish delight mess",
+        "reason": "Unsupported ingredient identity 'Orange Blossom Water'"
+      },
+      {
+        "external_id": "53439",
+        "title": "Arepa",
+        "reason": "Unsupported ingredient identity 'Corn Flour'"
+      },
+      {
+        "external_id": "53334",
+        "title": "Arepa Pabellón",
+        "reason": "Unsupported ingredient identity 'Corn Arepa Filled With Mozarella Cheese'"
+      },
+      {
+        "external_id": "53329",
+        "title": "Arepa pelua",
+        "reason": "Unsupported ingredient identity 'Beef'"
+      },
+      {
+        "external_id": "53392",
+        "title": "Arnhemse meisjes",
+        "reason": "Unsupported ingredient identity 'Puff Pastry'"
+      },
+      {
+        "external_id": "53406",
+        "title": "Arra të Mbushura me Fik Walnut Stuffed Figs (with Fig Syrup)",
+        "reason": "Unsupported ingredient identity 'Figs'"
+      },
+      {
+        "external_id": "53156",
+        "title": "Arroz al horno (baked rice)",
+        "reason": "Unsupported ingredient identity 'Extra Virgin Olive Oil'"
+      },
+      {
+        "external_id": "53147",
+        "title": "Arroz con gambas y calamar",
+        "reason": "Unsupported ingredient identity 'Raw King Prawns'"
+      },
+      {
+        "external_id": "53522",
+        "title": "Arroz con Leche Recipe",
+        "reason": "Unsupported quantity '1 cup'"
+      },
+      {
+        "external_id": "53133",
+        "title": "Asado",
+        "reason": "Unsupported ingredient identity 'Mixed Beef Cuts'"
+      },
+      {
+        "external_id": "53278",
+        "title": "Aubergine & hummus grills",
+        "reason": "Unsupported ingredient identity 'Aubergine'"
+      },
+      {
+        "external_id": "53267",
+        "title": "Aubergine couscous salad",
+        "reason": "Unsupported ingredient identity 'Aubergine'"
+      },
+      {
+        "external_id": "53099",
+        "title": "Aussie Burgers",
+        "reason": "Unsupported ingredient identity 'Lean Minced Steak'"
+      },
+      {
+        "external_id": "53425",
+        "title": "Authentic Laos Tapioca Pudding with Bananas",
+        "reason": "Unsupported quantity '1 cup'"
+      },
+      {
+        "external_id": "53127",
+        "title": "Authentic Norwegian Kransekake",
+        "reason": "Unsupported ingredient identity 'Almonds'"
+      },
+      {
+        "external_id": "53107",
+        "title": "Avocado dip with new potatoes",
+        "reason": "Unsupported ingredient identity 'Avocado'"
+      },
+      {
+        "external_id": "53050",
+        "title": "Ayam Percik",
+        "reason": "Unsupported ingredient identity 'Chicken Thighs'"
+      },
+      {
+        "external_id": "53094",
+        "title": "Baba Ghanoush",
+        "reason": "Unsupported quantity '4 large'"
+      },
+      {
+        "external_id": "53481",
+        "title": "Bahia-style Moqueca prawn stew",
+        "reason": "Unsupported ingredient identity 'Raw King Prawns'"
+      },
+      {
+        "external_id": "53496",
+        "title": "Bai Sach Chrouk – Grilled Pork with Rice",
+        "reason": "Unsupported ingredient identity 'Pork Shoulder'"
+      },
+      {
+        "external_id": "52807",
+        "title": "Baingan Bharta",
+        "reason": "Unsupported ingredient identity 'Aubergine'"
+      },
+      {
+        "external_id": "53456",
+        "title": "Bajan Salt Bread Recipe",
+        "reason": "Unsupported quantity '2 tubs'"
+      },
+      {
+        "external_id": "53460",
+        "title": "Bajan Sweet Bread",
+        "reason": "Unsupported ingredient identity 'Coconut'"
+      },
+      {
+        "external_id": "53559",
+        "title": "Baked brie with sorrel jam",
+        "reason": "Unsupported ingredient identity 'Dried Sorrel'"
+      },
+      {
+        "external_id": "52959",
+        "title": "Baked salmon with fennel & tomatoes",
+        "reason": "Unsupported ingredient identity 'Fennel'"
+      },
+      {
+        "external_id": "53548",
+        "title": "Baked Yuca Fries",
+        "reason": "Unsupported ingredient identity 'Yuca'"
+      },
+      {
+        "external_id": "52767",
+        "title": "Bakewell tart",
+        "reason": "Unsupported quantity '175g/6oz': no exact conversion"
+      },
+      {
+        "external_id": "53279",
+        "title": "Baklava with spiced nuts, ricotta & chocolate",
+        "reason": "Unsupported ingredient identity 'Lemon Juice'"
+      },
+      {
+        "external_id": "53440",
+        "title": "Balchi di Pisca",
+        "reason": "Unsupported ingredient identity 'Salt Cod'"
+      },
+      {
+        "external_id": "53441",
+        "title": "Banana den Forno",
+        "reason": "Unsupported quantity '1 cup'"
+      },
+      {
+        "external_id": "52855",
+        "title": "Banana Pancakes",
+        "reason": "Unsupported quantity '1 large'"
+      },
+      {
+        "external_id": "53239",
+        "title": "Bang bang prawn salad",
+        "reason": "Unsupported ingredient identity 'Rice Noodles'"
+      },
+      {
+        "external_id": "53451",
+        "title": "Bangladeshi fish curry with daikon",
+        "reason": "Unsupported ingredient identity 'White Fish'"
+      },
+      {
+        "external_id": "53457",
+        "title": "Barbados Pepperpot",
+        "reason": "Unsupported ingredient identity 'Pigs Trotters'"
+      },
+      {
+        "external_id": "53242",
+        "title": "Barbecue pork buns",
+        "reason": "Unsupported ingredient identity 'White Bread Mix'"
+      },
+      {
+        "external_id": "53103",
+        "title": "Barramundi with Moroccan spices",
+        "reason": "Unsupported ingredient identity 'barramundi'"
+      },
+      {
+        "external_id": "52894",
+        "title": "Battenberg Cake",
+        "reason": "Unsupported ingredient identity 'Almonds'"
+      },
+      {
+        "external_id": "52995",
+        "title": "BBQ Pork Sloppy Joes",
+        "reason": "Unit 'pcs' is not compatible with g"
+      },
+      {
+        "external_id": "52848",
+        "title": "Bean & Sausage Hotpot",
+        "reason": "Unsupported ingredient identity 'Sausages'"
+      },
+      {
+        "external_id": "52928",
+        "title": "BeaverTails",
+        "reason": "Unsupported quantity '1/2 cup '"
+      },
+      {
+        "external_id": "53366",
+        "title": "Beef and Broccoli Stir-Fry",
+        "reason": "Unsupported ingredient identity 'Dry sherry'"
+      },
+      {
+        "external_id": "52874",
+        "title": "Beef and Mustard Pie",
+        "reason": "Unsupported ingredient identity 'Beef'"
+      },
+      {
+        "external_id": "52878",
+        "title": "Beef and Oyster pie",
+        "reason": "Unsupported ingredient identity 'Beef'"
+      },
+      {
+        "external_id": "53071",
+        "title": "Beef Asado",
+        "reason": "Unsupported ingredient identity 'Beef'"
+      },
+      {
+        "external_id": "52997",
+        "title": "Beef Banh Mi Bowls with Sriracha Mayo, Carrot & Pickled Cucumber",
+        "reason": "Unsupported quantity 'White': no exact conversion"
+      },
+      {
+        "external_id": "52904",
+        "title": "Beef Bourguignon",
+        "reason": "Unsupported ingredient identity 'Goose Fat'"
+      },
+      {
+        "external_id": "52812",
+        "title": "Beef Brisket Pot Roast",
+        "reason": "Unsupported ingredient identity 'Beef Brisket'"
+      },
+      {
+        "external_id": "53070",
+        "title": "Beef Caldereta",
+        "reason": "Unsupported ingredient identity 'Beef'"
+      },
+      {
+        "external_id": "52873",
+        "title": "Beef Dumpling Stew",
+        "reason": "Unsupported ingredient identity 'Beef'"
+      },
+      {
+        "external_id": "53317",
+        "title": "Beef Empanadas",
+        "reason": "Unsupported ingredient identity 'Lard'"
+      },
+      {
+        "external_id": "52952",
+        "title": "Beef Lo Mein",
+        "reason": "Unsupported ingredient identity 'Beef'"
+      },
+      {
+        "external_id": "53421",
+        "title": "BEEF LOK LAK (Lok Lak Sach Ko)",
+        "reason": "Unsupported ingredient identity 'Beef Tenderloin'"
+      },
+      {
+        "external_id": "53359",
+        "title": "Beef Mandi",
+        "reason": "Unsupported ingredient identity 'Basmati Rice'"
+      },
+      {
+        "external_id": "53068",
+        "title": "Beef Mechado",
+        "reason": "Unsupported quantity '1 sliced'"
+      },
+      {
+        "external_id": "53238",
+        "title": "Beef pho",
+        "reason": "Unsupported ingredient identity 'Beef Stock'"
+      },
+      {
+        "external_id": "53469",
+        "title": "Beef pumpkin Stew",
+        "reason": "Unsupported ingredient identity 'Beef'"
+      },
+      {
+        "external_id": "53053",
+        "title": "Beef Rendang",
+        "reason": "Unsupported ingredient identity 'Beef'"
+      },
+      {
+        "external_id": "52834",
+        "title": "Beef stroganoff",
+        "reason": "Unsupported quantity '1 tbls'"
+      },
+      {
+        "external_id": "52824",
+        "title": "Beef Sunday Roast",
+        "reason": "Unsupported ingredient identity 'Beef'"
+      },
+      {
+        "external_id": "52803",
+        "title": "Beef Wellington",
+        "reason": "Unsupported ingredient identity 'English Mustard'"
+      },
+      {
+        "external_id": "53307",
+        "title": "Beetroot & red cabbage sauerkraut",
+        "reason": "Unit 'g' is not compatible with pcs"
+      },
+      {
+        "external_id": "53313",
+        "title": "Beetroot latkes",
+        "reason": "Unsupported ingredient identity 'Rapeseed Oil'"
+      },
+      {
+        "external_id": "53078",
+        "title": "Beetroot Soup (Borscht)",
+        "reason": "Unsupported ingredient identity 'Chicken Stock Cube'"
+      },
+      {
+        "external_id": "53463",
+        "title": "Belgian Meatballs in Liège Syrup Sauce",
+        "reason": "Unsupported ingredient identity 'Minced Pork'"
+      },
+      {
+        "external_id": "53468",
+        "title": "Belgian Stoemp",
+        "reason": "Unsupported ingredient identity 'Sausages'"
+      },
+      {
+        "external_id": "53466",
+        "title": "Belgian Waterzooi Chicken",
+        "reason": "Unsupported ingredient identity 'Chicken Legs'"
+      },
+      {
+        "external_id": "53453",
+        "title": "Bengali Chicken Curry with Potatoes",
+        "reason": "Unsupported quantity '2 diced'"
+      },
+      {
+        "external_id": "53013",
+        "title": "Big Mac",
+        "reason": "Unsupported ingredient identity 'Sesame Seed Burger Buns'"
+      },
+      {
+        "external_id": "53018",
+        "title": "Bigos (Hunters Stew)",
+        "reason": "Unsupported quantity '2 sliced'"
+      },
+      {
+        "external_id": "53300",
+        "title": "Bigos (Polish hunter's stew)",
+        "reason": "Unsupported ingredient identity 'White Cabbage'"
+      },
+      {
+        "external_id": "53580",
+        "title": "Biss Jaggery Modak",
+        "reason": "Unsupported quantity '2 cups '"
+      },
+      {
+        "external_id": "53069",
+        "title": "Bistek",
+        "reason": "Unsupported ingredient identity 'Beef'"
+      },
+      {
+        "external_id": "52979",
+        "title": "Bitterballen (Dutch meatballs)",
+        "reason": "Unsupported ingredient identity 'Beef Stock'"
+      },
+      {
+        "external_id": "53482",
+        "title": "Black bean & meat stew - feijoada",
+        "reason": "Unsupported ingredient identity 'Black Beans'"
+      },
+      {
+        "external_id": "53546",
+        "title": "Black Bean soup",
+        "reason": "Unsupported ingredient identity 'Extra Virgin Olive Oil'"
+      },
+      {
+        "external_id": "53536",
+        "title": "Black Beans Hotpot",
+        "reason": "Unsupported ingredient identity 'Black Beans'"
+      },
+      {
+        "external_id": "52891",
+        "title": "Blackberry Fool",
+        "reason": "Unsupported ingredient identity 'Hazlenuts'"
+      },
+      {
+        "external_id": "53080",
+        "title": "Blini Pancakes",
+        "reason": "Unsupported ingredient identity 'Buckwheat'"
+      },
+      {
+        "external_id": "53100",
+        "title": "Blueberry & lemon friands",
+        "reason": "Unsupported ingredient identity 'Almonds'"
+      },
+      {
+        "external_id": "53401",
+        "title": "Bolani with Potato Filling",
+        "reason": "Unsupported ingredient identity 'Spring Onions'"
+      },
+      {
+        "external_id": "53438",
+        "title": "Bolita di Keshi",
+        "reason": "Unsupported quantity '1 lb'"
+      },
+      {
+        "external_id": "53311",
+        "title": "Borsch",
+        "reason": "Unsupported ingredient identity 'Beef Shin'"
+      },
+      {
+        "external_id": "53385",
+        "title": "Boterkoek (Dutch Butter Cake)",
+        "reason": "Unit 'pcs' is not compatible with ml"
+      },
+      {
+        "external_id": "52914",
+        "title": "Boulangère Potatoes",
+        "reason": "Unsupported quantity '2 finely chopped': no exact conversion"
+      },
+      {
+        "external_id": "53036",
+        "title": "Boxty Breakfast",
+        "reason": "Unsupported quantity '4 large'"
+      },
+      {
+        "external_id": "52826",
+        "title": "Braised Beef Chilli",
+        "reason": "Unsupported ingredient identity 'Beef'"
+      },
+      {
+        "external_id": "53305",
+        "title": "Braised stuffed cabbage",
+        "reason": "Unsupported ingredient identity 'Cabbage Leaves'"
+      },
+      {
+        "external_id": "53485",
+        "title": "Brazilian carrot cake",
+        "reason": "Unsupported quantity '2 medium'"
+      },
+      {
+        "external_id": "53476",
+        "title": "Brazilian cheese bread (pão de queijo)",
+        "reason": "Unsupported ingredient identity 'Oil'"
+      },
+      {
+        "external_id": "53475",
+        "title": "Brazilian chocolate truffles - brigadeiro",
+        "reason": "Unit 'tbsp' is not compatible with g"
+      },
+      {
+        "external_id": "52792",
+        "title": "Bread and Butter Pudding",
+        "reason": "Unsupported quantity '25g/1oz': no exact conversion"
+      },
+      {
+        "external_id": "53076",
+        "title": "Bread omelette",
+        "reason": "Unit 'pcs' is not compatible with ml"
+      },
+      {
+        "external_id": "53533",
+        "title": "Breaded Steak Recipe (Lomo de Res Apanado)",
+        "reason": "Unsupported ingredient identity 'Beef'"
+      },
+      {
+        "external_id": "53458",
+        "title": "Breadfruit in Butter Sauce",
+        "reason": "Unsupported ingredient identity 'Breadfruit'"
+      },
+      {
+        "external_id": "53454",
+        "title": "Breadfruit in Butter Sauce Recipe",
+        "reason": "Unsupported ingredient identity 'Breadfruit'"
+      },
+      {
+        "external_id": "53562",
+        "title": "Breadfruit Tacos",
+        "reason": "Unsupported ingredient identity 'Breadfruit'"
+      },
+      {
+        "external_id": "52965",
+        "title": "Breakfast Potatoes",
+        "reason": "Unsupported quantity '3 Medium'"
+      },
+      {
+        "external_id": "52913",
+        "title": "Brie wrapped in prosciutto & brioche",
+        "reason": "Unit 'g' is not compatible with ml"
+      },
+      {
+        "external_id": "52842",
+        "title": "Broccoli & Stilton soup",
+        "reason": "Unsupported ingredient identity 'Rapeseed Oil'"
+      },
+      {
+        "external_id": "52940",
+        "title": "Brown Stew Chicken",
+        "reason": "Unsupported ingredient identity 'Chicken'"
+      },
+      {
+        "external_id": "53126",
+        "title": "Brun Lapskaus (Norwegian Beef Vegetable Stew)",
+        "reason": "Unsupported quantity '2 tblsp'"
+      },
+      {
+        "external_id": "53190",
+        "title": "Bryndzové Halušky",
+        "reason": "Unsupported ingredient identity 'Bryndza cheese'"
+      },
+      {
+        "external_id": "52961",
+        "title": "Budino Di Ricotta",
+        "reason": "Unsupported ingredient identity 'Ricotta'"
+      },
+      {
+        "external_id": "53492",
+        "title": "Bulgarian Green Salad",
+        "reason": "Unsupported ingredient identity 'Lettuce'"
+      },
+      {
+        "external_id": "53493",
+        "title": "Bulgarian Honey Cookies",
+        "reason": "Unsupported quantity '2 large'"
+      },
+      {
+        "external_id": "53060",
+        "title": "Burek",
+        "reason": "Unsupported ingredient identity 'Filo Pastry'"
+      },
+      {
+        "external_id": "53077",
+        "title": "Cabbage Soup (Shchi)",
+        "reason": "Unit 'tbsp' is not compatible with g"
+      },
+      {
+        "external_id": "53488",
+        "title": "Cabbage with Ground Beef",
+        "reason": "Unsupported quantity '1 lb'"
+      },
+      {
+        "external_id": "53256",
+        "title": "Cacik",
+        "reason": "Unsupported ingredient identity 'Natural Yoghurt'"
+      },
+      {
+        "external_id": "53544",
+        "title": "CAFE LA LLAVE ESPRESSO ICE CREAM",
+        "reason": "Unsupported quantity '2 cups'"
+      },
+      {
+        "external_id": "52819",
+        "title": "Cajun spiced fish tacos",
+        "reason": "Unsupported ingredient identity 'cajun'"
+      },
+      {
+        "external_id": "53361",
+        "title": "Callaloo and SaltFish",
+        "reason": "Unsupported ingredient identity 'Salt Cod'"
+      },
+      {
+        "external_id": "52939",
+        "title": "Callaloo Jamaican Style",
+        "reason": "Unsupported ingredient identity 'Kale'"
+      },
+      {
+        "external_id": "53428",
+        "title": "Camaro Grelhado Com Molho Cru (Grilled Prawns with Green Onion Sauce)",
+        "reason": "Unsupported ingredient identity 'Prawns'"
+      },
+      {
+        "external_id": "53418",
+        "title": "Cambodian Stir-fried Morning Glory with Pork, Fermented Soybeans, and Garlic",
+        "reason": "Unsupported ingredient identity 'Morning Glory'"
+      },
+      {
+        "external_id": "53420",
+        "title": "Cambodian Waffles (Num Poum)",
+        "reason": "Unsupported quantity '1/2 cup'"
+      },
+      {
+        "external_id": "52923",
+        "title": "Canadian Butter Tarts",
+        "reason": "Unsupported ingredient identity 'Shortcrust Pastry'"
+      },
+      {
+        "external_id": "53141",
+        "title": "Carbonada Criolla",
+        "reason": "Unsupported ingredient identity 'Beef'"
+      },
+      {
+        "external_id": "53360",
+        "title": "Caribbean Tamarind balls",
+        "reason": "Unsupported ingredient identity 'Tamarind Pulp'"
+      },
+      {
+        "external_id": "53576",
+        "title": "Carrot and Bean Fritters",
+        "reason": "Unit 'g' is not compatible with pcs"
+      },
+      {
+        "external_id": "52897",
+        "title": "Carrot Cake",
+        "reason": "Unsupported ingredient identity 'Bicarbonate Of Soda'"
+      },
+      {
+        "external_id": "52976",
+        "title": "Cashew Ghoriba Biscuits",
+        "reason": "Unsupported ingredient identity 'Cashew Nuts'"
+      },
+      {
+        "external_id": "53564",
+        "title": "Cassava bread",
+        "reason": "Unsupported ingredient identity 'Farine'"
+      },
+      {
+        "external_id": "53508",
+        "title": "Cassava Cake",
+        "reason": "Unsupported ingredient identity 'Cassava'"
+      },
+      {
+        "external_id": "53330",
+        "title": "Cassava pizza",
+        "reason": "Unsupported ingredient identity 'Casabe'"
+      },
+      {
+        "external_id": "53507",
+        "title": "Cayman Style Potato Salad",
+        "reason": "Unit 'pcs' is not compatible with g"
+      },
+      {
+        "external_id": "53510",
+        "title": "Cayman-Style Lobster",
+        "reason": "Unsupported ingredient identity 'Lobster'"
+      },
+      {
+        "external_id": "53055",
+        "title": "Cevapi Sausages",
+        "reason": "Unsupported ingredient identity 'Minced Pork'"
+      },
+      {
+        "external_id": "52969",
+        "title": "Chakchouka ",
+        "reason": "Unsupported quantity '1 Diced'"
+      },
+      {
+        "external_id": "53310",
+        "title": "Challah",
+        "reason": "Unsupported quantity '2 Beaten '"
+      },
+      {
+        "external_id": "53290",
+        "title": "Cheese Borek",
+        "reason": "Unsupported quantity '1 beaten'"
+      },
+      {
+        "external_id": "53442",
+        "title": "Cheese Sticks",
+        "reason": "Unsupported quantity '1 cup'"
+      },
+      {
+        "external_id": "52898",
+        "title": "Chelsea Buns",
+        "reason": "Unsupported ingredient identity 'White Flour'"
+      },
+      {
+        "external_id": "53016",
+        "title": "Chick-Fil-A Sandwich",
+        "reason": "Unit 'pcs' is not compatible with g"
+      },
+      {
+        "external_id": "53161",
+        "title": "Chicken & chorizo rice pot",
+        "reason": "Unsupported ingredient identity 'Oil'"
+      },
+      {
+        "external_id": "52846",
+        "title": "Chicken & mushroom Hotpot",
+        "reason": "Unsupported quantity '1 chopped'"
+      },
+      {
+        "external_id": "52796",
+        "title": "Chicken Alfredo Primavera",
+        "reason": "Unit 'tbsp' is not compatible with g"
+      },
+      {
+        "external_id": "53459",
+        "title": "Chicken and Potato Roti",
+        "reason": "Unsupported quantity '1 lb'"
+      },
+      {
+        "external_id": "52934",
+        "title": "Chicken Basquaise",
+        "reason": "Unsupported ingredient identity 'Chicken'"
+      },
+      {
+        "external_id": "52956",
+        "title": "Chicken Congee",
+        "reason": "Unsupported ingredient identity 'Chicken'"
+      },
+      {
+        "external_id": "52850",
+        "title": "Chicken Couscous",
+        "reason": "Unsupported quantity '1 chopped'"
+      },
+      {
+        "external_id": "52765",
+        "title": "Chicken Enchilada Casserole",
+        "reason": "Unsupported ingredient identity 'Enchilada sauce'"
+      },
+      {
+        "external_id": "52818",
+        "title": "Chicken Fajita Mac and Cheese",
+        "reason": "Unsupported ingredient identity 'macaroni'"
+      },
+      {
+        "external_id": "53367",
+        "title": "Chicken Fried Rice",
+        "reason": "Unsupported ingredient identity 'Chicken Thighs'"
+      },
+      {
+        "external_id": "52875",
+        "title": "Chicken Ham and Leek Pie",
+        "reason": "Unit 'pcs' is not compatible with g"
+      },
+      {
+        "external_id": "52795",
+        "title": "Chicken Handi",
+        "reason": "Unsupported ingredient identity 'Chicken'"
+      },
+      {
+        "external_id": "53531",
+        "title": "Chicken in Orange Sauce Recipe (Pollo a la Naranja)",
+        "reason": "Unsupported ingredient identity 'Chicken Legs'"
+      },
+      {
+        "external_id": "52831",
+        "title": "Chicken Karaage",
+        "reason": "Unsupported ingredient identity 'Chicken'"
+      },
+      {
+        "external_id": "53455",
+        "title": "Chicken Liver Pate Recipe",
+        "reason": "Unsupported ingredient identity 'Chicken Liver'"
+      },
+      {
+        "external_id": "53565",
+        "title": "Chicken Lollipop",
+        "reason": "Unsupported ingredient identity 'Chicken Wings'"
+      },
+      {
+        "external_id": "53358",
+        "title": "Chicken Mandi",
+        "reason": "Unsupported ingredient identity 'Chicken'"
+      },
+      {
+        "external_id": "52920",
+        "title": "Chicken Marengo",
+        "reason": "Unsupported ingredient identity 'Chicken Legs'"
+      },
+      {
+        "external_id": "52879",
+        "title": "Chicken Parmentier",
+        "reason": "Unsupported quantity '5 tblsp '"
+      },
+      {
+        "external_id": "53011",
+        "title": "Chicken Quinoa Greek Salad",
+        "reason": "Unsupported ingredient identity 'Quinoa'"
+      },
+      {
+        "external_id": "53549",
+        "title": "Chicken Salad With Mushrooms and Bacon",
+        "reason": "Unsupported ingredient identity 'Shallots'"
+      },
+      {
+        "external_id": "53218",
+        "title": "Chicken Shawarma with homemade garlic herb yoghurt sauce",
+        "reason": "Unsupported quantity '2 cloves minced': no exact conversion"
+      },
+      {
+        "external_id": "53261",
+        "title": "Chicken wings with cumin, lemon & garlic",
+        "reason": "Unsupported ingredient identity 'Chicken Wings'"
+      },
+      {
+        "external_id": "53186",
+        "title": "Chicken with saffron, raisins & pine nuts",
+        "reason": "Unsupported ingredient identity 'Chicken'"
+      },
+      {
+        "external_id": "52870",
+        "title": "Chickpea Fajitas",
+        "reason": "Unsupported ingredient identity 'Chickpeas'"
+      },
+      {
+        "external_id": "53166",
+        "title": "Chickpea, chorizo & spinach stew",
+        "reason": "Unsupported ingredient identity 'Extra Virgin Olive Oil'"
+      },
+      {
+        "external_id": "53516",
+        "title": "Chilean Dobladitas",
+        "reason": "Unsupported quantity '4 cups'"
+      },
+      {
+        "external_id": "53514",
+        "title": "Chilean Empanada",
+        "reason": "Unit 'tbsp' is not compatible with g"
+      },
+      {
+        "external_id": "53513",
+        "title": "Chilean-Style Sopaipillas",
+        "reason": "Unsupported ingredient identity 'Zapallo Squash'"
+      },
+      {
+        "external_id": "53265",
+        "title": "Chilli ginger lamb chops",
+        "reason": "Unsupported quantity '4 Cloves Crushed': no exact conversion"
+      },
+      {
+        "external_id": "52839",
+        "title": "Chilli prawn linguine",
+        "reason": "Unsupported ingredient identity 'Linguine Pasta'"
+      },
+      {
+        "external_id": "53365",
+        "title": "Chinese Orange Chicken",
+        "reason": "Unsupported quantity 'Zest of 1': no exact conversion"
+      },
+      {
+        "external_id": "53372",
+        "title": "Chinese Tomato Egg Stir Fry",
+        "reason": "Unsupported ingredient identity 'Plum Tomatoes'"
+      },
+      {
+        "external_id": "52910",
+        "title": "Chinon Apple Tarts",
+        "reason": "Unsupported ingredient identity 'Puff Pastry'"
+      },
+      {
+        "external_id": "53319",
+        "title": "Chivito sandwich",
+        "reason": "Unit 'g' is not compatible with ml"
+      },
+      {
+        "external_id": "53063",
+        "title": "Chivito uruguayo",
+        "reason": "Unsupported ingredient identity 'Beef Brisket'"
+      },
+      {
+        "external_id": "52856",
+        "title": "Choc Chip Pecan Pie",
+        "reason": "Unsupported ingredient identity 'Cream Cheese'"
+      },
+      {
+        "external_id": "53320",
+        "title": "Chocolate alfajores",
+        "reason": "Unit 'g' is not compatible with ml"
+      },
+      {
+        "external_id": "52853",
+        "title": "Chocolate Avocado Mousse",
+        "reason": "Unsupported ingredient identity 'Cacao'"
+      },
+      {
+        "external_id": "52966",
+        "title": "Chocolate Caramel Crispy",
+        "reason": "Unsupported ingredient identity 'Mars Bar'"
+      },
+      {
+        "external_id": "53170",
+        "title": "Chocolate churros with chocolate & salted caramel sauce",
+        "reason": "Unsupported ingredient identity 'Sunflower Oil'"
+      },
+      {
+        "external_id": "53101",
+        "title": "Chocolate Coconut Squares",
+        "reason": "Unit 'tbsp' is not compatible with g"
+      },
+      {
+        "external_id": "53324",
+        "title": "Chocolate empanadas",
+        "reason": "Unsupported ingredient identity 'Condensed Milk'"
+      },
+      {
+        "external_id": "52860",
+        "title": "Chocolate Raspberry Brownies",
+        "reason": "Unsupported ingredient identity 'Dark Chocolate'"
+      },
+      {
+        "external_id": "52905",
+        "title": "Chocolate Souffle",
+        "reason": "Unsupported ingredient identity 'Single Cream'"
+      },
+      {
+        "external_id": "53289",
+        "title": "Chorba Hamra bel Frik (Algerian Lamb, Tomato, and Freekeh Soup)",
+        "reason": "Unsupported ingredient identity 'Freekeh'"
+      },
+      {
+        "external_id": "53136",
+        "title": "Choripán",
+        "reason": "Unit 'pcs' is not compatible with g"
+      },
+      {
+        "external_id": "53168",
+        "title": "Chorizo & chickpea soup",
+        "reason": "Unsupported ingredient identity 'Tinned Tomatos'"
+      },
+      {
+        "external_id": "53157",
+        "title": "Chorizo & soft-boiled egg salad",
+        "reason": "Unsupported ingredient identity 'Baby New Potatoes'"
+      },
+      {
+        "external_id": "53185",
+        "title": "Chorizo & tomato salad",
+        "reason": "Unsupported ingredient identity 'Beef tomatoes'"
+      },
+      {
+        "external_id": "53159",
+        "title": "Chorizo, potato & cheese omelette",
+        "reason": "Unsupported quantity '1 small'"
+      },
+      {
+        "external_id": "53542",
+        "title": "Chorreadas",
+        "reason": "Unsupported ingredient identity 'Sweetcorn'"
+      },
+      {
+        "external_id": "52990",
+        "title": "Christmas cake",
+        "reason": "Unsupported ingredient identity 'Muscovado Sugar'"
+      },
+      {
+        "external_id": "52788",
+        "title": "Christmas Pudding Flapjack",
+        "reason": "Unsupported ingredient identity 'salted butter'"
+      },
+      {
+        "external_id": "52989",
+        "title": "Christmas Pudding Trifle",
+        "reason": "Unit 'pcs' is not compatible with g"
+      },
+      {
+        "external_id": "53283",
+        "title": "Chtitha Batata (Algerian Potato Stew)",
+        "reason": "Unsupported ingredient identity 'Red Chilli'"
+      },
+      {
+        "external_id": "53528",
+        "title": "Chuletas de Cerdo a la Criolla (Pork Chops in Creole Sauce)",
+        "reason": "Unsupported ingredient identity 'Pork Chops'"
+      },
+      {
+        "external_id": "53153",
+        "title": "Churros",
+        "reason": "Unsupported ingredient identity 'Sunflower Oil'"
+      },
+      {
+        "external_id": "53116",
+        "title": "Cinnamon buns",
+        "reason": "Unsupported ingredient identity 'Strong White Flour'"
+      },
+      {
+        "external_id": "53462",
+        "title": "Cinnamon Roll Cookies",
+        "reason": "Unsupported quantity '1 medium'"
+      },
+      {
+        "external_id": "52840",
+        "title": "Clam chowder",
+        "reason": "Unsupported ingredient identity 'Clams'"
+      },
+      {
+        "external_id": "53154",
+        "title": "Clam, chorizo & white bean stew",
+        "reason": "Unsupported quantity '1 chopped'"
+      },
+      {
+        "external_id": "52988",
+        "title": "Classic Christmas pudding",
+        "reason": "Unsupported ingredient identity 'Almonds'"
+      },
+      {
+        "external_id": "53555",
+        "title": "Classic Potato Salad",
+        "reason": "Unsupported ingredient identity 'New Potatoes'"
+      },
+      {
+        "external_id": "53343",
+        "title": "Classic Tourtière",
+        "reason": "Unsupported ingredient identity 'Canola Oil'"
+      },
+      {
+        "external_id": "53446",
+        "title": "Clear Soup with Semolina Dumplings",
+        "reason": "Unsupported ingredient identity 'Semolina'"
+      },
+      {
+        "external_id": "53524",
+        "title": "Coconut Natilla Recipe",
+        "reason": "Unsupported quantity '3 Cups'"
+      },
+      {
+        "external_id": "53477",
+        "title": "Coconut quindim",
+        "reason": "Unit 'tbsp' is not compatible with g"
+      },
+      {
+        "external_id": "53037",
+        "title": "Coddled pork with cider",
+        "reason": "Unsupported quantity 'Knob': no exact conversion"
+      },
+      {
+        "external_id": "53561",
+        "title": "Codfish deviled eggs",
+        "reason": "Unsupported ingredient identity 'Mayonnaise'"
+      },
+      {
+        "external_id": "53523",
+        "title": "Colombian Buñuelos Recipe",
+        "reason": "Unsupported quantity 'For frying': no exact conversion"
+      },
+      {
+        "external_id": "53526",
+        "title": "Colombian Style Stuffed Potatoes",
+        "reason": "Unsupported quantity 'For frying': no exact conversion"
+      },
+      {
+        "external_id": "53505",
+        "title": "Conch Fritters",
+        "reason": "Unsupported ingredient identity 'Conchs'"
+      },
+      {
+        "external_id": "53512",
+        "title": "Conch Stew",
+        "reason": "Unsupported ingredient identity 'Conchs'"
+      },
+      {
+        "external_id": "52832",
+        "title": "Coq au vin",
+        "reason": "Unsupported quantity '1½ tbsp': no exact conversion"
+      },
+      {
+        "external_id": "52977",
+        "title": "Corba",
+        "reason": "Unsupported ingredient identity 'Lentils'"
+      },
+      {
+        "external_id": "53431",
+        "title": "Corn on the cob with lime, green chilli and coconut butter",
+        "reason": "Unsupported ingredient identity 'Vegetable Stock'"
+      },
+      {
+        "external_id": "52998",
+        "title": "Corned Beef and Cabbage",
+        "reason": "Unsupported ingredient identity 'Beef Brisket'"
+      },
+      {
+        "external_id": "53350",
+        "title": "Corned Beef and Cabbage – Jamaican Style",
+        "reason": "Unsupported ingredient identity 'Cabbage'"
+      },
+      {
+        "external_id": "53096",
+        "title": "Corned Beef Hash",
+        "reason": "Unit 'tbsp' is not compatible with g"
+      },
+      {
+        "external_id": "53291",
+        "title": "Cornes de Gazelle (Gazelle Horns)",
+        "reason": "Unsupported ingredient identity 'Almonds'"
+      },
+      {
+        "external_id": "53490",
+        "title": "Cottage Cheese And Feta Stuffed Peppers",
+        "reason": "Unsupported ingredient identity 'Feta'"
+      },
+      {
+        "external_id": "52779",
+        "title": "Cream Cheese Tart",
+        "reason": "Unsupported quantity 'Pinch': no exact conversion"
+      },
+      {
+        "external_id": "53480",
+        "title": "Creamy Aji green sauce",
+        "reason": "Unsupported ingredient identity 'Coriander'"
+      },
+      {
+        "external_id": "53532",
+        "title": "Creamy Corn Soup Recipe",
+        "reason": "Unsupported ingredient identity 'Corn On The Cob'"
+      },
+      {
+        "external_id": "53569",
+        "title": "Creamy mango smoothie",
+        "reason": "Unsupported ingredient identity 'Mango'"
+      },
+      {
+        "external_id": "53530",
+        "title": "Creamy Mustard Chicken",
+        "reason": "Unsupported ingredient identity 'Chicken Legs'"
+      },
+      {
+        "external_id": "52841",
+        "title": "Creamy Tomato Soup",
+        "reason": "Unsupported quantity '2 chopped'"
+      },
+      {
+        "external_id": "53148",
+        "title": "Crema Catalana",
+        "reason": "Unsupported ingredient identity 'Cinnamon Stick'"
+      },
+      {
+        "external_id": "53072",
+        "title": "Crispy Eggplant",
+        "reason": "Unsupported quantity '1 large'"
+      },
+      {
+        "external_id": "53419",
+        "title": "Crispy fried fish with ginger and fermented soybeans (trey chien chuon)",
+        "reason": "Unsupported ingredient identity 'Ginger'"
+      },
+      {
+        "external_id": "52999",
+        "title": "Crispy Sausages and Greens",
+        "reason": "Unsupported ingredient identity 'Kale'"
+      },
+      {
+        "external_id": "53058",
+        "title": "Croatian Bean Stew",
+        "reason": "Unsupported ingredient identity 'Cannellini Beans'"
+      },
+      {
+        "external_id": "53056",
+        "title": "Croatian lamb peka",
+        "reason": "Unsupported ingredient identity 'Courgettes'"
+      },
+      {
+        "external_id": "52830",
+        "title": "Crock Pot Chicken Baked Tacos",
+        "reason": "Unsupported quantity '4 - 6': no exact conversion"
+      },
+      {
+        "external_id": "53547",
+        "title": "Cuban Sandwich",
+        "reason": "Unsupported ingredient identity 'Pork Chops'"
+      },
+      {
+        "external_id": "53309",
+        "title": "Cucumber & fennel salad",
+        "reason": "Unsupported ingredient identity 'Cucumber'"
+      },
+      {
+        "external_id": "53098",
+        "title": "Cumberland Pie",
+        "reason": "Unsupported ingredient identity 'Celery'"
+      },
+      {
+        "external_id": "53473",
+        "title": "Curried Spinach from Botswana",
+        "reason": "Unsupported quantity '1  bunch'"
+      },
+      {
+        "external_id": "52785",
+        "title": "Dal fry",
+        "reason": "Unsupported ingredient identity 'Toor dal'"
+      },
+      {
+        "external_id": "53556",
+        "title": "Danish Rye Bread",
+        "reason": "Unsupported ingredient identity 'Rye Grain'"
+      },
+      {
+        "external_id": "53338",
+        "title": "Date squares",
+        "reason": "Unsupported ingredient identity 'Pitted Dates'"
+      },
+      {
+        "external_id": "53411",
+        "title": "Dolma Japrak Stuffed Vine Leaves",
+        "reason": "Unsupported ingredient identity 'Pickled Grape Leaves'"
+      },
+      {
+        "external_id": "53563",
+        "title": "Dominica mastiff bread",
+        "reason": "Unsupported quantity '3 Lbs'"
+      },
+      {
+        "external_id": "53571",
+        "title": "Dominica’s coconut rough cake",
+        "reason": "Unsupported ingredient identity 'Wheat Flour'"
+      },
+      {
+        "external_id": "53567",
+        "title": "Dominican Bakes",
+        "reason": "Unsupported quantity '4 cups'"
+      },
+      {
+        "external_id": "53193",
+        "title": "Drunken noodles (pad kee mao)",
+        "reason": "Unsupported ingredient identity 'Flat Rice Noodles'"
+      },
+      {
+        "external_id": "52907",
+        "title": "Duck Confit",
+        "reason": "Unsupported ingredient identity 'Sea Salt'"
+      },
+      {
+        "external_id": "53543",
+        "title": "Dulce de Leche Cheesecake with a Maria Cookie Crust.",
+        "reason": "Unsupported ingredient identity 'Maria Cookies'"
+      },
+      {
+        "external_id": "52899",
+        "title": "Dundee cake",
+        "reason": "Unsupported ingredient identity 'Almonds'"
+      },
+      {
+        "external_id": "53386",
+        "title": "Dutch Apple Pie",
+        "reason": "Unsupported quantity 'Pinch': no exact conversion"
+      },
+      {
+        "external_id": "53393",
+        "title": "Dutch doughnuts",
+        "reason": "Unsupported ingredient identity 'Instant Yeast'"
+      },
+      {
+        "external_id": "53379",
+        "title": "Dutch poffertjes (mini pancakes)",
+        "reason": "Unsupported ingredient identity 'Buckwheat Flour'"
+      },
+      {
+        "external_id": "53387",
+        "title": "Dutch Spiced Breakfast Cake (Ontbijtkoek)",
+        "reason": "Unsupported ingredient identity 'Dark Brown Soft Sugar'"
+      },
+      {
+        "external_id": "53382",
+        "title": "Dutch stroopwafel",
+        "reason": "Unsupported ingredient identity 'Instant Yeast'"
+      },
+      {
+        "external_id": "53285",
+        "title": "Dziriat (Algerian Almond Tarts)",
+        "reason": "Unsupported quantity '1 cup'"
+      },
+      {
+        "external_id": "53143",
+        "title": "Easy Spanish chicken",
+        "reason": "Unsupported ingredient identity 'Extra Virgin Olive Oil'"
+      },
+      {
+        "external_id": "53486",
+        "title": "Easy White Bean Soup",
+        "reason": "Unsupported ingredient identity 'Cannellini Beans'"
+      },
+      {
+        "external_id": "52888",
+        "title": "Eccles Cakes",
+        "reason": "Unsupported quantity 'Juice of 1/2': no exact conversion"
+      },
+      {
+        "external_id": "52955",
+        "title": "Egg Drop Soup",
+        "reason": "Unsupported quantity '3 cups '"
+      },
+      {
+        "external_id": "53370",
+        "title": "Egg Foo Young",
+        "reason": "Unsupported ingredient identity 'Unsalted Beef Stock'"
+      },
+      {
+        "external_id": "53073",
+        "title": "Eggplant Adobo",
+        "reason": "Unsupported quantity '1 lb'"
+      },
+      {
+        "external_id": "53031",
+        "title": "Egyptian Fatteh",
+        "reason": "Unsupported ingredient identity 'Beef'"
+      },
+      {
+        "external_id": "53134",
+        "title": "Empanadas",
+        "reason": "Unsupported quantity '2 chopped'"
+      },
+      {
+        "external_id": "53518",
+        "title": "Empanadas Fritas de Queso",
+        "reason": "Unsupported quantity '3 Cups'"
+      },
+      {
+        "external_id": "52895",
+        "title": "English Breakfast",
+        "reason": "Unsupported ingredient identity 'Sausages'"
+      },
+      {
+        "external_id": "53149",
+        "title": "Ensaimada",
+        "reason": "Unsupported quantity '2 medium'"
+      },
+      {
+        "external_id": "52944",
+        "title": "Escovitch Fish",
+        "reason": "Unsupported ingredient identity 'Red Snapper'"
+      },
+      {
+        "external_id": "52791",
+        "title": "Eton Mess",
+        "reason": "Unsupported ingredient identity 'strawberries'"
+      },
+      {
+        "external_id": "53557",
+        "title": "Extra crispy chicken wings",
+        "reason": "Unsupported ingredient identity 'Chicken Wings'"
+      },
+      {
+        "external_id": "53254",
+        "title": "Ezme",
+        "reason": "Unsupported quantity '3 Large'"
+      },
+      {
+        "external_id": "53139",
+        "title": "Fainá",
+        "reason": "Unsupported ingredient identity 'Chickpea Flour'"
+      },
+      {
+        "external_id": "53266",
+        "title": "Falafel",
+        "reason": "Unsupported ingredient identity 'Sunflower Oil'"
+      },
+      {
+        "external_id": "53091",
+        "title": "Falafel Pita Sandwich with Tahini Sauce",
+        "reason": "Unsupported ingredient identity 'Falafel'"
+      },
+      {
+        "external_id": "53123",
+        "title": "Fårikål (Norwegian National Dish)",
+        "reason": "Unsupported ingredient identity 'Lamb'"
+      },
+      {
+        "external_id": "53188",
+        "title": "Fašírky",
+        "reason": "Unsupported ingredient identity 'Ground Pork'"
+      },
+      {
+        "external_id": "53092",
+        "title": "Fasoliyyeh Bi Z-Zayt (Syrian Green Beans with Olive Oil)",
+        "reason": "Unsupported ingredient identity 'Green Beans'"
+      },
+      {
+        "external_id": "52919",
+        "title": "Fennel Dauphinoise",
+        "reason": "Unsupported ingredient identity 'Fennel'"
+      },
+      {
+        "external_id": "53030",
+        "title": "Feteer Meshaltet",
+        "reason": "Unsupported quantity '4 cups '"
+      },
+      {
+        "external_id": "53064",
+        "title": "Fettuccine Alfredo",
+        "reason": "Unsupported ingredient identity 'Fettuccine'"
+      },
+      {
+        "external_id": "52835",
+        "title": "Fettucine alfredo",
+        "reason": "Unsupported ingredient identity 'Clotted Cream'"
+      },
+      {
+        "external_id": "53342",
+        "title": "Figgy Duff",
+        "reason": "Unsupported quantity '2 cups'"
+      },
+      {
+        "external_id": "53399",
+        "title": "Firni",
+        "reason": "Unsupported ingredient identity 'Whole Milk'"
+      },
+      {
+        "external_id": "53043",
+        "title": "Fish fofos",
+        "reason": "Unsupported ingredient identity 'Haddock'"
+      },
+      {
+        "external_id": "52802",
+        "title": "Fish pie",
+        "reason": "Unsupported ingredient identity 'Floury Potatoes'"
+      },
+      {
+        "external_id": "53079",
+        "title": "Fish Soup (Ukha)",
+        "reason": "Unsupported quantity '1 sliced'"
+      },
+      {
+        "external_id": "52918",
+        "title": "Fish Stew with Rouille",
+        "reason": "Unsupported ingredient identity 'Prawns'"
+      },
+      {
+        "external_id": "53122",
+        "title": "Fiskesuppe (Creamy Norwegian Fish Soup)",
+        "reason": "Unsupported ingredient identity 'Fish fillet'"
+      },
+      {
+        "external_id": "52906",
+        "title": "Flamiche",
+        "reason": "Unsupported ingredient identity 'Leek'"
+      },
+      {
+        "external_id": "53322",
+        "title": "Flan",
+        "reason": "Unit 'g' is not compatible with ml"
+      },
+      {
+        "external_id": "53341",
+        "title": "Flapper Pie",
+        "reason": "Unsupported ingredient identity 'Graham Cracker Crumbs'"
+      },
+      {
+        "external_id": "53464",
+        "title": "Flemish Hutsepot",
+        "reason": "Unsupported ingredient identity 'Floury Potatoes'"
+      },
+      {
+        "external_id": "53413",
+        "title": "Flija Layered Pancake / Crepe",
+        "reason": "Unit 'tbsp' is not compatible with g"
+      },
+      {
+        "external_id": "52815",
+        "title": "French Lentils With Garlic and Thyme",
+        "reason": "Unsupported ingredient identity 'French Lentils'"
+      },
+      {
+        "external_id": "52915",
+        "title": "French Omelette",
+        "reason": "Unsupported quantity '2 knobs'"
+      },
+      {
+        "external_id": "52996",
+        "title": "French Onion Chicken with Roasted Carrots & Mashed Potatoes",
+        "reason": "Unit 'pcs' is not compatible with g"
+      },
+      {
+        "external_id": "52903",
+        "title": "French Onion Soup",
+        "reason": "Unit 'kg' is not compatible with pcs"
+      },
+      {
+        "external_id": "53061",
+        "title": "Fresh sardines",
+        "reason": "Unsupported ingredient identity 'Sardines'"
+      },
+      {
+        "external_id": "53178",
+        "title": "Fried calamari",
+        "reason": "Unsupported ingredient identity 'Squid'"
+      },
+      {
+        "external_id": "53572",
+        "title": "Fried cocoy banana",
+        "reason": "Unsupported ingredient identity 'Cinnamon'"
+      },
+      {
+        "external_id": "53509",
+        "title": "Fried Crab",
+        "reason": "Unsupported ingredient identity 'Crab Meay'"
+      },
+      {
+        "external_id": "53553",
+        "title": "Frikadeller - Danish Meatballs",
+        "reason": "Unsupported quantity '1 large'"
+      },
+      {
+        "external_id": "53465",
+        "title": "Frog Legs Recipe in Garlic Butter",
+        "reason": "Unsupported ingredient identity 'Frogs Legs'"
+      },
+      {
+        "external_id": "52957",
+        "title": "Fruit and Cream Cheese Breakfast Pastries",
+        "reason": "Unsupported ingredient identity 'Cream Cheese'"
+      },
+      {
+        "external_id": "53025",
+        "title": "Ful Medames",
+        "reason": "Unsupported ingredient identity 'Broad Beans'"
+      },
+      {
+        "external_id": "52896",
+        "title": "Full English Breakfast",
+        "reason": "Unsupported ingredient identity 'Sausages'"
+      },
+      {
+        "external_id": "53131",
+        "title": "Fyrstekake – Norwegian Prince Cake",
+        "reason": "Unsupported quantity '3/4 cup '"
+      },
+      {
+        "external_id": "53541",
+        "title": "Gallo pinto",
+        "reason": "Unsupported ingredient identity 'Black Beans'"
+      },
+      {
+        "external_id": "53144",
+        "title": "Gambas al ajillo",
+        "reason": "Unsupported ingredient identity 'Raw King Prawns'"
+      },
+      {
+        "external_id": "52764",
+        "title": "Garides Saganaki",
+        "reason": "Unsupported ingredient identity 'Raw king prawns'"
+      },
+      {
+        "external_id": "53180",
+        "title": "Garlicky prawns with sherry",
+        "reason": "Unsupported quantity '3 cloves Chopped': no exact conversion"
+      },
+      {
+        "external_id": "52951",
+        "title": "General Tsos Chicken",
+        "reason": "Unit 'pcs' is not compatible with g"
+      },
+      {
+        "external_id": "53381",
+        "title": "Gevulde speculaas",
+        "reason": "Unsupported ingredient identity 'Brown Sugar'"
+      },
+      {
+        "external_id": "53012",
+        "title": "Gigantes Plaki",
+        "reason": "Unsupported ingredient identity 'Butter Beans'"
+      },
+      {
+        "external_id": "53578",
+        "title": "Gingerbread Waffles",
+        "reason": "Unit 'ml' is not compatible with g"
+      },
+      {
+        "external_id": "53021",
+        "title": "Golabki (cabbage roll)",
+        "reason": "Unsupported ingredient identity 'Cabbage'"
+      },
+      {
+        "external_id": "53346",
+        "title": "Grape Nut Ice Cream",
+        "reason": "Unsupported quantity '2 cups'"
+      },
+      {
+        "external_id": "53274",
+        "title": "Griddled aubergines with sesame dressing",
+        "reason": "Unsupported ingredient identity 'Aubergine'"
+      },
+      {
+        "external_id": "53272",
+        "title": "Griddled flatbreads",
+        "reason": "Unsupported ingredient identity 'Strong Wholemeal Flour'"
+      },
+      {
+        "external_id": "53255",
+        "title": "Grilled aubergines with spicy chickpeas & walnut sauce",
+        "reason": "Unsupported quantity '1 chopped'"
+      },
+      {
+        "external_id": "53478",
+        "title": "Grilled corn with garlic mayo & grated cheese",
+        "reason": "Unsupported ingredient identity 'Corn On The Cob'"
+      },
+      {
+        "external_id": "53074",
+        "title": "Grilled eggplant with coconut milk",
+        "reason": "Unsupported ingredient identity 'Coconut Milk'"
+      },
+      {
+        "external_id": "52829",
+        "title": "Grilled Mac and Cheese Sandwich",
+        "reason": "Unsupported ingredient identity 'Macaroni'"
+      },
+      {
+        "external_id": "53041",
+        "title": "Grilled Portuguese sardines",
+        "reason": "Unsupported ingredient identity 'Sardines'"
+      },
+      {
+        "external_id": "53450",
+        "title": "Grits",
+        "reason": "Unsupported ingredient identity 'Grits'"
+      },
+      {
+        "external_id": "53397",
+        "title": "Haft Mewa Recipe",
+        "reason": "Unsupported ingredient identity 'Dried Apricots'"
+      },
+      {
+        "external_id": "53179",
+        "title": "Ham croquetas",
+        "reason": "Unsupported quantity '2 large'"
+      },
+      {
+        "external_id": "53035",
+        "title": "Ham hock colcannon",
+        "reason": "Unsupported ingredient identity 'Floury Potatoes'"
+      },
+      {
+        "external_id": "53340",
+        "title": "Hodge Podge",
+        "reason": "Unsupported ingredient identity 'New Potatoes'"
+      },
+      {
+        "external_id": "52967",
+        "title": "Home-made Mandazi",
+        "reason": "Unit 'tbsp' is not compatible with g"
+      },
+      {
+        "external_id": "52993",
+        "title": "Honey Balsamic Chicken with Crispy Broccoli & Potatoes",
+        "reason": "Unit 'pcs' is not compatible with g"
+      },
+      {
+        "external_id": "53579",
+        "title": "Honey Cookies",
+        "reason": "Unit 'g' is not compatible with ml"
+      },
+      {
+        "external_id": "52773",
+        "title": "Honey Teriyaki Salmon",
+        "reason": "Unsupported ingredient identity 'Salmon'"
+      },
+      {
+        "external_id": "53007",
+        "title": "Honey Yogurt Cheesecake",
+        "reason": "Unsupported ingredient identity 'Digestive Biscuits'"
+      },
+      {
+        "external_id": "52954",
+        "title": "Hot and Sour Soup",
+        "reason": "Unsupported quantity '1/3 cup'"
+      },
+      {
+        "external_id": "52787",
+        "title": "Hot Chocolate Fudge",
+        "reason": "Unsupported ingredient identity 'Chocolate Chips'"
+      },
+      {
+        "external_id": "53258",
+        "title": "Hot cumin lamb wrap with crunchy slaw & spicy mayo",
+        "reason": "Unsupported ingredient identity 'Lamb Leg'"
+      },
+      {
+        "external_id": "53269",
+        "title": "Hummus",
+        "reason": "Unsupported ingredient identity 'Chickpeas'"
+      },
+      {
+        "external_id": "53552",
+        "title": "Hveder - Danish Wheat Buns",
+        "reason": "Unsupported quantity '1 cup'"
+      },
+      {
+        "external_id": "53253",
+        "title": "Imam bayildi with BBQ lamb & tzatziki",
+        "reason": "Unsupported ingredient identity 'Aubergine'"
+      },
+      {
+        "external_id": "52781",
+        "title": "Irish stew",
+        "reason": "Unsupported ingredient identity 'whole wheat'"
+      },
+      {
+        "external_id": "53436",
+        "title": "Jajek",
+        "reason": "Unsupported ingredient identity 'Yogurt'"
+      },
+      {
+        "external_id": "53339",
+        "title": "Jam jam cookies",
+        "reason": "Unsupported quantity '1 cup'"
+      },
+      {
+        "external_id": "52890",
+        "title": "Jam Roly-Poly",
+        "reason": "Unsupported ingredient identity 'Vanilla'"
+      },
+      {
+        "external_id": "53351",
+        "title": "Jamaican Banana Fritters",
+        "reason": "Unsupported quantity '3 Medium'"
+      },
+      {
+        "external_id": "52938",
+        "title": "Jamaican Beef Patties",
+        "reason": "Unsupported quantity '4 cups '"
+      },
+      {
+        "external_id": "53353",
+        "title": "Jamaican Boiled Dumplings",
+        "reason": "Unsupported quantity '8 cups '"
+      },
+      {
+        "external_id": "53363",
+        "title": "Jamaican Cornmeal Porridge",
+        "reason": "Unsupported quantity '4 cups'"
+      },
+      {
+        "external_id": "53345",
+        "title": "Jamaican Curry Chicken Recipe",
+        "reason": "Unsupported ingredient identity 'Chicken Thighs'"
+      },
+      {
+        "external_id": "53354",
+        "title": "Jamaican Curry Goat",
+        "reason": "Unsupported ingredient identity 'Goat Meat'"
+      },
+      {
+        "external_id": "53362",
+        "title": "Jamaican Curry Shrimp Recipe",
+        "reason": "Unsupported ingredient identity 'Jumbo Shrimp'"
+      },
+      {
+        "external_id": "53355",
+        "title": "Jamaican Festival (Sweet Dumpling)",
+        "reason": "Unsupported quantity '1 1/2 cups '"
+      },
+      {
+        "external_id": "53356",
+        "title": "Jamaican Fried Dumplings",
+        "reason": "Unsupported quantity '2 cups'"
+      },
+      {
+        "external_id": "53352",
+        "title": "Jamaican Instant Pot Rice and Beans",
+        "reason": "Unsupported quantity '1 chopped'"
+      },
+      {
+        "external_id": "53349",
+        "title": "Jamaican Pepper Shrimp",
+        "reason": "Unsupported ingredient identity 'Shrimp'"
+      },
+      {
+        "external_id": "53357",
+        "title": "Jamaican Rice and Peas",
+        "reason": "Unsupported quantity '2 cups'"
+      },
+      {
+        "external_id": "53348",
+        "title": "Jamaican Spice Bun Recipe",
+        "reason": "Unsupported quantity '1 large'"
+      },
+      {
+        "external_id": "53364",
+        "title": "Jamaican Steamed Cabbage",
+        "reason": "Unsupported ingredient identity 'Cabbage'"
+      },
+      {
+        "external_id": "53344",
+        "title": "Jamaican Sweet Potato Pudding",
+        "reason": "Unsupported ingredient identity 'Sweet Potatoes'"
+      },
+      {
+        "external_id": "53145",
+        "title": "Jamon & wild garlic croquetas",
+        "reason": "Unsupported ingredient identity 'Wild Garlic Leaves'"
+      },
+      {
+        "external_id": "53033",
+        "title": "Japanese gohan rice",
+        "reason": "Unsupported ingredient identity 'Sushi Rice'"
+      },
+      {
+        "external_id": "53034",
+        "title": "Japanese Katsudon",
+        "reason": "Unsupported quantity '1 large'"
+      },
+      {
+        "external_id": "52937",
+        "title": "Jerk chicken with rice & peas",
+        "reason": "Unsupported ingredient identity 'Chicken Thighs'"
+      },
+      {
+        "external_id": "53335",
+        "title": "Jiggs Dinner",
+        "reason": "Unsupported ingredient identity 'Beef'"
+      },
+      {
+        "external_id": "53220",
+        "title": "kabse",
+        "reason": "Unsupported ingredient identity 'Chicken'"
+      },
+      {
+        "external_id": "53398",
+        "title": "Kadu Borani",
+        "reason": "Unsupported ingredient identity 'Squash'"
+      },
+      {
+        "external_id": "52971",
+        "title": "Kafteji",
+        "reason": "Unsupported quantity '5 Large'"
+      },
+      {
+        "external_id": "52769",
+        "title": "Kapsalon",
+        "reason": "Unsupported ingredient identity 'Fries'"
+      },
+      {
+        "external_id": "53125",
+        "title": "Karbonader (Lean Beef Patties) with Caramelized Onions",
+        "reason": "Unit 'tbsp' is not compatible with g"
+      },
+      {
+        "external_id": "53445",
+        "title": "Kaspressknödel - Cheese Dumplings",
+        "reason": "Unit 'g' is not compatible with pcs"
+      },
+      {
+        "external_id": "52820",
+        "title": "Katsu Chicken curry",
+        "reason": "Unsupported quantity '4 pounded to 1cm thickness': no exact conversion"
+      },
+      {
+        "external_id": "52887",
+        "title": "Kedgeree",
+        "reason": "Unsupported ingredient identity 'Smoked Haddock'"
+      },
+      {
+        "external_id": "53449",
+        "title": "Kelem dolmasi",
+        "reason": "Unsupported ingredient identity 'Lamb Mince'"
+      },
+      {
+        "external_id": "52974",
+        "title": "Keleya Zaara",
+        "reason": "Unsupported ingredient identity 'Lamb'"
+      },
+      {
+        "external_id": "52813",
+        "title": "Kentucky Fried Chicken",
+        "reason": "Unsupported ingredient identity 'Chicken'"
+      },
+      {
+        "external_id": "53112",
+        "title": "Kenyan Beef Curry",
+        "reason": "Unsupported quantity '4 cups '"
+      },
+      {
+        "external_id": "53494",
+        "title": "Keto Banitsa",
+        "reason": "Unsupported ingredient identity 'Mozzarella'"
+      },
+      {
+        "external_id": "52859",
+        "title": "Key Lime Pie",
+        "reason": "Unsupported ingredient identity 'Digestive Biscuits'"
+      },
+      {
+        "external_id": "53502",
+        "title": "Khmer Banh Xeo – Cambodian Savory Pancake",
+        "reason": "Unsupported quantity '1 cup'"
+      },
+      {
+        "external_id": "53286",
+        "title": "Khobz el Dar (Algerian Semolina Bread)",
+        "reason": "Unsupported ingredient identity 'Semolina Flour'"
+      },
+      {
+        "external_id": "52868",
+        "title": "Kidney Bean Curry",
+        "reason": "Unsupported quantity '1 tbls'"
+      },
+      {
+        "external_id": "53216",
+        "title": "Knafeh",
+        "reason": "Unsupported ingredient identity 'Knafeh'"
+      },
+      {
+        "external_id": "53257",
+        "title": "kofta burgers",
+        "reason": "Unsupported ingredient identity 'Lamb'"
+      },
+      {
+        "external_id": "53027",
+        "title": "Koshari",
+        "reason": "Unsupported ingredient identity 'Brown Lentils'"
+      },
+      {
+        "external_id": "53434",
+        "title": "Koulenje",
+        "reason": "Unsupported quantity '6 cups '"
+      },
+      {
+        "external_id": "53015",
+        "title": "Krispy Kreme Donut",
+        "reason": "Unsupported quantity '1/4 ounce'"
+      },
+      {
+        "external_id": "53408",
+        "title": "Kulaç Soda Bread",
+        "reason": "Unsupported quantity 'Splash': no exact conversion"
+      },
+      {
+        "external_id": "52978",
+        "title": "Kumpir",
+        "reason": "Unsupported quantity '2 large'"
+      },
+      {
+        "external_id": "52945",
+        "title": "Kung Pao Chicken",
+        "reason": "Unsupported ingredient identity 'Sake'"
+      },
+      {
+        "external_id": "52946",
+        "title": "Kung Po Prawns",
+        "reason": "Unsupported ingredient identity 'Prawns'"
+      },
+      {
+        "external_id": "53414",
+        "title": "Kurabie Butter Cookies",
+        "reason": "Unit 'ml' is not compatible with g"
+      },
+      {
+        "external_id": "53128",
+        "title": "Kvæfjord Cake “Verdens Beste” (World’s Best Cake)",
+        "reason": "Unsupported quantity '2 large'"
+      },
+      {
+        "external_id": "53412",
+        "title": "Lakra me Mish Cabbage and Meat Stew",
+        "reason": "Unsupported ingredient identity 'Beef'"
+      },
+      {
+        "external_id": "53407",
+        "title": "Lakror me Kungull Summer Squash Pie",
+        "reason": "Unsupported ingredient identity 'Squash'"
+      },
+      {
+        "external_id": "52821",
+        "title": "Laksa King Prawn Noodles",
+        "reason": "Unsupported ingredient identity 'Red Chilli'"
+      },
+      {
+        "external_id": "53277",
+        "title": "Lamb & apricot meatballs",
+        "reason": "Unsupported ingredient identity 'Red Onions'"
+      },
+      {
+        "external_id": "53009",
+        "title": "Lamb and Lemon Souvlaki",
+        "reason": "Unsupported ingredient identity 'Sea Salt'"
+      },
+      {
+        "external_id": "52877",
+        "title": "Lamb and Potato pie",
+        "reason": "Unsupported ingredient identity 'Lamb Shoulder'"
+      },
+      {
+        "external_id": "52805",
+        "title": "Lamb Biryani",
+        "reason": "Unsupported ingredient identity 'Cashew nuts'"
+      },
+      {
+        "external_id": "53083",
+        "title": "Lamb Pilaf (Plov)",
+        "reason": "Unsupported ingredient identity 'Lamb'"
+      },
+      {
+        "external_id": "52808",
+        "title": "Lamb Rogan josh",
+        "reason": "Unsupported quantity '2 quartered'"
+      },
+      {
+        "external_id": "52843",
+        "title": "Lamb Tagine",
+        "reason": "Unsupported quantity '2 tblsp '"
+      },
+      {
+        "external_id": "52782",
+        "title": "Lamb tomato and sweet spices",
+        "reason": "Unsupported ingredient identity 'ginger'"
+      },
+      {
+        "external_id": "53010",
+        "title": "Lamb Tzatziki Burgers",
+        "reason": "Unsupported ingredient identity 'Bulgur Wheat'"
+      },
+      {
+        "external_id": "53104",
+        "title": "Lamingtons",
+        "reason": "Unsupported ingredient identity 'Salted Butter'"
+      },
+      {
+        "external_id": "52884",
+        "title": "Lancashire hotpot",
+        "reason": "Unsupported ingredient identity 'Lamb'"
+      },
+      {
+        "external_id": "53427",
+        "title": "Lao Naem Khao",
+        "reason": "Unsupported ingredient identity 'Jasmine Rice'"
+      },
+      {
+        "external_id": "53426",
+        "title": "Lao Som Pak Pickled Cabbage",
+        "reason": "Unsupported ingredient identity 'Cabbage'"
+      },
+      {
+        "external_id": "53424",
+        "title": "Laos Plantain Coconut Bake (Flourless Muffin)",
+        "reason": "Unsupported ingredient identity 'Coconut Cream'"
+      },
+      {
+        "external_id": "52987",
+        "title": "Lasagna Sandwiches",
+        "reason": "Unsupported ingredient identity 'Sour Cream'"
+      },
+      {
+        "external_id": "52844",
+        "title": "Lasagne",
+        "reason": "Unsupported quantity '1 tblsp '"
+      },
+      {
+        "external_id": "53570",
+        "title": "Layered mango custard",
+        "reason": "Unsupported ingredient identity 'Custard'"
+      },
+      {
+        "external_id": "52973",
+        "title": "Leblebi Soup",
+        "reason": "Unsupported quantity '1 medium finely diced': no exact conversion"
+      },
+      {
+        "external_id": "53519",
+        "title": "Leche Asada",
+        "reason": "Unsupported quantity '1 quart'"
+      },
+      {
+        "external_id": "53437",
+        "title": "Leg of Lamb Armenian-Style",
+        "reason": "Unsupported ingredient identity 'Lamb Leg'"
+      },
+      {
+        "external_id": "53211",
+        "title": "Lemongrass beef stew with noodles",
+        "reason": "Unsupported ingredient identity 'Ginger'"
+      },
+      {
+        "external_id": "53467",
+        "title": "Liegeoise Salad",
+        "reason": "Unsupported ingredient identity 'Green Beans'"
+      },
+      {
+        "external_id": "53146",
+        "title": "Locro",
+        "reason": "Unsupported ingredient identity 'Dried white corn'"
+      },
+      {
+        "external_id": "52947",
+        "title": "Ma Po Tofu",
+        "reason": "Unsupported ingredient identity 'Tofu'"
+      },
+      {
+        "external_id": "53461",
+        "title": "Macaroni Pie",
+        "reason": "Unsupported ingredient identity 'Macaroni'"
+      },
+      {
+        "external_id": "53504",
+        "title": "Macaroni Pudding",
+        "reason": "Unsupported ingredient identity 'Macaroni'"
+      },
+      {
+        "external_id": "52900",
+        "title": "Madeira Cake",
+        "reason": "Unsupported quantity 'Zest of 1': no exact conversion"
+      },
+      {
+        "external_id": "53472",
+        "title": "Madombi: Dumplings from Botswana",
+        "reason": "Unsupported quantity '1 1/4 cup'"
+      },
+      {
+        "external_id": "53474",
+        "title": "Magwinya: Doughnut Bites from Botswana",
+        "reason": "Unsupported quantity '1/4 cup'"
+      },
+      {
+        "external_id": "53221",
+        "title": "Mamoul (Eid biscuits)",
+        "reason": "Unsupported ingredient identity 'Semolina'"
+      },
+      {
+        "external_id": "53433",
+        "title": "Mango chow",
+        "reason": "Unsupported ingredient identity 'Mango'"
+      },
+      {
+        "external_id": "53538",
+        "title": "Mango Tropical Salsa",
+        "reason": "Unsupported ingredient identity 'Red Onions'"
+      },
+      {
+        "external_id": "53515",
+        "title": "Manjar (Dulce de Leche)",
+        "reason": "Unsupported quantity '1 quart'"
+      },
+      {
+        "external_id": "53402",
+        "title": "Mantu Afghan Dumpling",
+        "reason": "Unsupported ingredient identity 'Lamb'"
+      },
+      {
+        "external_id": "52827",
+        "title": "Massaman Beef curry",
+        "reason": "Unsupported ingredient identity 'Peanuts'"
+      },
+      {
+        "external_id": "53400",
+        "title": "Mastawa Lamb and Rice",
+        "reason": "Unsupported ingredient identity 'Lamb'"
+      },
+      {
+        "external_id": "53140",
+        "title": "Matambre a la Pizza",
+        "reason": "Unsupported ingredient identity 'Beef Flank Steak'"
+      },
+      {
+        "external_id": "52865",
+        "title": "Matar Paneer",
+        "reason": "Unsupported ingredient identity 'Sunflower Oil'"
+      },
+      {
+        "external_id": "53132",
+        "title": "Mazariner – Scandinavian Almond Tartlets",
+        "reason": "Unsupported quantity '3 Cups'"
+      },
+      {
+        "external_id": "52968",
+        "title": "Mbuzi Choma (Roasted Goat)",
+        "reason": "Unsupported ingredient identity 'Goat Meat'"
+      },
+      {
+        "external_id": "52880",
+        "title": "McSinghs Scotch pie",
+        "reason": "Unsupported ingredient identity 'Cumin'"
+      },
+      {
+        "external_id": "53423",
+        "title": "Meang Nem",
+        "reason": "Unsupported ingredient identity 'Dried Shrimp'"
+      },
+      {
+        "external_id": "52777",
+        "title": "Mediterranean Pasta Salad",
+        "reason": "Unsupported ingredient identity 'mozzarella balls'"
+      },
+      {
+        "external_id": "53048",
+        "title": "Mee goreng mamak",
+        "reason": "Unsupported ingredient identity 'Peanuts'"
+      },
+      {
+        "external_id": "53086",
+        "title": "Migas",
+        "reason": "Unsupported quantity '1 large'"
+      },
+      {
+        "external_id": "53135",
+        "title": "Milanesa",
+        "reason": "Unsupported ingredient identity 'Beef Cutlet'"
+      },
+      {
+        "external_id": "52991",
+        "title": "Mince Pies",
+        "reason": "Unsupported ingredient identity 'Mincemeat'"
+      },
+      {
+        "external_id": "52876",
+        "title": "Minced Beef Pie",
+        "reason": "Unsupported quantity '1 chopped'"
+      },
+      {
+        "external_id": "53304",
+        "title": "Mini bundt cakes",
+        "reason": "Unit 'tsp' is not compatible with g"
+      },
+      {
+        "external_id": "53560",
+        "title": "Mini butter buns",
+        "reason": "Unsupported ingredient identity 'Bread Flour'"
+      },
+      {
+        "external_id": "53109",
+        "title": "Mini chilli beef pies",
+        "reason": "Unsupported ingredient identity 'Ready rolled shortcrust pastry'"
+      },
+      {
+        "external_id": "53336",
+        "title": "Molasses Baked Beans",
+        "reason": "Unsupported ingredient identity 'Dried White Navy Beans'"
+      },
+      {
+        "external_id": "52927",
+        "title": "Montreal Smoked Meat",
+        "reason": "Unsupported ingredient identity 'Beef Brisket'"
+      },
+      {
+        "external_id": "53047",
+        "title": "Moroccan Carrot Soup",
+        "reason": "Unsupported quantity '6 chopped'"
+      },
+      {
+        "external_id": "53006",
+        "title": "Moussaka",
+        "reason": "Unsupported ingredient identity 'Beef'"
+      },
+      {
+        "external_id": "53029",
+        "title": "Mulukhiyah",
+        "reason": "Unsupported ingredient identity 'Mulukhiyah'"
+      },
+      {
+        "external_id": "52864",
+        "title": "Mushroom & Chestnut Rotolo",
+        "reason": "Unsupported ingredient identity 'Chestnuts'"
+      },
+      {
+        "external_id": "53059",
+        "title": "Mushroom soup with buckwheat",
+        "reason": "Unsupported ingredient identity 'Buckwheat'"
+      },
+      {
+        "external_id": "53038",
+        "title": "Mustard champ",
+        "reason": "Unsupported ingredient identity 'Mustard'"
+      },
+      {
+        "external_id": "53223",
+        "title": "Mutabbaq",
+        "reason": "Unsupported ingredient identity 'Mincemeat'"
+      },
+      {
+        "external_id": "52924",
+        "title": "Nanaimo Bars",
+        "reason": "Unsupported ingredient identity 'Custard'"
+      },
+      {
+        "external_id": "53377",
+        "title": "Napa Cabbage with Dried Shrimp",
+        "reason": "Unsupported ingredient identity 'Dried Shrimp'"
+      },
+      {
+        "external_id": "53051",
+        "title": "Nasi lemak",
+        "reason": "Unsupported ingredient identity 'Coconut Milk'"
+      },
+      {
+        "external_id": "52858",
+        "title": "New York cheesecake",
+        "reason": "Unsupported ingredient identity 'Sour Cream'"
+      },
+      {
+        "external_id": "53347",
+        "title": "No-Churn Rum Raisin Ice Cream",
+        "reason": "Unsupported ingredient identity 'Dark Rum'"
+      },
+      {
+        "external_id": "53497",
+        "title": "Nom Banh Chok – Cambodian Noodle Soup",
+        "reason": "Unsupported quantity '8 cups '"
+      },
+      {
+        "external_id": "53245",
+        "title": "Noodle bowl salad",
+        "reason": "Unsupported ingredient identity 'Rice Noodles'"
+      },
+      {
+        "external_id": "53117",
+        "title": "Nordic smørrebrød with asparagus and horseradish cream",
+        "reason": "Unsupported ingredient identity 'Creme Fraiche'"
+      },
+      {
+        "external_id": "53129",
+        "title": "Norwegian Krumkake",
+        "reason": "Unsupported quantity '3 Large'"
+      },
+      {
+        "external_id": "53121",
+        "title": "Norwegian Potato Lefse",
+        "reason": "Unsupported quantity '3 Lbs'"
+      },
+      {
+        "external_id": "53500",
+        "title": "Num Ansom – Sticky Rice Cake",
+        "reason": "Unsupported ingredient identity 'Glutinous Rice'"
+      },
+      {
+        "external_id": "53422",
+        "title": "Num E (Sticky Rice Balls in Sugar Syrup and Coconut Cream)",
+        "reason": "Unsupported ingredient identity 'Sticky Rice Flour'"
+      },
+      {
+        "external_id": "53501",
+        "title": "Num Pang – Cambodian Baguette Sandwich",
+        "reason": "Unsupported ingredient identity 'Baguette'"
+      },
+      {
+        "external_id": "52851",
+        "title": "Nutty Chicken Curry",
+        "reason": "Unsupported ingredient identity 'Red Chilli'"
+      },
+      {
+        "external_id": "53331",
+        "title": "Oatmeal pancakes",
+        "reason": "Unsupported quantity '1 medium'"
+      },
+      {
+        "external_id": "53551",
+        "title": "Old-fashioned Danish Apple Trifle",
+        "reason": "Unsupported ingredient identity 'Cooking Apples'"
+      },
+      {
+        "external_id": "53554",
+        "title": "Open-faced Sandwich With Potato",
+        "reason": "Unsupported ingredient identity 'New Potatoes'"
+      },
+      {
+        "external_id": "52810",
+        "title": "Osso Buco alla Milanese",
+        "reason": "Unsupported ingredient identity 'Veal'"
+      },
+      {
+        "external_id": "52943",
+        "title": "Oxtail with broad beans",
+        "reason": "Unsupported ingredient identity 'Oxtail'"
+      },
+      {
+        "external_id": "53487",
+        "title": "Oyster Mushroom Soup",
+        "reason": "Unsupported ingredient identity 'Oyster Mushrooms'"
+      },
+      {
+        "external_id": "53417",
+        "title": "Pa Amb Tomaquet (Bread with Tomato)",
+        "reason": "Unsupported quantity '2 sliced'"
+      },
+      {
+        "external_id": "52774",
+        "title": "Pad See Ew",
+        "reason": "Unsupported ingredient identity 'rice stick noodles'"
+      },
+      {
+        "external_id": "53191",
+        "title": "Pad Thai",
+        "reason": "Unsupported ingredient identity 'Rice Noodles'"
+      },
+      {
+        "external_id": "53151",
+        "title": "Paella",
+        "reason": "Unsupported ingredient identity 'Raw tiger prawns'"
+      },
+      {
+        "external_id": "53537",
+        "title": "Pan De Yucca",
+        "reason": "Unsupported ingredient identity 'Raw Yucca'"
+      },
+      {
+        "external_id": "53152",
+        "title": "Pan-fried hake, white bean & chorizo broth",
+        "reason": "Unsupported ingredient identity 'Dried white beans'"
+      },
+      {
+        "external_id": "53192",
+        "title": "Panang chicken curry (kaeng panang gai)",
+        "reason": "Unsupported ingredient identity 'Coconut Milk'"
+      },
+      {
+        "external_id": "52854",
+        "title": "Pancakes",
+        "reason": "Unsupported quantity '2 large'"
+      },
+      {
+        "external_id": "53534",
+        "title": "Papas Chorreadas Recipe (Potatoes with Cream and Cheese Sauce)",
+        "reason": "Unsupported ingredient identity 'Red Potatoes'"
+      },
+      {
+        "external_id": "53573",
+        "title": "Papaya salad",
+        "reason": "Unsupported ingredient identity 'Green Papaya'"
+      },
+      {
+        "external_id": "53429",
+        "title": "Paracuca (Roasted Peanuts)",
+        "reason": "Unsupported ingredient identity 'Unsalted Peanuts'"
+      },
+      {
+        "external_id": "52902",
+        "title": "Parkin Cake",
+        "reason": "Unsupported quantity '1 large'"
+      },
+      {
+        "external_id": "53333",
+        "title": "Passion fruit mousse",
+        "reason": "Unsupported ingredient identity 'Unflavoured Gelatin'"
+      },
+      {
+        "external_id": "53520",
+        "title": "Pastel de Choclo",
+        "reason": "Unsupported quantity '2 chopped'"
+      },
+      {
+        "external_id": "53517",
+        "title": "Pastel de Papas (Chilean Potato Pie)",
+        "reason": "Unsupported quantity '5 Cups'"
+      },
+      {
+        "external_id": "53017",
+        "title": "Paszteciki (Polish Pasties)",
+        "reason": "Unsupported quantity '1 cup '"
+      },
+      {
+        "external_id": "53172",
+        "title": "Patatas bravas",
+        "reason": "Unsupported quantity '1 small finely diced': no exact conversion"
+      },
+      {
+        "external_id": "52930",
+        "title": "Pate Chinois",
+        "reason": "Unsupported quantity '4 cups '"
+      },
+      {
+        "external_id": "52862",
+        "title": "Peach & Blueberry Grunt",
+        "reason": "Unsupported ingredient identity 'Corn Flour'"
+      },
+      {
+        "external_id": "52861",
+        "title": "Peanut Butter Cheesecake",
+        "reason": "Unsupported ingredient identity 'Peanut Cookies'"
+      },
+      {
+        "external_id": "52958",
+        "title": "Peanut Butter Cookies",
+        "reason": "Unsupported ingredient identity 'Peanut Butter'"
+      },
+      {
+        "external_id": "52916",
+        "title": "Pear Tarte Tatin",
+        "reason": "Unsupported ingredient identity 'Pears'"
+      },
+      {
+        "external_id": "53471",
+        "title": "Phaphatha Flatbreads",
+        "reason": "Unit 'tsp' is not compatible with g"
+      },
+      {
+        "external_id": "53539",
+        "title": "Picadillo de Vainicas (Green Beans Picadillo)",
+        "reason": "Unsupported ingredient identity 'Green Beans'"
+      },
+      {
+        "external_id": "53292",
+        "title": "Piernik (Polish gingerbread)",
+        "reason": "Unsupported ingredient identity 'Clear Honey'"
+      },
+      {
+        "external_id": "53019",
+        "title": "Pierogi (Polish Dumplings)",
+        "reason": "Unit 'tbsp' is not compatible with g"
+      },
+      {
+        "external_id": "52837",
+        "title": "Pilchard puttanesca",
+        "reason": "Unsupported quantity '1 tbls'"
+      },
+      {
+        "external_id": "53039",
+        "title": "Piri-piri chicken and slaw",
+        "reason": "Unsupported ingredient identity 'Chicken'"
+      },
+      {
+        "external_id": "53224",
+        "title": "Pistachio Kunafa Chocolate Cake and Cupcakes",
+        "reason": "Unsupported ingredient identity 'White Chocolate'"
+      },
+      {
+        "external_id": "53160",
+        "title": "Pisto con huevos",
+        "reason": "Unsupported quantity '2 tblsp '"
+      },
+      {
+        "external_id": "53014",
+        "title": "Pizza Express Margherita",
+        "reason": "Unit 'tsp' is not compatible with g"
+      },
+      {
+        "external_id": "53566",
+        "title": "plantain rolls",
+        "reason": "Unsupported ingredient identity 'Plantain'"
+      },
+      {
+        "external_id": "53295",
+        "title": "Polish chocolate & walnut cake",
+        "reason": "Unsupported ingredient identity 'Coco Sugar'"
+      },
+      {
+        "external_id": "53298",
+        "title": "Polish doughnuts (Pączki)",
+        "reason": "Unit 'tsp' is not compatible with g"
+      },
+      {
+        "external_id": "53299",
+        "title": "Polish patties (kotlety)",
+        "reason": "Unsupported ingredient identity 'Bread Rolls'"
+      },
+      {
+        "external_id": "53162",
+        "title": "Pollo en pepitoria",
+        "reason": "Unsupported ingredient identity 'Saffron'"
+      },
+      {
+        "external_id": "53540",
+        "title": "Pollo en Salsa",
+        "reason": "Unsupported ingredient identity 'Chicken Thighs'"
+      },
+      {
+        "external_id": "53022",
+        "title": "Polskie Nalesniki (Polish Pancakes)",
+        "reason": "Unsupported quantity '1 cup '"
+      },
+      {
+        "external_id": "53297",
+        "title": "Pomegranate salad",
+        "reason": "Unsupported ingredient identity 'Lemon Juice'"
+      },
+      {
+        "external_id": "53301",
+        "title": "Pork & sauerkraut goulash",
+        "reason": "Unsupported ingredient identity 'Lard'"
+      },
+      {
+        "external_id": "52847",
+        "title": "Pork Cassoulet",
+        "reason": "Unsupported ingredient identity 'Goose Fat'"
+      },
+      {
+        "external_id": "53306",
+        "title": "Pork rib bortsch",
+        "reason": "Unsupported ingredient identity 'Pork Back Ribs'"
+      },
+      {
+        "external_id": "53521",
+        "title": "Porotos Granados (Chilean Bean Stew)",
+        "reason": "Unsupported ingredient identity 'Butternut Squash'"
+      },
+      {
+        "external_id": "53044",
+        "title": "Portuguese barbecued pork (Febras assadas)",
+        "reason": "Unsupported ingredient identity 'Pork'"
+      },
+      {
+        "external_id": "53046",
+        "title": "Portuguese custard tarts",
+        "reason": "Unit 'tbsp' is not compatible with g"
+      },
+      {
+        "external_id": "53045",
+        "title": "Portuguese fish stew (Caldeirada de peixe)",
+        "reason": "Unsupported quantity '2 finely chopped': no exact conversion"
+      },
+      {
+        "external_id": "53042",
+        "title": "Portuguese prego with green piri-piri",
+        "reason": "Unsupported ingredient identity 'Beef Fillet'"
+      },
+      {
+        "external_id": "53323",
+        "title": "Postre Chajá",
+        "reason": "Unsupported quantity 'Pinch': no exact conversion"
+      },
+      {
+        "external_id": "52780",
+        "title": "Potato Gratin with Chicken",
+        "reason": "Unsupported quantity '2 tblsp'"
+      },
+      {
+        "external_id": "53489",
+        "title": "Potato Moussaka Recipe",
+        "reason": "Unsupported quantity '1 lb'"
+      },
+      {
+        "external_id": "53081",
+        "title": "Potato Salad (Olivier Salad)",
+        "reason": "Unit 'pcs' is not compatible with g"
+      },
+      {
+        "external_id": "52932",
+        "title": "Pouding chomeur",
+        "reason": "Unsupported quantity '½ cup ': no exact conversion"
+      },
+      {
+        "external_id": "53280",
+        "title": "Poulet Roti a l'Algerienne (Algerian Roast Chicken)",
+        "reason": "Unsupported quantity '1 cup '"
+      },
+      {
+        "external_id": "52804",
+        "title": "Poutine",
+        "reason": "Unsupported quantity 'Dash': no exact conversion"
+      },
+      {
+        "external_id": "53499",
+        "title": "Prahok Ktis – Pork and Coconut Dip",
+        "reason": "Unsupported ingredient identity 'Ground Pork'"
+      },
+      {
+        "external_id": "52922",
+        "title": "Prawn & Fennel Bisque",
+        "reason": "Unsupported ingredient identity 'Tiger Prawns'"
+      },
+      {
+        "external_id": "53244",
+        "title": "Prawn & noodle salad with crispy shallots",
+        "reason": "Unsupported ingredient identity 'Rice Noodles'"
+      },
+      {
+        "external_id": "53200",
+        "title": "Prawn stir-fry",
+        "reason": "Unsupported ingredient identity 'Raw tiger prawns'"
+      },
+      {
+        "external_id": "53174",
+        "title": "Prawns with Romesco sauce",
+        "reason": "Unsupported quantity '3 Large'"
+      },
+      {
+        "external_id": "53410",
+        "title": "Presh me Oriz Leek and Rice Bake",
+        "reason": "Unsupported ingredient identity 'Leek'"
+      },
+      {
+        "external_id": "52921",
+        "title": "Provençal Omelette Cake",
+        "reason": "Unsupported ingredient identity 'Courgettes'"
+      },
+      {
+        "external_id": "52857",
+        "title": "Pumpkin Pie",
+        "reason": "Unsupported ingredient identity 'Shortcrust Pastry'"
+      },
+      {
+        "external_id": "53230",
+        "title": "Purple sprouting broccoli tempura with nuoc cham",
+        "reason": "Unsupported ingredient identity 'Corn Flour'"
+      },
+      {
+        "external_id": "53574",
+        "title": "Quark and Rhubarb Pie",
+        "reason": "Unit 'tbsp' is not compatible with g"
+      },
+      {
+        "external_id": "53173",
+        "title": "Quick gazpacho",
+        "reason": "Unit 'g' is not compatible with ml"
+      },
+      {
+        "external_id": "53108",
+        "title": "Quick salt & pepper squid",
+        "reason": "Unsupported ingredient identity 'Squid'"
+      },
+      {
+        "external_id": "53383",
+        "title": "Ramen Noodles with Boiled Egg",
+        "reason": "Unsupported ingredient identity 'Noodles'"
+      },
+      {
+        "external_id": "52933",
+        "title": "Rappie Pie",
+        "reason": "Unit 'tbsp' is not compatible with g"
+      },
+      {
+        "external_id": "53303",
+        "title": "Raspberry mousse",
+        "reason": "Unsupported ingredient identity 'Gelatine Leafs'"
+      },
+      {
+        "external_id": "53124",
+        "title": "Raspeballer (Norwegian Potato Dumplings)",
+        "reason": "Unsupported ingredient identity 'Pork knuckle'"
+      },
+      {
+        "external_id": "52908",
+        "title": "Ratatouille",
+        "reason": "Unsupported ingredient identity 'Aubergine'"
+      },
+      {
+        "external_id": "52809",
+        "title": "Recheado Masala Fish",
+        "reason": "Unsupported ingredient identity 'Mackerel'"
+      },
+      {
+        "external_id": "53204",
+        "title": "Red curry chicken kebabs",
+        "reason": "Unit 'pcs' is not compatible with g"
+      },
+      {
+        "external_id": "53115",
+        "title": "Red onion pickle",
+        "reason": "Unsupported ingredient identity 'Red Onions'"
+      },
+      {
+        "external_id": "52941",
+        "title": "Red Peas Soup",
+        "reason": "Unsupported ingredient identity 'Kidney Beans'"
+      },
+      {
+        "external_id": "52811",
+        "title": "Ribollita",
+        "reason": "Unsupported quantity '1 chopped'"
+      },
+      {
+        "external_id": "53506",
+        "title": "Rice and Beans",
+        "reason": "Unsupported ingredient identity 'Kidney Beans'"
+      },
+      {
+        "external_id": "53227",
+        "title": "Rice paper dumplings",
+        "reason": "Unsupported ingredient identity 'White Cabbage'"
+      },
+      {
+        "external_id": "52783",
+        "title": "Rigatoni with fennel sausage sauce",
+        "reason": "Unsupported quantity '2½ tbsp': no exact conversion"
+      },
+      {
+        "external_id": "53273",
+        "title": "Roast aubergine with goat's cheese & toasted flatbread",
+        "reason": "Unsupported ingredient identity 'Aubergine'"
+      },
+      {
+        "external_id": "52942",
+        "title": "Roast fennel and aubergine paella",
+        "reason": "Unsupported ingredient identity 'Baby Aubergine'"
+      },
+      {
+        "external_id": "53268",
+        "title": "Roasted chicken with creamy walnut sauce",
+        "reason": "Unsupported ingredient identity 'Chicken Thighs'"
+      },
+      {
+        "external_id": "52816",
+        "title": "Roasted Eggplant With Tahini, Pine Nuts, and Lentils",
+        "reason": "Unsupported quantity '2 small cut into chunks': no exact conversion"
+      },
+      {
+        "external_id": "52786",
+        "title": "Rocky Road Fudge",
+        "reason": "Unsupported ingredient identity 'Miniature Marshmallows'"
+      },
+      {
+        "external_id": "53024",
+        "title": "Rogaliki (Polish Croissant Cookies)",
+        "reason": "Unsupported quantity '1 cup '"
+      },
+      {
+        "external_id": "53118",
+        "title": "Rømmegrøt – Norwegian Sour Cream Porridge",
+        "reason": "Unsupported ingredient identity 'Full fat sour cream'"
+      },
+      {
+        "external_id": "53545",
+        "title": "Ropa Veija",
+        "reason": "Unsupported ingredient identity 'Flank Steak'"
+      },
+      {
+        "external_id": "53315",
+        "title": "Rosemary braised red cabbage with kabanos",
+        "reason": "Unsupported ingredient identity 'Red Cabbage'"
+      },
+      {
+        "external_id": "53020",
+        "title": "Rosol (Polish Chicken Soup)",
+        "reason": "Unsupported ingredient identity 'Chicken Legs'"
+      },
+      {
+        "external_id": "53052",
+        "title": "Roti john",
+        "reason": "Unsupported quantity '1/4 lb'"
+      },
+      {
+        "external_id": "53388",
+        "title": "Runner Bean Mash (Snijbonen Stamppot)",
+        "reason": "Unsupported ingredient identity 'Runner Beans'"
+      },
+      {
+        "external_id": "52960",
+        "title": "Salmon Avocado Salad",
+        "reason": "Unsupported ingredient identity 'Salmon'"
+      },
+      {
+        "external_id": "52962",
+        "title": "Salmon Eggs Eggs Benedict",
+        "reason": "Unsupported ingredient identity 'White Wine Vinegar'"
+      },
+      {
+        "external_id": "53234",
+        "title": "Salmon noodle soup",
+        "reason": "Unsupported ingredient identity 'Thai Red Curry Paste'"
+      },
+      {
+        "external_id": "53248",
+        "title": "Salmon noodle wraps",
+        "reason": "Unsupported ingredient identity 'Rice Noodles'"
+      },
+      {
+        "external_id": "52823",
+        "title": "Salmon Prawn Risotto",
+        "reason": "Unsupported quantity '50g/2oz': no exact conversion"
+      },
+      {
+        "external_id": "53233",
+        "title": "Salt & pepper squid",
+        "reason": "Unsupported ingredient identity 'Corn Flour'"
+      },
+      {
+        "external_id": "53511",
+        "title": "Salt Beef and Beans",
+        "reason": "Unsupported ingredient identity 'Corned Beef'"
+      },
+      {
+        "external_id": "53171",
+        "title": "Salt cod tortilla",
+        "reason": "Unsupported quantity '1 Large Chopped': no exact conversion"
+      },
+      {
+        "external_id": "52833",
+        "title": "Salted Caramel Cheescake",
+        "reason": "Unsupported ingredient identity 'Digestive Biscuits'"
+      },
+      {
+        "external_id": "52936",
+        "title": "Saltfish and Ackee",
+        "reason": "Unsupported ingredient identity 'Salt Cod'"
+      },
+      {
+        "external_id": "53498",
+        "title": "Samlar Kari – Khmer Red Curry",
+        "reason": "Unsupported ingredient identity 'Chicken Thighs'"
+      },
+      {
+        "external_id": "53503",
+        "title": "Samlar Machu Kreung – Cambodian Sour Stew",
+        "reason": "Unsupported ingredient identity 'Chicken Thighs'"
+      },
+      {
+        "external_id": "53337",
+        "title": "Saskatoon Pie",
+        "reason": "Unsupported quantity '6 cups '"
+      },
+      {
+        "external_id": "53443",
+        "title": "Satee",
+        "reason": "Unsupported quantity '1 chopped'"
+      },
+      {
+        "external_id": "53577",
+        "title": "Sauerkraut and Fish Salad",
+        "reason": "Unsupported ingredient identity 'Sauerkraut'"
+      },
+      {
+        "external_id": "53296",
+        "title": "Sauerkraut pierogi",
+        "reason": "Unsupported ingredient identity 'Sunflower Oil'"
+      },
+      {
+        "external_id": "53314",
+        "title": "Sauerkraut pierogii",
+        "reason": "Unsupported ingredient identity 'Sunflower Oil'"
+      },
+      {
+        "external_id": "53247",
+        "title": "Sea bass with sizzled ginger, chilli & spring onions",
+        "reason": "Unsupported ingredient identity 'Sea Bass Fillets'"
+      },
+      {
+        "external_id": "52836",
+        "title": "Seafood fideuà",
+        "reason": "Unsupported ingredient identity 'Mussels'"
+      },
+      {
+        "external_id": "53167",
+        "title": "Seafood rice",
+        "reason": "Unsupported ingredient identity 'Leek'"
+      },
+      {
+        "external_id": "53054",
+        "title": "Seri muka kuih",
+        "reason": "Unsupported ingredient identity 'Coconut Milk'"
+      },
+      {
+        "external_id": "53378",
+        "title": "Sesame Cucumber Salad",
+        "reason": "Unsupported ingredient identity 'Cucumber'"
+      },
+      {
+        "external_id": "53470",
+        "title": "Seswaa",
+        "reason": "Unsupported ingredient identity 'Beef'"
+      },
+      {
+        "external_id": "53215",
+        "title": "Shakshouka",
+        "reason": "Unit 'g' is not compatible with pcs"
+      },
+      {
+        "external_id": "52963",
+        "title": "Shakshuka",
+        "reason": "Unsupported ingredient identity 'Red Onions'"
+      },
+      {
+        "external_id": "53219",
+        "title": "Shakshuka Feta Cheese",
+        "reason": "Unsupported quantity '4 large'"
+      },
+      {
+        "external_id": "53028",
+        "title": "Shawarma",
+        "reason": "Unsupported ingredient identity 'Chicken Thighs'"
+      },
+      {
+        "external_id": "53226",
+        "title": "Shawarma bread",
+        "reason": "Unsupported quantity '1 cup'"
+      },
+      {
+        "external_id": "53217",
+        "title": "Shawarma chuck roast wrap",
+        "reason": "Unsupported ingredient identity 'Chuck Roast'"
+      },
+      {
+        "external_id": "53491",
+        "title": "Shopska Salad",
+        "reason": "Unsupported ingredient identity 'Cucumber'"
+      },
+      {
+        "external_id": "52953",
+        "title": "Shrimp Chow Fun",
+        "reason": "Unsupported ingredient identity 'Rice Stick Noodles'"
+      },
+      {
+        "external_id": "53375",
+        "title": "Shrimp With Snow Peas",
+        "reason": "Unit 'tsp' is not compatible with g"
+      },
+      {
+        "external_id": "53374",
+        "title": "Sichuan Eggplant",
+        "reason": "Unsupported quantity '1.5 pounds sliced': no exact conversion"
+      },
+      {
+        "external_id": "53371",
+        "title": "Sichuan Style Stir-Fried Chinese Long Beans",
+        "reason": "Unsupported ingredient identity 'Chinese Long Beans'"
+      },
+      {
+        "external_id": "53369",
+        "title": "Silken Tofu with Sesame Soy Sauce",
+        "reason": "Unsupported ingredient identity 'Silken Tofu'"
+      },
+      {
+        "external_id": "53484",
+        "title": "Simple heart of palm & tomato salad",
+        "reason": "Unsupported ingredient identity 'Palm Hearts'"
+      },
+      {
+        "external_id": "53368",
+        "title": "Singapore Noodles with Shrimp",
+        "reason": "Unsupported ingredient identity 'Sesame Seed Oil'"
+      },
+      {
+        "external_id": "52994",
+        "title": "Skillet Apple Pork Chops with Roasted Sweet Potatoes & Zucchini",
+        "reason": "Unit 'pcs' is not compatible with g"
+      },
+      {
+        "external_id": "53395",
+        "title": "Slagroomtaart",
+        "reason": "Unit 'g' is not compatible with pcs"
+      },
+      {
+        "external_id": "53023",
+        "title": "Sledz w Oleju (Polish Herrings)",
+        "reason": "Unsupported ingredient identity 'Herring'"
+      },
+      {
+        "external_id": "53432",
+        "title": "Slow-cooked, Wadadli-spiced Cubano pork belly",
+        "reason": "Unsupported ingredient identity 'Coriander'"
+      },
+      {
+        "external_id": "53260",
+        "title": "Slow-roast lamb with cinnamon, fennel & citrus",
+        "reason": "Unsupported ingredient identity 'Lamb Leg'"
+      },
+      {
+        "external_id": "53302",
+        "title": "Slow-roasted ham with lemon, garlic & sage",
+        "reason": "Unsupported quantity '5 chopped cloves': no exact conversion"
+      },
+      {
+        "external_id": "53259",
+        "title": "Smoked aubergine purée",
+        "reason": "Unsupported ingredient identity 'Aubergine'"
+      },
+      {
+        "external_id": "52964",
+        "title": "Smoked Haddock Kedgeree",
+        "reason": "Unsupported quantity '1 chopped'"
+      },
+      {
+        "external_id": "53264",
+        "title": "Smoky chicken skewers",
+        "reason": "Unsupported ingredient identity 'Chicken Thighs'"
+      },
+      {
+        "external_id": "52784",
+        "title": "Smoky Lentil Chili with Squash",
+        "reason": "Unsupported quantity '1 tbls'"
+      },
+      {
+        "external_id": "53479",
+        "title": "Smoky tomato pepper salsa",
+        "reason": "Unsupported ingredient identity 'Red Onions'"
+      },
+      {
+        "external_id": "52981",
+        "title": "Snert (Dutch Split Pea Soup)",
+        "reason": "Unsupported ingredient identity 'Peas'"
+      },
+      {
+        "external_id": "52992",
+        "title": "Soy-Glazed Meatloaves with Wasabi Mashed Potatoes & Roasted Carrots",
+        "reason": "Unit 'pcs' is not compatible with g"
+      },
+      {
+        "external_id": "52982",
+        "title": "Spaghetti alla Carbonara",
+        "reason": "Unsupported quantity 'As required': no exact conversion"
+      },
+      {
+        "external_id": "52770",
+        "title": "Spaghetti Bolognese",
+        "reason": "Unsupported ingredient identity 'lean minced beef'"
+      },
+      {
+        "external_id": "53181",
+        "title": "Spanish beans with chicken & chorizo",
+        "reason": "Unsupported ingredient identity 'Pinto Beans'"
+      },
+      {
+        "external_id": "53164",
+        "title": "Spanish Chicken",
+        "reason": "Unsupported ingredient identity 'Chicken Thighs'"
+      },
+      {
+        "external_id": "53155",
+        "title": "Spanish chicken pie",
+        "reason": "Unsupported ingredient identity 'Paprika'"
+      },
+      {
+        "external_id": "53163",
+        "title": "Spanish fig & almond balls",
+        "reason": "Unsupported ingredient identity 'Almonds'"
+      },
+      {
+        "external_id": "53183",
+        "title": "Spanish meatballs with clams, chorizo & squid",
+        "reason": "Unsupported ingredient identity 'Shallots'"
+      },
+      {
+        "external_id": "53184",
+        "title": "Spanish rice & prawn one-pot",
+        "reason": "Unsupported quantity '1 sliced'"
+      },
+      {
+        "external_id": "53182",
+        "title": "Spanish seafood rice",
+        "reason": "Unsupported quantity '1 tblsp '"
+      },
+      {
+        "external_id": "53176",
+        "title": "Spanish tomato bread with jamón Serrano",
+        "reason": "Unsupported quantity '4 Chopped'"
+      },
+      {
+        "external_id": "52872",
+        "title": "Spanish Tortilla",
+        "reason": "Unsupported quantity '1 sliced'"
+      },
+      {
+        "external_id": "53175",
+        "title": "Spanish-style slow-cooked lamb shoulder & beans",
+        "reason": "Unsupported ingredient identity 'Lamb Shoulder'"
+      },
+      {
+        "external_id": "53105",
+        "title": "Spiced smoky barbecued chicken",
+        "reason": "Unsupported quantity 'Juice/zest of one': no exact conversion"
+      },
+      {
+        "external_id": "53142",
+        "title": "Spiced tortilla",
+        "reason": "Unsupported ingredient identity 'Sunflower Oil'"
+      },
+      {
+        "external_id": "52771",
+        "title": "Spicy Arrabiata Penne",
+        "reason": "Unsupported quantity '1 pound'"
+      },
+      {
+        "external_id": "52797",
+        "title": "Spicy North African Potato Salad",
+        "reason": "Unsupported ingredient identity 'Small Potatoes'"
+      },
+      {
+        "external_id": "53209",
+        "title": "Spicy Thai prawn noodles",
+        "reason": "Unsupported ingredient identity 'Rice Noodles'"
+      },
+      {
+        "external_id": "52849",
+        "title": "Spinach & Ricotta Cannelloni",
+        "reason": "Unsupported quantity '8 cloves chopped': no exact conversion"
+      },
+      {
+        "external_id": "52925",
+        "title": "Split Pea Soup",
+        "reason": "Unsupported ingredient identity 'Ham'"
+      },
+      {
+        "external_id": "52886",
+        "title": "Spotted Dick",
+        "reason": "Unsupported quantity 'pinch': no exact conversion"
+      },
+      {
+        "external_id": "53040",
+        "title": "Spring onion and prawn empanadas",
+        "reason": "Unsupported ingredient identity 'Spring Onions'"
+      },
+      {
+        "external_id": "52866",
+        "title": "Squash linguine",
+        "reason": "Unsupported ingredient identity 'Butternut Squash'"
+      },
+      {
+        "external_id": "53102",
+        "title": "Squid, chickpea & chorizo salad",
+        "reason": "Unsupported ingredient identity 'Can of chickpeas'"
+      },
+      {
+        "external_id": "52980",
+        "title": "Stamppot",
+        "reason": "Unsupported ingredient identity 'Bay Leaf'"
+      },
+      {
+        "external_id": "53229",
+        "title": "Steak & Vietnamese noodle salad",
+        "reason": "Unsupported ingredient identity 'Brown Rice Noodle'"
+      },
+      {
+        "external_id": "52881",
+        "title": "Steak and Kidney Pie",
+        "reason": "Unsupported ingredient identity 'Puff Pastry'"
+      },
+      {
+        "external_id": "52935",
+        "title": "Steak Diane",
+        "reason": "Unsupported ingredient identity 'Canola Oil'"
+      },
+      {
+        "external_id": "53110",
+        "title": "Sticky Chicken",
+        "reason": "Unsupported ingredient identity 'Chicken drumsticks'"
+      },
+      {
+        "external_id": "52883",
+        "title": "Sticky Toffee Pudding",
+        "reason": "Unsupported ingredient identity 'Muscovado Sugar'"
+      },
+      {
+        "external_id": "52793",
+        "title": "Sticky Toffee Pudding Ultimate",
+        "reason": "Unsupported ingredient identity 'Medjool dates'"
+      },
+      {
+        "external_id": "53201",
+        "title": "Stir-fried chicken with chillies & basil",
+        "reason": "Unsupported ingredient identity 'Chicken'"
+      },
+      {
+        "external_id": "52817",
+        "title": "Stovetop Eggplant With Harissa, Chickpeas, and Cumin Yogurt",
+        "reason": "Unsupported quantity '6 small'"
+      },
+      {
+        "external_id": "53082",
+        "title": "Strawberries Romanoff",
+        "reason": "Unsupported ingredient identity 'Strawberries'"
+      },
+      {
+        "external_id": "53005",
+        "title": "Strawberry Rhubarb Pie",
+        "reason": "Unit 'tbsp' is not compatible with g"
+      },
+      {
+        "external_id": "53550",
+        "title": "Strawberry tart",
+        "reason": "Unsupported ingredient identity 'Marzipan'"
+      },
+      {
+        "external_id": "53067",
+        "title": "Stuffed Bell Peppers with Quinoa and Black Beans",
+        "reason": "Unsupported quantity '4 whole'"
+      },
+      {
+        "external_id": "53435",
+        "title": "Stuffed Grape Leaves",
+        "reason": "Unsupported quantity '1 cup'"
+      },
+      {
+        "external_id": "53008",
+        "title": "Stuffed Lamb Tomatoes",
+        "reason": "Unsupported quantity '4 large'"
+      },
+      {
+        "external_id": "53558",
+        "title": "Stuffed plantain cups",
+        "reason": "Unsupported ingredient identity 'Plantain'"
+      },
+      {
+        "external_id": "52931",
+        "title": "Sugar Pie",
+        "reason": "Unsupported ingredient identity 'Brown Sugar'"
+      },
+      {
+        "external_id": "53130",
+        "title": "Suksessterte (Norwegian almond “success cake”)",
+        "reason": "Unsupported ingredient identity 'Almonds'"
+      },
+      {
+        "external_id": "53113",
+        "title": "Sukuma Wiki",
+        "reason": "Unsupported ingredient identity 'Oil'"
+      },
+      {
+        "external_id": "53187",
+        "title": "Šúĺlance s Makom",
+        "reason": "Unsupported ingredient identity 'Semolina'"
+      },
+      {
+        "external_id": "52911",
+        "title": "Summer Pistou",
+        "reason": "Unsupported ingredient identity 'Rapeseed Oil'"
+      },
+      {
+        "external_id": "52889",
+        "title": "Summer Pudding",
+        "reason": "Unsupported ingredient identity 'Strawberries'"
+      },
+      {
+        "external_id": "53065",
+        "title": "Sushi",
+        "reason": "Unsupported ingredient identity 'Sushi Rice'"
+      },
+      {
+        "external_id": "53376",
+        "title": "Sweet and Sour Chicken",
+        "reason": "Unsupported ingredient identity 'Chicken Thighs'"
+      },
+      {
+        "external_id": "52949",
+        "title": "Sweet and Sour Pork",
+        "reason": "Unsupported ingredient identity 'Pork'"
+      },
+      {
+        "external_id": "53275",
+        "title": "Sweet potato salad",
+        "reason": "Unsupported ingredient identity 'Sweet Potatoes'"
+      },
+      {
+        "external_id": "53089",
+        "title": "Syrian Bread",
+        "reason": "Unsupported quantity '1 and 1/8 cup': no exact conversion"
+      },
+      {
+        "external_id": "53095",
+        "title": "Syrian Rice with Meat",
+        "reason": "Unsupported quantity '1/4 cup'"
+      },
+      {
+        "external_id": "53093",
+        "title": "Syrian Spaghetti",
+        "reason": "Unsupported quantity '16 ounces'"
+      },
+      {
+        "external_id": "52950",
+        "title": "Szechuan Beef",
+        "reason": "Unsupported ingredient identity 'Beef'"
+      },
+      {
+        "external_id": "53447",
+        "title": "Tafelspitz",
+        "reason": "Unsupported ingredient identity 'Beef Brisket'"
+      },
+      {
+        "external_id": "52869",
+        "title": "Tahini Lentils",
+        "reason": "Unsupported ingredient identity 'Tahini'"
+      },
+      {
+        "external_id": "53287",
+        "title": "Tajine de Poulet aux Carottes et Patates Douces (Chicken and Sweet Potato Tagine)",
+        "reason": "Unsupported quantity '2 sliced'"
+      },
+      {
+        "external_id": "53119",
+        "title": "Tall Skoleboller",
+        "reason": "Unsupported quantity '1 cup '"
+      },
+      {
+        "external_id": "53535",
+        "title": "Tamal De Maicena",
+        "reason": "Unsupported quantity '4 cups'"
+      },
+      {
+        "external_id": "53026",
+        "title": "Tamiya",
+        "reason": "Unsupported ingredient identity 'Broad Beans'"
+      },
+      {
+        "external_id": "52806",
+        "title": "Tandoori chicken",
+        "reason": "Unsupported quantity '2 Juice'"
+      },
+      {
+        "external_id": "53312",
+        "title": "Tangy cabbage slaw",
+        "reason": "Unsupported ingredient identity 'Mayonnaise'"
+      },
+      {
+        "external_id": "53246",
+        "title": "Tangy carrot, cabbage & onion salad",
+        "reason": "Unsupported quantity '4 sliced'"
+      },
+      {
+        "external_id": "52909",
+        "title": "Tarte Tatin",
+        "reason": "Unsupported ingredient identity 'Puff Pastry'"
+      },
+      {
+        "external_id": "53404",
+        "title": "Tavë Kosi Baked Lamb and Yogurt",
+        "reason": "Unsupported ingredient identity 'Lamb'"
+      },
+      {
+        "external_id": "53405",
+        "title": "Tavë me Presh ska Mish Meatless Leek Bake",
+        "reason": "Unsupported ingredient identity 'Leek'"
+      },
+      {
+        "external_id": "53448",
+        "title": "Tendir Choreyi (Tandoori Bread)",
+        "reason": "Unit 'tsp' is not compatible with g"
+      },
+      {
+        "external_id": "52772",
+        "title": "Teriyaki Chicken Casserole",
+        "reason": "Unsupported quantity '3/4 cup'"
+      },
+      {
+        "external_id": "53199",
+        "title": "Thai beef stir-fry",
+        "reason": "Unsupported ingredient identity 'Beef'"
+      },
+      {
+        "external_id": "53206",
+        "title": "Thai chicken cakes with sweet chilli sauce",
+        "reason": "Unsupported quantity '2 large'"
+      },
+      {
+        "external_id": "53208",
+        "title": "Thai coconut & veg broth",
+        "reason": "Unsupported ingredient identity 'Thai Red Curry Paste'"
+      },
+      {
+        "external_id": "53195",
+        "title": "Thai curry noodle soup",
+        "reason": "Unsupported ingredient identity 'Thai Green Curry Paste'"
+      },
+      {
+        "external_id": "53212",
+        "title": "Thai drumsticks",
+        "reason": "Unsupported ingredient identity 'sweet chilli sauce'"
+      },
+      {
+        "external_id": "53198",
+        "title": "Thai fried rice with prawns & peas",
+        "reason": "Unsupported ingredient identity 'Red Onions'"
+      },
+      {
+        "external_id": "53214",
+        "title": "Thai green chicken soup",
+        "reason": "Unsupported ingredient identity 'Sunflower Oil'"
+      },
+      {
+        "external_id": "52814",
+        "title": "Thai Green Curry",
+        "reason": "Unsupported quantity '225g new': no exact conversion"
+      },
+      {
+        "external_id": "53197",
+        "title": "Thai pork & peanut curry",
+        "reason": "Unsupported ingredient identity 'Spring Onions'"
+      },
+      {
+        "external_id": "53205",
+        "title": "Thai prawn curry",
+        "reason": "Unsupported quantity '1 tbls'"
+      },
+      {
+        "external_id": "53210",
+        "title": "Thai pumpkin soup",
+        "reason": "Unsupported ingredient identity 'Sunflower Oil'"
+      },
+      {
+        "external_id": "53203",
+        "title": "Thai rice noodle salad",
+        "reason": "Unsupported ingredient identity 'Vermicelli Rice Noodles'"
+      },
+      {
+        "external_id": "53213",
+        "title": "Thai-style fish broth with greens",
+        "reason": "Unsupported ingredient identity 'Brown Rice Noodle'"
+      },
+      {
+        "external_id": "53202",
+        "title": "Thai-style steamed fish",
+        "reason": "Unsupported ingredient identity 'Trout'"
+      },
+      {
+        "external_id": "52882",
+        "title": "Three Fish Pie",
+        "reason": "Unsupported quantity 'Knob': no exact conversion"
+      },
+      {
+        "external_id": "52912",
+        "title": "Three-cheese souffles",
+        "reason": "Unsupported ingredient identity 'Bay Leaves'"
+      },
+      {
+        "external_id": "52929",
+        "title": "Timbits",
+        "reason": "Unsupported quantity '2 cups '"
+      },
+      {
+        "external_id": "53444",
+        "title": "Tirolean Dumplings",
+        "reason": "Unit 'g' is not compatible with pcs"
+      },
+      {
+        "external_id": "52822",
+        "title": "Toad In The Hole",
+        "reason": "Unsupported ingredient identity 'sausages'"
+      },
+      {
+        "external_id": "53240",
+        "title": "Tofu, greens & cashew stir-fry",
+        "reason": "Unsupported ingredient identity 'Broccoli'"
+      },
+      {
+        "external_id": "53207",
+        "title": "Tom kha gai",
+        "reason": "Unsupported ingredient identity 'Coconut Milk'"
+      },
+      {
+        "external_id": "53196",
+        "title": "Tom yum (hot & sour) soup with prawns",
+        "reason": "Unsupported ingredient identity 'Lemongrass'"
+      },
+      {
+        "external_id": "53194",
+        "title": "Tom yum soup with prawns",
+        "reason": "Unit 'g' is not compatible with pcs"
+      },
+      {
+        "external_id": "53032",
+        "title": "Tonkatsu pork",
+        "reason": "Unsupported ingredient identity 'Pork Chops'"
+      },
+      {
+        "external_id": "53415",
+        "title": "Torrijas",
+        "reason": "Unsupported quantity '1 medium'"
+      },
+      {
+        "external_id": "53165",
+        "title": "Torrijas with sherry",
+        "reason": "Unsupported quantity '2 medium'"
+      },
+      {
+        "external_id": "53318",
+        "title": "Torta de fiambre",
+        "reason": "Unsupported ingredient identity 'Ham'"
+      },
+      {
+        "external_id": "52926",
+        "title": "Tourtiere",
+        "reason": "Unsupported quantity '1 medium'"
+      },
+      {
+        "external_id": "53057",
+        "title": "Traditional Croatian Goulash",
+        "reason": "Unsupported ingredient identity 'Beef'"
+      },
+      {
+        "external_id": "53391",
+        "title": "Traditional Dutch rice tart (rijstevlaai)",
+        "reason": "Unsupported ingredient identity 'Coconut Oil'"
+      },
+      {
+        "external_id": "52892",
+        "title": "Treacle Tart",
+        "reason": "Unsupported ingredient identity 'Golden Syrup'"
+      },
+      {
+        "external_id": "53416",
+        "title": "Trinxat (Potato, Cabbage and Bacon Hash)",
+        "reason": "Unsupported ingredient identity 'Cabbage'"
+      },
+      {
+        "external_id": "52975",
+        "title": "Tuna and Egg Briks",
+        "reason": "Unsupported ingredient identity 'Spring Onions'"
+      },
+      {
+        "external_id": "52852",
+        "title": "Tuna Nicoise",
+        "reason": "Unsupported quantity '2 tblsp '"
+      },
+      {
+        "external_id": "52972",
+        "title": "Tunisian Lamb Soup",
+        "reason": "Unsupported ingredient identity 'Lamb Mince'"
+      },
+      {
+        "external_id": "52970",
+        "title": "Tunisian Orange Cake",
+        "reason": "Unsupported quantity '1 large'"
+      },
+      {
+        "external_id": "53249",
+        "title": "Turkey Bánh mì",
+        "reason": "Unsupported ingredient identity 'Baguette'"
+      },
+      {
+        "external_id": "52845",
+        "title": "Turkey Meatloaf",
+        "reason": "Unsupported quantity '1 tblsp '"
+      },
+      {
+        "external_id": "53251",
+        "title": "Turkish lahmacun",
+        "reason": "Unsupported ingredient identity 'Fast action yeast'"
+      },
+      {
+        "external_id": "53263",
+        "title": "Turkish lamb pilau",
+        "reason": "Unsupported ingredient identity 'Pine Nuts'"
+      },
+      {
+        "external_id": "53270",
+        "title": "Turkish-style lamb",
+        "reason": "Unsupported ingredient identity 'Lamb Leg'"
+      },
+      {
+        "external_id": "53114",
+        "title": "Ugali – Kenyan cornmeal",
+        "reason": "Unsupported quantity '2 cups '"
+      },
+      {
+        "external_id": "53250",
+        "title": "Vegan banh mi",
+        "reason": "Unsupported ingredient identity 'Raw Vegetables'"
+      },
+      {
+        "external_id": "52794",
+        "title": "Vegan Chocolate Cake",
+        "reason": "Unsupported quantity '1 1/4 cup'"
+      },
+      {
+        "external_id": "52775",
+        "title": "Vegan Lasagna",
+        "reason": "Unsupported ingredient identity 'green red lentils'"
+      },
+      {
+        "external_id": "53000",
+        "title": "Vegetable Shepherds Pie",
+        "reason": "Unsupported quantity '3 Lbs'"
+      },
+      {
+        "external_id": "52863",
+        "title": "Vegetarian Casserole",
+        "reason": "Unsupported ingredient identity 'Rapeseed Oil'"
+      },
+      {
+        "external_id": "52867",
+        "title": "Vegetarian Chilli",
+        "reason": "Unsupported ingredient identity 'Roasted Vegetables'"
+      },
+      {
+        "external_id": "53222",
+        "title": "Vegetarian Shakshuka",
+        "reason": "Unsupported ingredient identity 'Red Onions'"
+      },
+      {
+        "external_id": "52838",
+        "title": "Venetian Duck Ragu",
+        "reason": "Unsupported quantity '1 tbls'"
+      },
+      {
+        "external_id": "53325",
+        "title": "Venezuelan Arepas",
+        "reason": "Unsupported ingredient identity 'Cornmeal'"
+      },
+      {
+        "external_id": "53327",
+        "title": "Venezuelan Coconut Chicken",
+        "reason": "Unit 'pcs' is not compatible with g"
+      },
+      {
+        "external_id": "53326",
+        "title": "Venezuelan Sancocho",
+        "reason": "Unsupported ingredient identity 'Hind Shank'"
+      },
+      {
+        "external_id": "53328",
+        "title": "Venezuelan Shredded Beef",
+        "reason": "Unsupported ingredient identity 'Skirty Steak'"
+      },
+      {
+        "external_id": "53332",
+        "title": "Venezuelan turnovers",
+        "reason": "Unsupported ingredient identity 'Pepper'"
+      },
+      {
+        "external_id": "53228",
+        "title": "Vietnamese caramel trout",
+        "reason": "Unsupported ingredient identity 'Golden Caster Sugar'"
+      },
+      {
+        "external_id": "53232",
+        "title": "Vietnamese chicken salad",
+        "reason": "Unsupported ingredient identity 'Rice Noodles'"
+      },
+      {
+        "external_id": "52828",
+        "title": "Vietnamese Grilled Pork (bun-thit-nuong)",
+        "reason": "Unsupported ingredient identity 'Pork'"
+      },
+      {
+        "external_id": "53231",
+        "title": "Vietnamese lamb shanks with sweet potatoes",
+        "reason": "Unsupported ingredient identity 'Ground Nut Oil'"
+      },
+      {
+        "external_id": "53237",
+        "title": "Vietnamese pork salad",
+        "reason": "Unsupported ingredient identity 'Golden Caster Sugar'"
+      },
+      {
+        "external_id": "53243",
+        "title": "Vietnamese prawn spiralized rolls",
+        "reason": "Unsupported ingredient identity 'Lime'"
+      },
+      {
+        "external_id": "53241",
+        "title": "Vietnamese veg parcels",
+        "reason": "Unsupported ingredient identity 'Rice Flour Pancakes'"
+      },
+      {
+        "external_id": "53235",
+        "title": "Vietnamese-style caramel pork",
+        "reason": "Unsupported ingredient identity 'Ground Nut Oil'"
+      },
+      {
+        "external_id": "53236",
+        "title": "Vietnamese-style veggie hotpot",
+        "reason": "Unsupported ingredient identity 'Ginger'"
+      },
+      {
+        "external_id": "53062",
+        "title": "Walnut Roll Gužvara",
+        "reason": "Unsupported quantity '2 parts '"
+      },
+      {
+        "external_id": "53271",
+        "title": "Walnut, date & honey cake",
+        "reason": "Unsupported ingredient identity 'Muscovado Sugar'"
+      },
+      {
+        "external_id": "53106",
+        "title": "Warm roast asparagus salad",
+        "reason": "Unsupported ingredient identity 'Asparagus'"
+      },
+      {
+        "external_id": "52917",
+        "title": "White chocolate creme brulee",
+        "reason": "Unsupported ingredient identity 'White Chocolate Chips'"
+      },
+      {
+        "external_id": "52948",
+        "title": "Wontons",
+        "reason": "Unsupported ingredient identity 'Pork'"
+      },
+      {
+        "external_id": "52871",
+        "title": "Yaki Udon",
+        "reason": "Unsupported ingredient identity 'Udon Noodles'"
+      },
+      {
+        "external_id": "53225",
+        "title": "Yemeni Lahsa (Elite Shakshuka)",
+        "reason": "Unsupported quantity '1 Diced'"
+      },
+      {
+        "external_id": "53097",
+        "title": "Yorkshire Puddings",
+        "reason": "Unsupported ingredient identity 'Sunflower Oil'"
+      },
+      {
+        "external_id": "53294",
+        "title": "Zapiekanki",
+        "reason": "Unsupported ingredient identity 'Baguette'"
+      },
+      {
+        "external_id": "53394",
+        "title": "Zeeuwse bolussen",
+        "reason": "Unsupported quantity '1 medium'"
+      },
+      {
+        "external_id": "53189",
+        "title": "Zemiakové Placky",
+        "reason": "Unsupported quantity '1 medium chopped': no exact conversion"
+      }
+    ],
+    "total_recipes": 15
+  }
+}

@@ -1,5 +1,24 @@
 # Frontend / FastAPI integration and acceptance evidence
 
+## Source-breadth engineering refresh — 2026-11-01
+
+The [FF20 source-breadth record](evidence/ff20-source-breadth.md) documents 15 reviewed
+genuine recipes across six actual categories, preserving both original captures,
+all 41 old ingredient meanings and ten substitution rules. Existing whole-batch,
+SQLite, 23-operation contract and accepted Dashboard/full-history UI remain unchanged.
+The newly reviewed source matrix accounts for all 300 slots/105 quantified lines.
+
+Engineering exercised two new genuine recipes through 1/8 scaling, shared-stock
+shopping, explicit purchase/repeat transfer, exact cook/history, insufficient-stock
+rollback and actual same-file process restart. Real browser discovery showed 15 cards,
+six categories and retained history at both required viewports. One actual live import
+on 2026-11-01 returned HTTP 200: starting 15, imported 0, updated 15, total 15, skipped 775;
+the complete report and precise times are linked from the evidence record.
+
+This is engineering evidence, not final independent QA or delivered issue closure.
+Earlier two-record results below remain historical checkpoints. Final exact-SHA
+independent source/behavior/regression verification remains required before #20 closes.
+
 ## Engineering integration refresh — 2026-10-31
 
 The [final engineering record](evidence/final-acceptance.md#engineering-integration-refresh--2026-10-31-ff48-pm-r1)

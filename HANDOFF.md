@@ -11,23 +11,25 @@ Updated: 2026-11-01, Asia/Qyzylorda. Deadline: 2026-11-03.
 
 Only [#20](https://github.com/ttogzhann/freshfirst-market/issues/20) is open. Branch: `feature/ff20-source-breadth`, in `freshfirst-market-final`. [Acceptance criteria](https://github.com/ttogzhann/freshfirst-market/issues/20#issuecomment-6547855239), [local PM handoff](docs/evidence/ff20-pm-2026-11-01.md).
 
-- Official source acquisition captured 790 distinct records; 24 screened candidates. Proposed 15-record corpus includes the original two. These are candidates, not completed acceptance.
-- Raw captures, provenance and slot review are preserved under `.qa-state/ff20-acquisition/`. Draft tests and fixtures are uncommitted under `backend/tests/test_recipe_breadth.py` and `backend/tests/fixtures/mealdb-breadth/`.
-- No production source changes have been made for #20. Independent early source review is pending. Do not count draft tests as passing.
-- Replace candidate 53100: its blueberry title/instructions conflict with its blackberry ingredient slot. Preserve the original capture as audit evidence; do not invent a corrected ingredient.
-- PM clarification at `.qa-state/ff20-pm-clarification.md`: expanded recipe seeding must preserve user state; existing intentional first-install sample-pantry initialization remains unchanged.
+- Implemented 15 reviewed genuine recipes/6 actual categories, including unchanged original 53137/52776. Replaced contradictory 53100 with independently reviewed 53321; rejected capture/reason remain checked-in audit evidence. All300slots/105quantifiedlines are covered by independent expectations; repeated lines reconcile to 102 canonical rows.
+- Added 36 exact catalog identities and 3 aliases; existing 41 identities/old aliases/rules preserved. All purpose flour reuses existing flour. Parser, frontend, schema, 23-operation API and dependencies unchanged.
+- Source implementation commits `b214642184b9c0cdde67dcee3a412bfda2c7ac76` and formatter correction `5c07123cb4f687f9b9ba752990e6f63f760c66dc`; final evidence/HANDOFF commit follows without application changes. This is engineering completion pending independent QA, not a delivered/closed issue.
+- Actual new-pair stock journey passed 1/8scaling/shared deduction/explicit purchase/repeat transfer/exact cook/409 no mutation/same-file backend process restart and frontend discovery/history at1280x800 and375x812. Details and logs: [source-breadth evidence](docs/evidence/ff20-source-breadth.md).
+- Full required matrix passed on committed `5c07123cb4f687f9b9ba752990e6f63f760c66dc`: backend 187 tests/one known warning, frontend 93 tests, Ruff/32-file formatting,typecheck, API 23,lint zero errors/six known warnings,build passed. Initial formatter-only failure was corrected and the complete matrix rerun; failed logs preserved. Final evidence commit changes no application code.
+- Actual live import2026-11-01T02:54:54–02:54:59UTC: HTTP 200, starting 15, imported 0, updated 15, total 15, skipped 775; complete public-source report is checked in. No fallback/source-success fabrication.
+- Expanded recipe seeding validates the complete reviewed package before writes, adds missing IDs only, preserves newer/non-corpus recipes and user state. Existing intentional once-only sample pantry initialization remains unchanged under [PM r1a](https://github.com/ttogzhann/freshfirst-market/issues/20#issuecomment-6552473062).
 
 ## Exact next task
 
-Finish independent early source review, then engineer replaces 53100 with a fully reviewed genuine candidate and implements the 15–20-record offline corpus with exact additive mappings. Run full backend/frontend checks and real expanded-corpus import/purchase/cook/restart verification. Commit a candidate, obtain independent QA, verify exact delivery SHA, then close #20 and update this handoff.
+Independent QA reviews the final candidate commit containing this handoff (exact SHA supplied in the engineering delivery message; confirm `git rev-parse HEAD`) against all seven FF20-PM-r1/r1a criteria. Re-run required full matrix, inspect all source slots/provenance/old-entry projections, verify network-blocked missing-only seeds/corruption rollback/upsert references and real two-new-recipe purchase/cook/restart/UI. If any criterion is unverified or fails, return #20 to engineering without closure. After independent PASS, orchestrator verifies exact delivered SHA, coordinates delivery and closes #20, then updates this handoff. Do not deploy or start paid resources before verified functionality.
 
 ## Preservation and environment
 
 - Preserve the original dirty `freshfirst-market` checkout and all sibling worktrees/databases. Do not reset or clean them.
-- Current untracked work includes the PM handoff, draft breadth tests/fixtures, historical engineering handoffs and ignored QA/acquisition/database artifacts. Preserve these; stage only intended files.
+- Source review/tests/PM handoff are now committed. Preserve historical untracked handoffs and ignored QA/acquisition/database artifacts; stage only intended evidence updates.
 - Installed uv: `C:/Users/User/AppData/Roaming/Python/Python312/Scripts/uv.exe`. Existing backend `.venv` and frontend npm lockfile are authoritative.
 - Restricted-shell runtime/auth failures were misleading; approved `require_escalated` commands access installed Node/Python and authenticated GitHub. Never print credentials.
-- QA last confirmed ports 5173/8000/8002 free after stopping its owned processes. Recheck ownership before starting or stopping servers.
+- Engineer stopped its own 5173/8002 after the successful runtime/live journey; unknown servers and all existing databases were preserved. Recheck ownership before starting or stopping servers.
 - Prior worker turns hit a usage limit. Artifacts are preserved; resume from them rather than repeating completed acquisition or analysis. Actual aggregate effort is unknown.
 
 ## After #20
