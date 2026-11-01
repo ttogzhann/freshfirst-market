@@ -137,6 +137,15 @@ Do not start #56–#62 or create cloud resources in this step. The delivered ima
 - Engineering verification on the exact candidate: real Compose integration `1 passed`; forced-failure cleanup probe produced the expected test failure and removed all test-owned resources; focused SQLite regressions `31 passed`; Ruff check/format, Node syntax, and `git diff --check` passed.
 - Independent QA reviewed the exact candidate and issued `QA: PASS`, confirming unique resources, redaction, cleanup, and workflow coverage. No application changes, Playwright E2E, AWS, HTTPS, CI/CD, or later Part 3 issue work was started.
 
+## Part 3 Issue #60 status - approval-gated AWS EC2 architecture
+
+- Candidate `6e34d8d89f9631f1e2e545c9d07d1c3e05a4691d5` adds only the allowed static architecture files: `deploy/aws/freshfirst-ec2.yaml` and `deploy/aws/README.md`.
+- The design is a single EC2 proof of concept with Caddy terminating HTTPS, private Compose app/PostgreSQL networking, health-gated startup, encrypted gp3 EBS persistence, generated Secrets Manager values, backup/restore guidance, scoped runtime IAM, and conditional GitHub OIDC deployment permissions for future Issue #61.
+- Public ingress is limited to HTTP/HTTPS 80/443. SSH and PostgreSQL are not exposed. No AWS resources, stacks, DNS, certificates, budgets, roles, credentials, or paid services were created or changed.
+- Static verification: `C:\Users\User\AppData\Roaming\Python\Python312\Scripts\uv.exe --system-certs tool run --from cfn-lint cfn-lint deploy/aws/freshfirst-ec2.yaml` exited 0 with no diagnostics; direct security assertions and `git diff --check` passed. Cost assumptions are region-explicit for `us-east-1`, with low/expected/high ranges, variable-cost caveats, source links, and a proposed $35 alert threshold.
+- Independent QA reviewed the exact candidate and issued **QA: PASS** for AC-01 through AC-05. A final docs-only SHA check is required before integration. Issue #60 remains open until that gate and verified integration.
+- No AWS, DNS, HTTPS issuance, CI/CD, Issue #61, Issue #62, or existing database work was started. Deployment remains blocked until the explicit owner approvals listed in `deploy/aws/README.md` are recorded.
+
 ## Part 3 Issue #59 status - real-browser Compose E2E
 
 - Functional candidate `e140f75c50f33b0b7af5c77c3d1b7b8ae556eed0` adds pinned Playwright `1.55.0` Chromium coverage in `frontend/e2e/compose.spec.ts`, the runner configuration in `frontend/playwright.config.ts`, the `frontend` command `test:e2e:compose`, and focused setup documentation in `README.md`.
