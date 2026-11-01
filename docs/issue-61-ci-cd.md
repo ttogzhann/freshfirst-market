@@ -22,7 +22,12 @@ It does not authorize AWS activation, deployment, or live-site verification.
   production environment approval is the final workflow gate before AWS
   commands can run.
 - Post-deploy checks are bounded health, API, and headless-browser requests to
-  the supplied real origin. No PR or push path contains an AWS command.
+  the supplied real origin. The browser smoke creates a unique disposable
+  account through the visible registration UI, verifies login and session
+  restoration after reload, logs out and confirms a protected route redirects
+  to login, signs in again, then writes and rereads a pantry item after reload.
+  Credentials are process-local and never printed; no existing account or data
+  is used. No PR or push path contains an AWS command.
 
 Inputs, role ARNs, domains, image references, and origins are not stored in the
 repository. Configure `AWS_DEPLOYMENT_ROLE_ARN` only as a protected production
