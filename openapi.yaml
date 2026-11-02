@@ -158,6 +158,33 @@ paths:
                   $ref: '#/components/schemas/Ingredient'
         '500':
           $ref: '#/components/responses/ServerError'
+  /ingredients/autocomplete:
+    get:
+      operationId: autocompleteIngredients
+      summary: Resolve canonical names and aliases for the authenticated Pantry form
+      tags:
+        - Catalog
+      responses:
+        '200':
+          description: Deterministic database-backed catalog and alias matches.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IngredientAutocomplete'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 120
   /substitution-rules:
     get:
       operationId: listSubstitutionRules
@@ -279,6 +306,47 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '500':
           $ref: '#/components/responses/ServerError'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+          description: Opaque resource identifier returned by the API.
+  /pantry/{id}/resolve:
+    post:
+      operationId: resolvePantryItem
+      summary: Explicitly confirm a suggested or ambiguous Pantry canonical ingredient
+      tags:
+        - Pantry
+      responses:
+        '200':
+          description: The entry is now resolved to the confirmed canonical ingredient ID.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PantryItem'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: An equivalent resolved pantry lot already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PantryResolutionInput'
       parameters:
         - name: id
           in: path
@@ -931,6 +999,28 @@ components:
           type: string
         canonical_unit:
           $ref: '#/components/schemas/CanonicalUnit'
+    IngredientAutocomplete:
+      type: object
+      required:
+        - ingredient_id
+        - canonical_name
+        - category
+        - canonical_unit
+        - matched_alias
+        - locale
+      properties:
+        ingredient_id:
+          type: string
+        canonical_name:
+          type: string
+        category:
+          type: string
+        canonical_unit:
+          $ref: '#/components/schemas/CanonicalUnit'
+        matched_alias:
+          type: string
+        locale:
+          type: string
     PantryItem:
       type: object
       required:
@@ -971,6 +1061,10 @@ components:
         resolution_status:
           type: string
           enum: [resolved, unresolved, ambiguous, suggested]
+        resolution_candidates:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ingredient'
       description: >-
         Quantity is in the catalog ingredient canonical unit. Expired entries remain visible but
         provide zero usable stock.
@@ -1000,6 +1094,14 @@ components:
         Provide exactly one of ingredient_id or label. Positive quantity in a compatible input unit; normalized to canonical units, rounded to two
         decimals. g/kg map to g; ml/l/tsp/tbsp map to ml (1 tsp = 5 ml, 1 tbsp = 15 ml); pcs maps to
         pcs. No mass/volume conversion. A past expiry date is allowed.
+    PantryResolutionInput:
+      type: object
+      required:
+        - ingredient_id
+      properties:
+        ingredient_id:
+          type: string
+          minLength: 1
     RecipeIngredient:
       type: object
       required:

@@ -95,6 +95,7 @@ export function expiryStatus(
 export function usableStock(pantry: PantryItem[], today: string): Map<string, number> {
   const m = new Map<string, number>();
   for (const p of pantry) {
+    if (!p.ingredient_id || (p.resolution_status && p.resolution_status !== "resolved")) continue;
     if (expiryStatus(p.expiry_date, today) === "expired") continue;
     m.set(p.ingredient_id, (m.get(p.ingredient_id) ?? 0) + p.quantity);
   }

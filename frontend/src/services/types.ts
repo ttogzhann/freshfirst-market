@@ -15,18 +15,33 @@ export type ExpiryStatus = "fresh" | "expiring" | "expired";
 
 export interface PantryItem {
   id: string;
-  ingredient_id: string;
+  ingredient_id: string | null;
   /** Quantity in the ingredient's canonical unit. */
   quantity: number;
   /** ISO date YYYY-MM-DD */
   expiry_date: string;
+  original_label?: string | null;
+  normalized_label?: string | null;
+  resolution_status?: "resolved" | "unresolved" | "ambiguous" | "suggested";
+  resolution_candidates?: Ingredient[];
+  canonical_dimension?: CanonicalUnit | null;
 }
 
 export interface PantryInput {
-  ingredient_id: string;
+  ingredient_id?: string;
+  label?: string;
   quantity: number;
   unit: InputUnit;
   expiry_date: string;
+}
+
+export interface IngredientAutocomplete {
+  ingredient_id: string;
+  canonical_name: string;
+  category: string;
+  canonical_unit: CanonicalUnit;
+  matched_alias: string;
+  locale: string;
 }
 
 export interface RecipeIngredient {
@@ -187,11 +202,13 @@ export class ServiceError extends Error {
 
 export interface FreshService {
   listIngredients(): Promise<Ingredient[]>;
+  autocompleteIngredients(query: string): Promise<IngredientAutocomplete[]>;
   listSubstitutionRules(): Promise<SubstitutionRule[]>;
 
   listPantry(): Promise<PantryItem[]>;
   createPantryItem(input: PantryInput): Promise<PantryItem>;
   updatePantryItem(id: string, input: PantryInput): Promise<PantryItem>;
+  resolvePantryItem(id: string, ingredient_id: string): Promise<PantryItem>;
   deletePantryItem(id: string): Promise<void>;
 
   listRecipes(params?: {

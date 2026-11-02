@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Response
 
-from ..models import PantryInput, PantryItem
+from ..models import PantryInput, PantryItem, PantryResolutionInput
 from .dependencies import Csrf, ItemId, Service
 
 router = APIRouter(prefix="/pantry", tags=["Pantry"])
@@ -19,6 +19,15 @@ def create(service: Service, data: PantryInput, csrf: Csrf):
 @router.put("/{id}", response_model=PantryItem, operation_id="updatePantryItem")
 def update(service: Service, id: ItemId, data: PantryInput, csrf: Csrf):
     return service.update_pantry(id, data)
+
+
+@router.post(
+    "/{id}/resolve",
+    response_model=PantryItem,
+    operation_id="resolvePantryItem",
+)
+def resolve(service: Service, id: ItemId, data: PantryResolutionInput, csrf: Csrf):
+    return service.resolve_pantry(id, data.ingredient_id)
 
 
 @router.delete("/{id}", status_code=204, operation_id="deletePantryItem")

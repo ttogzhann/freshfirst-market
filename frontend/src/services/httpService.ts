@@ -5,6 +5,7 @@ import {
   type AuthSession,
   type AuthUser,
   type FreshService,
+  type IngredientAutocomplete,
 } from "./types";
 
 /** HTTP transport only. All quantities, matching and inventory decisions come from FastAPI. */
@@ -107,10 +108,16 @@ export function createHttpService(
       csrfToken = null;
     },
     listIngredients: () => request("/ingredients"),
+    autocompleteIngredients: (query): Promise<IngredientAutocomplete[]> => {
+      const params = new URLSearchParams({ q: query });
+      return request(`/ingredients/autocomplete?${params}`);
+    },
     listSubstitutionRules: () => request("/substitution-rules"),
     listPantry: () => request("/pantry"),
     createPantryItem: (input) => request("/pantry", "POST", input),
     updatePantryItem: (key, input) => request(`/pantry/${id(key)}`, "PUT", input),
+    resolvePantryItem: (key, ingredient_id) =>
+      request(`/pantry/${id(key)}/resolve`, "POST", { ingredient_id }),
     deletePantryItem: (key) => request(`/pantry/${id(key)}`, "DELETE"),
     listRecipes: (params = {}) => {
       const query = new URLSearchParams();
