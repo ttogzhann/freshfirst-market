@@ -90,6 +90,7 @@ pantry = Table(
         "ingredient_id",
         "canonical_dimension",
         "expiry_date",
+        "resolution_status",
         unique=True,
     ),
     Index("ix_pantry_items_owner_id", "owner_id"),

@@ -120,9 +120,11 @@ def _migrate_pantry_lots(connection, current):
             "CHECK (resolution_status IN ('resolved', 'unresolved', 'ambiguous', 'suggested'))"
         )
     connection.exec_driver_sql("DROP INDEX IF EXISTS uq_pantry_owner_ingredient")
+    connection.exec_driver_sql("DROP INDEX IF EXISTS uq_pantry_owner_lot")
     connection.exec_driver_sql(
         "CREATE UNIQUE INDEX IF NOT EXISTS uq_pantry_owner_lot "
-        "ON pantry_items(owner_id, ingredient_id, canonical_dimension, expiry_date)"
+        "ON pantry_items(owner_id, ingredient_id, canonical_dimension, expiry_date, "
+        "resolution_status)"
     )
     connection.exec_driver_sql(
         "CREATE INDEX IF NOT EXISTS ix_pantry_items_resolution "
@@ -177,7 +179,8 @@ def _rebuild_pantry_lots_sqlite(connection):
     connection.exec_driver_sql("ALTER TABLE pantry_items_new RENAME TO pantry_items")
     connection.exec_driver_sql(
         "CREATE UNIQUE INDEX uq_pantry_owner_lot "
-        "ON pantry_items(owner_id, ingredient_id, canonical_dimension, expiry_date)"
+        "ON pantry_items(owner_id, ingredient_id, canonical_dimension, expiry_date, "
+        "resolution_status)"
     )
     connection.exec_driver_sql("CREATE INDEX ix_pantry_items_owner_id ON pantry_items(owner_id)")
     connection.exec_driver_sql(

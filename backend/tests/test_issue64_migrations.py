@@ -10,7 +10,7 @@ from sqlalchemy.exc import IntegrityError
 from app.migrations import migrate
 from app.models import PantryInput
 from app.services.fresh import FreshService
-from app.store import SQLiteStore, pantry
+from app.store import SQLiteStore, pantry, users
 
 
 def test_fresh_sqlite_schema_is_repeat_safe_and_preserves_lot_columns(tmp_path):
@@ -85,6 +85,26 @@ def test_dated_lots_merge_only_when_the_expiry_matches_and_unresolved_is_exclude
     assert suggested.id != first.id
     assert "mystery grain" not in service.stock()
     assert service.stock()["pasta"] == 1750
+
+    with store.engine.begin() as connection:
+        connection.execute(
+            users.insert().values(
+                id="owner-64",
+                email="owner-64@example.com",
+                email_key="owner-64@example.com",
+                password_hash="unused",
+                created_at=1,
+            )
+        )
+    owner = service.for_owner("owner-64")
+    owner.create_pantry(
+        PantryInput(ingredient_id="pasta", quantity=1, unit="kg", expiry_date="2026-11-10")
+    )
+    owner_suggestion = owner.create_pantry(
+        PantryInput(label="pastaa", quantity=1, unit="kg", expiry_date="2026-11-10")
+    )
+    assert owner_suggestion.resolution_status == "suggested"
+    assert len(owner.list_pantry()) == 2
 
     restarted = FreshService(
         store=SQLiteStore(str(store.engine.url)), seed=False, today=lambda: date(2026, 11, 2)
