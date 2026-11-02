@@ -11,6 +11,13 @@ const python = process.env.FRESHFIRST_PYTHON ?? "/opt/venv/bin/python";
 const dataDirectory = path.resolve(process.env.FRESHFIRST_DATA_DIR ?? "/data");
 const shuttingDown = { value: false };
 
+// Render supplies the canonical HTTPS origin at runtime. Keep the explicit
+// variable as the preferred override, while making a fresh Render service
+// safe by default without baking a service name into the image.
+if (!process.env.FRESHFIRST_TRUSTED_ORIGINS && process.env.RENDER_EXTERNAL_URL) {
+  process.env.FRESHFIRST_TRUSTED_ORIGINS = process.env.RENDER_EXTERNAL_URL;
+}
+
 for (const name of ["DATABASE_URL", "FRESHFIRST_AUTH_SECRET", "FRESHFIRST_TRUSTED_ORIGINS"]) {
   if (!process.env[name]) {
     console.error(`${name} must be set at container runtime.`);
