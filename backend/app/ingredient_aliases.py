@@ -44,7 +44,21 @@ def resolve_rows(rows, value: str) -> AliasMatch:
         candidates.setdefault(row["ingredient_id"], row["alias_text"])
     ids = tuple(sorted(candidates))
     if len(ids) == 1:
-        return AliasMatch("exact", ids)
+        trusted = [
+            row
+            for row in exact_rows
+            if float(row["confidence"]) >= 0.8 and row["alias_type"] != "typo"
+        ]
+        if trusted:
+            return AliasMatch("exact", ids)
+        row = sorted(exact_rows, key=lambda item: item["alias_text"])[0]
+        return AliasMatch(
+            "suggestion",
+            ids,
+            row["alias_text"],
+            float(row["confidence"]),
+            True,
+        )
     if len(ids) > 1:
         return AliasMatch("ambiguous", ids)
     best = []

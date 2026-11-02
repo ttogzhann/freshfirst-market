@@ -54,6 +54,20 @@ def test_ambiguous_alias_is_not_auto_resolved_and_typo_requires_confirmation(tmp
                 )
                 .on_conflict_do_nothing(index_elements=["id"])
             )
+        connection.execute(
+            dialect_insert(ingredient_aliases, store.engine)
+            .values(
+                id="test-low-confidence",
+                ingredient_id="milk",
+                locale="en",
+                alias_text="milky typo",
+                normalized_text="milky typo",
+                alias_type="typo",
+                confidence=0.5,
+                provenance="test",
+            )
+            .on_conflict_do_nothing(index_elements=["id"])
+        )
     ambiguous = store.resolve_alias("common test food")
     assert ambiguous.status == "ambiguous"
     assert ambiguous.ingredient_ids == ("beef", "chicken")
@@ -61,6 +75,8 @@ def test_ambiguous_alias_is_not_auto_resolved_and_typo_requires_confirmation(tmp
     assert suggestion.status == "suggestion"
     assert suggestion.requires_confirmation is True
     assert suggestion.ingredient_ids == ("milk",)
+    assert store.resolve_alias("milky typo").status == "suggestion"
+    assert store.resolve_alias("МОЛОКО", locale="RU").ingredient_ids == ("milk",)
     assert store.resolve_alias("not a food").status == "unresolved"
     store.close()
 

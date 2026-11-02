@@ -26,6 +26,7 @@ from sqlalchemy import (
     Table,
     create_engine,
     event,
+    func,
     or_,
     select,
 )
@@ -347,7 +348,10 @@ class SQLiteStore:
             )
             if locale:
                 query = query.where(
-                    or_(ingredient_aliases.c.locale == locale, ingredient_aliases.c.locale == "en")
+                    or_(
+                        func.lower(ingredient_aliases.c.locale) == locale.casefold(),
+                        func.lower(ingredient_aliases.c.locale) == "en",
+                    )
                 )
             exact_rows = list(connection.execute(query).mappings())
             if exact_rows:
@@ -355,7 +359,10 @@ class SQLiteStore:
             query = select(ingredient_aliases)
             if locale:
                 query = query.where(
-                    or_(ingredient_aliases.c.locale == locale, ingredient_aliases.c.locale == "en")
+                    or_(
+                        func.lower(ingredient_aliases.c.locale) == locale.casefold(),
+                        func.lower(ingredient_aliases.c.locale) == "en",
+                    )
                 )
             return resolve_rows(connection.execute(query).mappings(), value)
 
