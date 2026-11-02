@@ -87,13 +87,24 @@ operator. Do not paste the URL into logs, CI output, shell history, or issue
 comments. To validate recovery, restore a copy into a new empty disposable
 PostgreSQL database using `pg_restore --no-owner --no-privileges --format=custom`
 with client tools matching the database's major version, then compare the
-preserved-entity counts with the source using the repository hook:
+schema, canonical row digests, and relational invariants with the source using
+the repository hook. Keep the URLs in protected process environment variables:
 
 ```powershell
-pwsh -File .\deploy\render\verify-postgres-restore.ps1 `
-  -RestoreUrl <isolated-disposable-url> `
-  -SourceUrl <source-url>
+$env:FRESHFIRST_RESTORE_DATABASE_URL = <isolated-disposable-url>
+$env:FRESHFIRST_SOURCE_DATABASE_URL = <source-url>
+pwsh -File .\deploy\render\verify-postgres-restore.ps1
+Remove-Item Env:FRESHFIRST_RESTORE_DATABASE_URL, Env:FRESHFIRST_SOURCE_DATABASE_URL
 ```
+
+The verifier requires every expected public table, compares a deterministically
+ordered schema snapshot, computes a per-row canonical MD5 digest and row count
+for each important table, and checks every application foreign-key relationship
+plus key domain invariants. It prints only counts and digests, never database
+URLs. URL parameters remain available for controlled automation, but environment
+variables are preferred so credentials stay out of shell history and process
+arguments where feasible. A mismatch fails closed; the script never writes to
+either database.
 
 Run the existing backend/migration tests against that isolated database as
 well. Never use
