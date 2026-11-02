@@ -271,21 +271,16 @@ class FreshService:
                 if p.ingredient_id == ingredient_id
                 and p.canonical_dimension == canonical_dimension
                 and p.expiry_date == expiry_date
-                and (
-                    ingredient_id
-                    or (
-                        p.normalized_label == normalized_label
-                        and p.resolution_status == resolution_status
-                    )
-                )
+                and p.resolution_status == resolution_status
+                and (ingredient_id or p.normalized_label == normalized_label)
             ),
             None,
         )
         if existing:
             existing.quantity = rounded(decimal(existing.quantity) + decimal(quantity))
-            existing.quantity_entered = rounded(
-                decimal(existing.quantity_entered or 0) + decimal(quantity_entered or quantity)
-            )
+            entered_unit = existing.original_unit or original_unit
+            factor = FACTORS.get(entered_unit, (None, 1))[1]
+            existing.quantity_entered = rounded(decimal(existing.quantity) / decimal(factor))
             return existing
         item = PantryItem(
             id=self.store.next_id("p"),
@@ -370,10 +365,8 @@ class FreshService:
                 and p.ingredient_id == ingredient_id
                 and p.canonical_dimension == dimension
                 and p.expiry_date == data.expiry_date
-                and (
-                    ingredient_id
-                    or (p.normalized_label == normalized_label and p.resolution_status == status)
-                )
+                and p.resolution_status == status
+                and (ingredient_id or p.normalized_label == normalized_label)
                 for p in self.state.pantry.values()
             )
             if duplicate:

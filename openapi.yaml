@@ -943,6 +943,7 @@ components:
           type: string
         ingredient_id:
           type: string
+          nullable: true
         quantity:
           type: number
           minimum: 0

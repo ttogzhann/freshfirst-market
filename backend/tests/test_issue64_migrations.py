@@ -71,18 +71,25 @@ def test_dated_lots_merge_only_when_the_expiry_matches_and_unresolved_is_exclude
     unresolved = service.create_pantry(
         PantryInput(label="mystery grain", quantity=2, unit="kg", expiry_date="2026-11-20")
     )
+    suggested = service.create_pantry(
+        PantryInput(label="pastaa", quantity=1, unit="kg", expiry_date="2026-11-10")
+    )
 
     assert first.id == same_lot.id
     assert same_lot.quantity == 1500
+    assert same_lot.quantity_entered == 1.5
     assert later_lot.id != first.id
     assert unresolved.ingredient_id is None
     assert unresolved.resolution_status == "unresolved"
+    assert suggested.resolution_status == "suggested"
+    assert suggested.id != first.id
     assert "mystery grain" not in service.stock()
+    assert service.stock()["pasta"] == 1750
 
     restarted = FreshService(
         store=SQLiteStore(str(store.engine.url)), seed=False, today=lambda: date(2026, 11, 2)
     )
-    assert len(restarted.list_pantry()) == 3
+    assert len(restarted.list_pantry()) == 4
     assert restarted.list_pantry()[0].quantity_entered is not None
     store.close()
     restarted.store.close()

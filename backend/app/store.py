@@ -82,7 +82,7 @@ pantry = Table(
     Column("normalized_label", String, nullable=True),
     Column("resolution_status", String, nullable=False, server_default="resolved"),
     CheckConstraint("quantity_canonical IS NULL OR quantity_canonical >= 0"),
-    CheckConstraint("quantity_entered IS NULL OR quantity_entered > 0"),
+    CheckConstraint("quantity_entered IS NULL OR quantity_entered >= 0"),
     CheckConstraint("resolution_status IN ('resolved', 'unresolved', 'ambiguous', 'suggested')"),
     Index(
         "uq_pantry_owner_lot",

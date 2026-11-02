@@ -109,6 +109,11 @@ def _migrate_pantry_lots(connection, current):
     constraints = {
         item["name"] for item in inspect(connection).get_check_constraints("pantry_items")
     }
+    if "ck_pantry_items_quantity_entered" not in constraints:
+        connection.exec_driver_sql(
+            "ALTER TABLE pantry_items ADD CONSTRAINT ck_pantry_items_quantity_entered "
+            "CHECK (quantity_entered IS NULL OR quantity_entered >= 0)"
+        )
     if "ck_pantry_items_resolution_status" not in constraints:
         connection.exec_driver_sql(
             "ALTER TABLE pantry_items ADD CONSTRAINT ck_pantry_items_resolution_status "
@@ -144,7 +149,7 @@ def _rebuild_pantry_lots_sqlite(connection):
                 quantity_canonical IS NULL OR quantity_canonical >= 0
             ),
             CONSTRAINT ck_pantry_items_quantity_entered CHECK (
-                quantity_entered IS NULL OR quantity_entered > 0
+                quantity_entered IS NULL OR quantity_entered >= 0
             ),
             CONSTRAINT ck_pantry_items_resolution_status CHECK (
                 resolution_status IN ('resolved', 'unresolved', 'ambiguous', 'suggested')
