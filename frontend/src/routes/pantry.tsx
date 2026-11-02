@@ -238,7 +238,9 @@ function PantryForm({ item, onClose }: { item: PantryItem | null; onClose: () =>
   const save = useAction(
     () => {
       const input = {
-        ...(ingredientId ? { ingredient_id: ingredientId } : { label: label.trim() }),
+        ...(ingredientId
+          ? { ingredient_id: ingredientId, ...(label.trim() ? { label: label.trim() } : {}) }
+          : { label: label.trim() }),
         quantity: Number(qty),
         unit,
         expiry_date: expiry,
@@ -316,7 +318,6 @@ function PantryForm({ item, onClose }: { item: PantryItem | null; onClose: () =>
                     className="block w-full rounded px-2 py-1 text-left text-sm hover:bg-muted"
                     onClick={() => {
                       setIngredientId(match.ingredient_id);
-                      setLabel("");
                       const next = ingredients.find((i) => i.id === match.ingredient_id);
                       if (next) setUnit(next.canonical_unit);
                     }}

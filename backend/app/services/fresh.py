@@ -353,10 +353,11 @@ class FreshService:
     def _pantry_identity(self, data):
         if data.ingredient_id:
             ing = self.ingredient(data.ingredient_id)
+            label = data.label or ing.name
             return (
                 ing.id,
-                ing.name,
-                normalize_alias(ing.name),
+                label,
+                normalize_alias(label),
                 data.unit,
                 ing.canonical_unit,
                 "resolved",

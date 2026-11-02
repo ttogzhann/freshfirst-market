@@ -265,6 +265,8 @@ export function createMockService(opts: MockOptions = {}): FreshService {
           ingredient_id: input.ingredient_id ?? null,
           quantity: q,
           expiry_date: input.expiry_date,
+          original_label: input.label ?? null,
+          resolution_status: "resolved",
         };
         state.pantry.push(item);
         return item;

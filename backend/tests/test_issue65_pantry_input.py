@@ -30,6 +30,26 @@ def test_exact_multilingual_label_preserves_input_and_canonical_id(client):
     assert client.get("/api/pantry").json()[0]["ingredient_id"] == "honey"
 
 
+def test_autocomplete_confirmation_preserves_label_after_reload(client, service):
+    response = client.post(
+        "/api/pantry",
+        json={
+            "ingredient_id": "milk",
+            "label": "МОЛОКО",
+            "quantity": 100,
+            "unit": "ml",
+            "expiry_date": "2026-11-01",
+        },
+    )
+    assert response.status_code == 200, response.text
+    item = response.json()
+    assert item["ingredient_id"] == "milk"
+    assert item["original_label"] == "МОЛОКО"
+    restored = service.for_owner(client.user_id).list_pantry()[0]
+    assert restored.ingredient_id == "milk"
+    assert restored.original_label == "МОЛОКО"
+
+
 def test_suggestion_and_ambiguity_require_explicit_confirmation(client, service):
     suggested = pantry_label(client, "molok", unit="ml")
     assert suggested.status_code == 200
