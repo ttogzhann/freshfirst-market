@@ -6,7 +6,7 @@ from datetime import date, datetime, timedelta, timezone
 from functools import wraps
 from threading import Lock
 
-from ..catalog import CATALOG, RULE_CATEGORIES, RULES
+from ..catalog import RULE_CATEGORIES, RULES
 from ..config import expiry_days as validate_expiry_days
 from ..errors import ServiceError, invalid, missing
 from ..models import (
@@ -95,9 +95,13 @@ class FreshService:
                 )
 
     def ingredient(self, ingredient_id):
-        if ingredient_id not in CATALOG:
+        if ingredient_id not in self.store.catalog:
             raise invalid("Choose an ingredient from the supported catalog")
-        return CATALOG[ingredient_id]
+        return self.store.catalog[ingredient_id]
+
+    @property
+    def catalog(self):
+        return self.store.catalog
 
     def recipe(self, recipe_id):
         if recipe_id not in self.state.recipes:
@@ -133,8 +137,8 @@ class FreshService:
                 raise invalid("Invalid, duplicate, or context-incompatible substitution")
             # No rule with incompatible stock dimensions is eligible.
             if (
-                CATALOG[rule.original_ingredient_id].canonical_unit
-                != CATALOG[rule.substitute_ingredient_id].canonical_unit
+                self.catalog[rule.original_ingredient_id].canonical_unit
+                != self.catalog[rule.substitute_ingredient_id].canonical_unit
             ):
                 raise invalid("Substitution requires an unsupported unit conversion")
             selected[sub.original_ingredient_id] = rule
@@ -167,8 +171,8 @@ class FreshService:
         return [
             DemandLine(
                 ingredient_id=i,
-                name=CATALOG[i].name,
-                unit=CATALOG[i].canonical_unit,
+                name=self.catalog[i].name,
+                unit=self.catalog[i].canonical_unit,
                 required=q,
                 available=stock.get(i, 0),
                 sufficient=stock.get(i, 0) >= aggregate[i],
@@ -182,7 +186,7 @@ class FreshService:
         missing_names, expiring = [], []
         covered = 0
         for line in recipe.ingredients:
-            name = CATALOG[line.ingredient_id].name
+            name = self.catalog[line.ingredient_id].name
             available = stock.get(line.ingredient_id, 0)
             if available >= decimal(line.quantity):
                 covered += 1
@@ -229,7 +233,7 @@ class FreshService:
                 raise invalid("The selected substitute has insufficient usable stock")
 
     def list_ingredients(self):
-        return list(CATALOG.values())
+        return list(self.catalog.values())
 
     def list_rules(self):
         return list(RULES.values())
@@ -311,7 +315,7 @@ class FreshService:
                     or recipe.category not in RULE_CATEGORIES[rule.id]
                 ):
                     continue
-                substitute = CATALOG[rule.substitute_ingredient_id]
+                substitute = self.catalog[rule.substitute_ingredient_id]
                 if substitute.canonical_unit != line.unit:
                     continue
                 required = positive_rounded(decimal(line.required) * decimal(rule.ratio))
@@ -338,7 +342,10 @@ class FreshService:
     def seed_recipes(self):
         # Validate the complete package before writing anything. Unlike live import,
         # unsupported baseline records are fatal and existing records are never replaced.
-        accepted = [normalize_meal(raw) for raw in PackagedMealSource().meals()]
+        accepted = [
+            normalize_meal(raw, self.catalog, self.store.resolve_alias)
+            for raw in PackagedMealSource().meals()
+        ]
         with self.store.transaction():
             for recipe in accepted:
                 self._upsert_recipe(recipe, missing_only=True)
@@ -364,7 +371,7 @@ class FreshService:
             report, accepted = ImportReport(), {}
             for raw in self.source.meals():
                 try:
-                    recipe = normalize_meal(raw)
+                    recipe = normalize_meal(raw, self.catalog, self.store.resolve_alias)
                 except ServiceError as exc:
                     report.skipped.append(
                         ImportSkip(
@@ -470,9 +477,9 @@ class FreshService:
             item = ShoppingItem(
                 id=self.store.next_id("s"),
                 ingredient_id=i,
-                label=CATALOG[i].name,
+                label=self.catalog[i].name,
                 quantity=rounded(quantity),
-                unit=CATALOG[i].canonical_unit,
+                unit=self.catalog[i].canonical_unit,
                 origin="generated",
                 purchased=False,
                 transferred_to_pantry=False,
@@ -491,7 +498,7 @@ class FreshService:
             match = next(
                 (
                     i
-                    for i in CATALOG.values()
+                    for i in self.catalog.values()
                     if i.name.casefold() == data.label.strip().casefold()
                     and i.canonical_unit == unit
                 ),

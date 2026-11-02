@@ -26,13 +26,16 @@ from sqlalchemy import (
     Table,
     create_engine,
     event,
+    func,
+    or_,
     select,
 )
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.pool import StaticPool
 
 from . import models
-from .catalog import CATALOG, RULES
+from .catalog import ALIASES, CATALOG, RULES, RUSSIAN_ALIASES, TRANSLITERATION_ALIASES
+from .ingredient_aliases import normalization_variants, normalize_alias, resolve_rows
 from .migrations import migrate
 
 metadata = MetaData()
@@ -190,6 +193,19 @@ rate_limits = Table(
     Column("window_start", Integer, nullable=False),
     Column("attempts", Integer, nullable=False),
 )
+ingredient_aliases = Table(
+    "ingredient_aliases",
+    metadata,
+    identity(),
+    Column("ingredient_id", String, ForeignKey("ingredients.id"), nullable=False),
+    Column("locale", String, nullable=False),
+    Column("alias_text", String, nullable=False),
+    Column("normalized_text", String, nullable=False),
+    Column("alias_type", String, nullable=False),
+    Column("confidence", Numeric(4, 3), nullable=False),
+    Column("provenance", String, nullable=False),
+    Index("ix_ingredient_aliases_normalized", "normalized_text", "locale"),
+)
 
 
 @dataclass
@@ -247,6 +263,51 @@ class SQLiteStore:
                         .values(**value.model_dump())
                         .on_conflict_do_nothing(index_elements=["id"])
                     )
+            canonical_names = {value.name.casefold() for value in CATALOG.values()}
+            aliases = [
+                (
+                    key,
+                    value,
+                    "en",
+                    key,
+                    "canonical" if key in canonical_names else "alias",
+                    1,
+                    "catalog.py",
+                )
+                for key, value in ALIASES.items()
+            ]
+            aliases += [
+                (key, value, "ru", key, "alias", 1, "reviewed-russian")
+                for key, value in RUSSIAN_ALIASES.items()
+            ]
+            aliases += [
+                (key, value, "ru-Latn", key, "transliteration", 1, "reviewed-transliteration")
+                for key, value in TRANSLITERATION_ALIASES.items()
+            ]
+            for index, (
+                alias,
+                ingredient_id,
+                locale,
+                text_value,
+                alias_type,
+                confidence,
+                provenance,
+            ) in enumerate(aliases):
+                row = {
+                    "id": f"alias_{index:04d}",
+                    "ingredient_id": ingredient_id,
+                    "locale": locale,
+                    "alias_text": alias,
+                    "normalized_text": normalize_alias(text_value),
+                    "alias_type": alias_type,
+                    "confidence": confidence,
+                    "provenance": provenance,
+                }
+                connection.execute(
+                    dialect_insert(ingredient_aliases, self.engine)
+                    .values(**row)
+                    .on_conflict_do_nothing(index_elements=["id"])
+                )
             connection.execute(
                 dialect_insert(settings, self.engine)
                 .values(
@@ -257,6 +318,7 @@ class SQLiteStore:
                 )
                 .on_conflict_do_nothing(index_elements=["id"])
             )
+        self._catalog_cache = self._read_catalog()
 
     def scoped(self, owner_id):
         scoped = object.__new__(SQLiteStore)
@@ -264,7 +326,45 @@ class SQLiteStore:
         scoped.lock = self.lock
         scoped.local = self.local
         scoped.owner_id = owner_id
+        scoped._catalog_cache = self._catalog_cache
         return scoped
+
+    def _read_catalog(self):
+        with self.engine.connect() as connection:
+            return {
+                row["id"]: models.Ingredient(**row)
+                for row in connection.execute(select(ingredients)).mappings()
+            }
+
+    @property
+    def catalog(self):
+        return self._catalog_cache
+
+    def resolve_alias(self, value, locale=None):
+        variants = normalization_variants(value)
+        with self.engine.connect() as connection:
+            query = select(ingredient_aliases).where(
+                ingredient_aliases.c.normalized_text.in_(variants)
+            )
+            if locale:
+                query = query.where(
+                    or_(
+                        func.lower(ingredient_aliases.c.locale) == locale.casefold(),
+                        func.lower(ingredient_aliases.c.locale) == "en",
+                    )
+                )
+            exact_rows = list(connection.execute(query).mappings())
+            if exact_rows:
+                return resolve_rows(exact_rows, value)
+            query = select(ingredient_aliases)
+            if locale:
+                query = query.where(
+                    or_(
+                        func.lower(ingredient_aliases.c.locale) == locale.casefold(),
+                        func.lower(ingredient_aliases.c.locale) == "en",
+                    )
+                )
+            return resolve_rows(connection.execute(query).mappings(), value)
 
     @property
     def state(self):
@@ -345,7 +445,7 @@ class SQLiteStore:
                             recipe_id=item.id,
                             ingredient_id=line["ingredient_id"],
                             quantity_canonical=line["quantity"],
-                            unit=CATALOG[line["ingredient_id"]].canonical_unit,
+                            unit=self.catalog[line["ingredient_id"]].canonical_unit,
                         )
                 if table is basket:
                     row["confirmed_substitutions_json"] = row.pop("substitutions")

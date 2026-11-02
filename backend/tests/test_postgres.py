@@ -160,3 +160,14 @@ def test_postgresql_auth_domain_transactions_and_process_restart(tmp_path):
 
     store.close()
     reopened.close()
+
+
+def test_postgresql_alias_schema_seed_and_resolution():
+    store = SQLiteStore(POSTGRES_URL)
+    assert store.resolve_alias("МОЛОКО").ingredient_ids == ("milk",)
+    assert store.resolve_alias("moloko").ingredient_ids == ("milk",)
+    with store.engine.connect() as connection:
+        assert (
+            connection.exec_driver_sql("SELECT COUNT(*) FROM ingredient_aliases").scalar_one() > 0
+        )
+    store.close()

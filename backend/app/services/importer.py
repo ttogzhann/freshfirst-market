@@ -125,7 +125,9 @@ class TheMealDBSource:
             ) from exc
 
 
-def normalize_meal(meal: dict) -> Recipe:
+def normalize_meal(meal: dict, catalog=None, resolver=None) -> Recipe:
+    if catalog is None:
+        catalog = CATALOG
     for key in ("idMeal", "strMeal", "strCategory", "strInstructions", "strMealThumb"):
         if not isinstance(meal.get(key), str) or not meal[key].strip():
             raise invalid(f"Missing required source field {key}")
@@ -143,9 +145,12 @@ def normalize_meal(meal: dict) -> Recipe:
                 raise invalid("Quantity without an ingredient")
             continue
         ingredient_id = ALIASES.get(name)
+        if resolver is not None:
+            match = resolver(raw_name)
+            ingredient_id = match.ingredient_ids[0] if match.status == "exact" else None
         if ingredient_id is None:
             raise invalid(f"Unsupported ingredient identity {raw_name!r}")
-        quantity = parse_measure(measure, CATALOG[ingredient_id].canonical_unit)
+        quantity = parse_measure(measure, catalog[ingredient_id].canonical_unit)
         quantities[ingredient_id] = quantities.get(ingredient_id, decimal(0)) + decimal(quantity)
     if not quantities:
         raise invalid("Recipe has no quantified ingredients")
