@@ -4,7 +4,7 @@ import time
 
 from sqlalchemy import inspect, text
 
-VERSION = 1
+VERSION = 2
 
 
 def migrate(connection):
@@ -51,10 +51,20 @@ def migrate(connection):
     connection.exec_driver_sql(
         "CREATE UNIQUE INDEX IF NOT EXISTS uq_store_settings_owner ON store_settings(owner_id)"
     )
+    connection.exec_driver_sql(
+        "CREATE TABLE IF NOT EXISTS ingredient_aliases ("
+        "id VARCHAR PRIMARY KEY, ingredient_id VARCHAR NOT NULL REFERENCES ingredients(id),"
+        "locale VARCHAR NOT NULL, alias_text VARCHAR NOT NULL, normalized_text VARCHAR NOT NULL,"
+        "alias_type VARCHAR NOT NULL, confidence NUMERIC(4,3) NOT NULL, "
+        "provenance VARCHAR NOT NULL)"
+    )
+    connection.exec_driver_sql(
+        "CREATE INDEX IF NOT EXISTS ix_ingredient_aliases_normalized "
+        "ON ingredient_aliases(normalized_text, locale)"
+    )
+    connection.execute(text("DELETE FROM schema_migrations"))
     connection.execute(
-        text(
-            "INSERT INTO schema_migrations(version, applied_at) VALUES (:version, :applied_at)",
-        ),
+        text("INSERT INTO schema_migrations(version, applied_at) VALUES (:version, :applied_at)"),
         {"version": VERSION, "applied_at": int(time.time())},
     )
 
