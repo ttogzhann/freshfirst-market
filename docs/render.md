@@ -62,6 +62,36 @@ maintenance, and expires after 30 days (with a limited upgrade grace period).
 Do not treat this configuration as production data hosting. Export or recreate
 only disposable test data, and upgrade the database before relying on it.
 
+### Free PostgreSQL backup and restore
+
+Render Free Postgres does not provide managed backups, point-in-time recovery,
+or managed recovery. Before any schema-changing production integration, take a
+logical backup from a trusted machine with the PostgreSQL client tools. The
+repository's read-only helper uses `pg_dump` custom format, the `public` schema,
+`--no-owner`, and `--no-privileges`; it never drops or changes database objects,
+refuses to overwrite an existing dump, validates the result with `pg_restore
+--list`, and writes a SHA-256 sidecar. It does not print or persist the database
+URL or password.
+
+Set `RENDER_POSTGRES_EXTERNAL_URL` only in the current process environment from
+your password manager or a protected terminal session, then run:
+
+```powershell
+$env:RENDER_POSTGRES_EXTERNAL_URL = <set this value without committing it>
+pwsh -File .\deploy\render\backup-postgres.ps1 -OutputDirectory .\private-render-backups
+Remove-Item Env:RENDER_POSTGRES_EXTERNAL_URL
+```
+
+Keep the dump and checksum outside the repository with access restricted to the
+operator. Do not paste the URL into logs, CI output, shell history, or issue
+comments. To validate recovery, restore a copy into a new empty disposable
+PostgreSQL database using `pg_restore --no-owner --no-privileges --format=custom`
+with client tools matching the database's major version, then run the existing
+backend/migration tests against that database. Never use
+`--clean` against a production or shared database. Free-plan Render recovery
+cannot be verified from this repository without the production external URL and
+explicit operator access; no production connection is attempted automatically.
+
 The image starts FastAPI and the TanStack Start SSR server in one container,
 then exposes only the gateway. Render terminates HTTPS and forwards HTTP to
 the container. The same-origin `/api` gateway preserves authentication,
