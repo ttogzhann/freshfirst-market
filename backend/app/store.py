@@ -72,12 +72,28 @@ pantry = Table(
     metadata,
     identity(),
     Column("owner_id", String, ForeignKey("users.id", ondelete="CASCADE")),
-    ingredient_ref(nullable=False),
-    Column("quantity_canonical", Numeric(14, 2), nullable=False),
+    ingredient_ref(nullable=True),
+    Column("quantity_canonical", Numeric(14, 2), nullable=True),
     Column("expiry_date", Date, nullable=False),
-    CheckConstraint("quantity_canonical >= 0"),
-    Index("uq_pantry_owner_ingredient", "owner_id", "ingredient_id", unique=True),
+    Column("quantity_entered", Numeric(14, 2), nullable=True),
+    Column("original_unit", String, nullable=True),
+    Column("canonical_dimension", String, nullable=False),
+    Column("original_label", String, nullable=True),
+    Column("normalized_label", String, nullable=True),
+    Column("resolution_status", String, nullable=False, server_default="resolved"),
+    CheckConstraint("quantity_canonical IS NULL OR quantity_canonical >= 0"),
+    CheckConstraint("quantity_entered IS NULL OR quantity_entered > 0"),
+    CheckConstraint("resolution_status IN ('resolved', 'unresolved', 'ambiguous', 'suggested')"),
+    Index(
+        "uq_pantry_owner_lot",
+        "owner_id",
+        "ingredient_id",
+        "canonical_dimension",
+        "expiry_date",
+        unique=True,
+    ),
     Index("ix_pantry_items_owner_id", "owner_id"),
+    Index("ix_pantry_items_resolution", "owner_id", "resolution_status"),
 )
 recipes = Table(
     "recipes",
@@ -398,6 +414,15 @@ class SQLiteStore:
         state = State(**{key: config[key] for key in ("seq", "removed_generated", "pantry_seeded")})
         for row in rows(pantry):
             row["quantity"] = row.pop("quantity_canonical")
+            row.setdefault("quantity_entered", row["quantity"])
+            if row.get("resolution_status") == "resolved" and row.get("ingredient_id"):
+                ingredient = self.catalog[row["ingredient_id"]]
+                row["canonical_dimension"] = (
+                    row.get("canonical_dimension") or ingredient.canonical_unit
+                )
+                row["original_unit"] = row.get("original_unit") or ingredient.canonical_unit
+                row["original_label"] = row.get("original_label") or ingredient.name
+                row["normalized_label"] = row.get("normalized_label") or ingredient.name.casefold()
             state.pantry[row["id"]] = models.PantryItem(**row)
         lines = rows(recipe_ingredients)
         for row in rows(recipes):
@@ -437,6 +462,20 @@ class SQLiteStore:
                     row["expiry_date"] = item.expiry_date
                 if table in (pantry, shopping):
                     row["quantity_canonical"] = row.pop("quantity")
+                if table is pantry:
+                    row["quantity_entered"] = row.get("quantity_entered") or row.get(
+                        "quantity_canonical"
+                    )
+                    if row.get("resolution_status") == "resolved" and row.get("ingredient_id"):
+                        ingredient = self.catalog[row["ingredient_id"]]
+                        row["canonical_dimension"] = (
+                            row.get("canonical_dimension") or ingredient.canonical_unit
+                        )
+                        row["original_unit"] = row.get("original_unit") or ingredient.canonical_unit
+                        row["original_label"] = row.get("original_label") or ingredient.name
+                        row["normalized_label"] = (
+                            row.get("normalized_label") or ingredient.name.casefold()
+                        )
                 if table is recipes:
                     for index, line in enumerate(row.pop("ingredients")):
                         line_id = f"{item.id}:{index}"

@@ -28,9 +28,15 @@ class Ingredient(Model):
 
 class PantryItem(Model):
     id: str
-    ingredient_id: str
+    ingredient_id: str | None
     quantity: Nonnegative
     expiry_date: date
+    quantity_entered: Nonnegative | None = None
+    original_unit: InputUnit | None = None
+    canonical_dimension: CanonicalUnit | None = None
+    original_label: str | None = None
+    normalized_label: str | None = None
+    resolution_status: Literal["resolved", "unresolved", "ambiguous", "suggested"] = "resolved"
 
 
 class DatedQuantity(Model):
@@ -50,8 +56,15 @@ class DatedQuantity(Model):
 
 
 class PantryInput(DatedQuantity):
-    ingredient_id: Text
+    ingredient_id: Text | None = None
+    label: Text | None = None
     unit: InputUnit
+
+    @model_validator(mode="after")
+    def exactly_one_identity(self):
+        if bool(self.ingredient_id) == bool(self.label):
+            raise ValueError("Provide exactly one of ingredient_id or label")
+        return self
 
 
 class RecipeIngredient(Model):

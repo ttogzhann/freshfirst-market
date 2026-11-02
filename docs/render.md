@@ -86,8 +86,17 @@ Keep the dump and checksum outside the repository with access restricted to the
 operator. Do not paste the URL into logs, CI output, shell history, or issue
 comments. To validate recovery, restore a copy into a new empty disposable
 PostgreSQL database using `pg_restore --no-owner --no-privileges --format=custom`
-with client tools matching the database's major version, then run the existing
-backend/migration tests against that database. Never use
+with client tools matching the database's major version, then compare the
+preserved-entity counts with the source using the repository hook:
+
+```powershell
+pwsh -File .\deploy\render\verify-postgres-restore.ps1 `
+  -RestoreUrl <isolated-disposable-url> `
+  -SourceUrl <source-url>
+```
+
+Run the existing backend/migration tests against that isolated database as
+well. Never use
 `--clean` against a production or shared database. Free-plan Render recovery
 cannot be verified from this repository without the production external URL and
 explicit operator access; no production connection is attempted automatically.

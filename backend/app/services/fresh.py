@@ -9,6 +9,7 @@ from threading import Lock
 from ..catalog import RULE_CATEGORIES, RULES
 from ..config import expiry_days as validate_expiry_days
 from ..errors import ServiceError, invalid, missing
+from ..ingredient_aliases import normalize_alias
 from ..models import (
     BasketItem,
     BasketItemWithRecipe,
@@ -29,7 +30,7 @@ from ..models import (
 )
 from ..store import SQLiteStore
 from .importer import PackagedMealSource, TheMealDBSource, normalize_meal
-from .quantities import decimal, normalize, positive_rounded, rounded, scale
+from .quantities import FACTORS, decimal, normalize, positive_rounded, rounded, scale
 
 
 def atomic(method):
@@ -114,11 +115,15 @@ class FreshService:
         return collection[item_id]
 
     def stock(self):
-        return {
-            p.ingredient_id: decimal(p.quantity)
-            for p in self.state.pantry.values()
-            if p.expiry_date >= self.today()
-        }
+        stock = defaultdict(lambda: decimal(0))
+        for item in self.state.pantry.values():
+            if (
+                item.ingredient_id
+                and item.resolution_status == "resolved"
+                and item.expiry_date >= self.today()
+            ):
+                stock[item.ingredient_id] += decimal(item.quantity)
+        return dict(stock)
 
     def demands(self, recipe, servings, substitutions):
         selected = {}
@@ -194,6 +199,7 @@ class FreshService:
                 missing_names.append(name)
             if available >= decimal(line.quantity) and any(
                 p.ingredient_id == line.ingredient_id
+                and p.resolution_status == "resolved"
                 and 0 <= (p.expiry_date - self.today()).days <= self.expiry_days
                 for p in self.state.pantry.values()
             ):
@@ -242,43 +248,158 @@ class FreshService:
     def list_pantry(self):
         return list(self.state.pantry.values())
 
-    def merge_pantry(self, ingredient_id, quantity, expiry_date):
+    def merge_pantry(
+        self,
+        ingredient_id,
+        quantity,
+        expiry_date,
+        *,
+        original_label=None,
+        normalized_label=None,
+        original_unit=None,
+        canonical_dimension=None,
+        resolution_status="resolved",
+        quantity_entered=None,
+    ):
+        canonical_dimension = canonical_dimension or (
+            self.catalog[ingredient_id].canonical_unit if ingredient_id else None
+        )
         existing = next(
-            (p for p in self.state.pantry.values() if p.ingredient_id == ingredient_id), None
+            (
+                p
+                for p in self.state.pantry.values()
+                if p.ingredient_id == ingredient_id
+                and p.canonical_dimension == canonical_dimension
+                and p.expiry_date == expiry_date
+                and (
+                    ingredient_id
+                    or (
+                        p.normalized_label == normalized_label
+                        and p.resolution_status == resolution_status
+                    )
+                )
+            ),
+            None,
         )
         if existing:
-            if existing.expiry_date != expiry_date:
-                raise ServiceError(
-                    409, "EXPIRY_CONFLICT", "Edit the existing pantry entry: expiry dates differ."
-                )
             existing.quantity = rounded(decimal(existing.quantity) + decimal(quantity))
+            existing.quantity_entered = rounded(
+                decimal(existing.quantity_entered or 0) + decimal(quantity_entered or quantity)
+            )
             return existing
         item = PantryItem(
             id=self.store.next_id("p"),
             ingredient_id=ingredient_id,
             quantity=quantity,
             expiry_date=expiry_date,
+            quantity_entered=quantity_entered or quantity,
+            original_unit=original_unit,
+            canonical_dimension=canonical_dimension,
+            original_label=original_label,
+            normalized_label=normalized_label,
+            resolution_status=resolution_status,
         )
         self.state.pantry[item.id] = item
         return item
 
-    @atomic
-    def create_pantry(self, data):
-        ing = self.ingredient(data.ingredient_id)
-        quantity = normalize(data.quantity, data.unit, ing.canonical_unit)
-        return self.merge_pantry(ing.id, quantity, data.expiry_date)
-
-    @atomic
-    def update_pantry(self, item_id, data):
-        item = self.find(self.state.pantry, item_id, "Pantry item")
-        ing = self.ingredient(data.ingredient_id)
-        quantity = normalize(data.quantity, data.unit, ing.canonical_unit)
-        if any(p.id != item_id and p.ingredient_id == ing.id for p in self.state.pantry.values()):
-            raise ServiceError(
-                409, "DUPLICATE_INGREDIENT", "Another pantry entry uses this ingredient."
+    def _pantry_identity(self, data):
+        if data.ingredient_id:
+            ing = self.ingredient(data.ingredient_id)
+            return (
+                ing.id,
+                ing.name,
+                normalize_alias(ing.name),
+                data.unit,
+                ing.canonical_unit,
+                "resolved",
             )
-        item.ingredient_id, item.quantity, item.expiry_date = ing.id, quantity, data.expiry_date
-        return item
+        match = self.store.resolve_alias(data.label)
+        status = {
+            "exact": "resolved",
+            "suggestion": "suggested",
+            "ambiguous": "ambiguous",
+            "unresolved": "unresolved",
+        }[match.status]
+        ingredient_id = match.ingredient_ids[0] if len(match.ingredient_ids) == 1 else None
+        dimension = FACTORS[data.unit][0]
+        return (
+            ingredient_id,
+            data.label,
+            normalize_alias(data.label),
+            data.unit,
+            dimension,
+            status,
+        )
+
+    def create_pantry(self, data):
+        identity = self._pantry_identity(data)
+        with self.store.transaction():
+            return deepcopy(self._save_pantry_input(data, identity))
+
+    def _save_pantry_input(self, data, identity):
+        ingredient_id, label, normalized_label, original_unit, dimension, status = identity
+        quantity = normalize(data.quantity, data.unit, dimension)
+        if status == "resolved":
+            quantity = normalize(
+                data.quantity, data.unit, self.catalog[ingredient_id].canonical_unit
+            )
+        return self.merge_pantry(
+            ingredient_id,
+            quantity,
+            data.expiry_date,
+            original_label=label,
+            normalized_label=normalized_label,
+            original_unit=original_unit,
+            canonical_dimension=dimension,
+            resolution_status=status,
+            quantity_entered=data.quantity,
+        )
+
+    def update_pantry(self, item_id, data):
+        identity = self._pantry_identity(data)
+        with self.store.transaction():
+            item = self.find(self.state.pantry, item_id, "Pantry item")
+            ingredient_id, label, normalized_label, original_unit, dimension, status = identity
+            quantity = normalize(data.quantity, data.unit, dimension)
+            if status == "resolved":
+                quantity = normalize(
+                    data.quantity, data.unit, self.catalog[ingredient_id].canonical_unit
+                )
+            duplicate = any(
+                p.id != item_id
+                and p.ingredient_id == ingredient_id
+                and p.canonical_dimension == dimension
+                and p.expiry_date == data.expiry_date
+                and (
+                    ingredient_id
+                    or (p.normalized_label == normalized_label and p.resolution_status == status)
+                )
+                for p in self.state.pantry.values()
+            )
+            if duplicate:
+                raise ServiceError(409, "DUPLICATE_LOT", "An equivalent pantry lot already exists.")
+            (
+                item.ingredient_id,
+                item.quantity,
+                item.expiry_date,
+                item.quantity_entered,
+                item.original_unit,
+                item.canonical_dimension,
+                item.original_label,
+                item.normalized_label,
+                item.resolution_status,
+            ) = (
+                ingredient_id,
+                quantity,
+                data.expiry_date,
+                data.quantity,
+                original_unit,
+                dimension,
+                label,
+                normalized_label,
+                status,
+            )
+            return deepcopy(item)
 
     @atomic
     def delete_pantry(self, item_id):
@@ -579,14 +700,25 @@ class FreshService:
             self.demands(self.recipe(data.recipe_id), data.servings, data.substitutions)
         )
         for i, required in total.items():
-            pantry = next(
-                p
-                for p in self.state.pantry.values()
-                if p.ingredient_id == i and p.expiry_date >= self.today()
+            remaining = decimal(required)
+            lots = sorted(
+                (
+                    p
+                    for p in self.state.pantry.values()
+                    if p.ingredient_id == i
+                    and p.resolution_status == "resolved"
+                    and p.expiry_date >= self.today()
+                ),
+                key=lambda p: p.expiry_date,
             )
-            pantry.quantity = rounded(decimal(pantry.quantity) - required)
-            if pantry.quantity <= 0:
-                del self.state.pantry[pantry.id]
+            for lot in lots:
+                consumed = min(decimal(lot.quantity), remaining)
+                lot.quantity = rounded(decimal(lot.quantity) - consumed)
+                remaining -= consumed
+                if lot.quantity <= 0:
+                    del self.state.pantry[lot.id]
+                if remaining <= 0:
+                    break
         record = CookingRecord(
             id=self.store.next_id("h"),
             recipe_id=data.recipe_id,

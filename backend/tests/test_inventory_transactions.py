@@ -28,7 +28,7 @@ def test_purchase_requires_confirmation_and_is_idempotent(client):
     )
 
 
-def test_conflicting_expiry_transfer_rolls_back_even_for_expired_stock(client):
+def test_transfer_preserves_expired_lot_and_adds_new_expiry_lot(client):
     pantry(client, "egg", 2, "pcs", "2026-10-19")
     item = client.post(
         "/api/shopping-list/items", json={"label": "Eggs", "quantity": 6, "unit": "pcs"}
@@ -38,9 +38,10 @@ def test_conflicting_expiry_transfer_rolls_back_even_for_expired_stock(client):
         f"/api/shopping-list/items/{item['id']}/transfer-to-pantry",
         json={"quantity": 6, "expiry_date": "2026-11-01"},
     )
-    assert response.status_code == 409
-    assert client.get("/api/pantry").json()[0]["quantity"] == 2
-    assert not client.get("/api/shopping-list").json()[0]["transferred_to_pantry"]
+    assert response.status_code == 200
+    lots = client.get("/api/pantry").json()
+    assert sorted(lot["quantity"] for lot in lots) == [2, 6]
+    assert client.get("/api/shopping-list").json()[0]["transferred_to_pantry"]
 
 
 def test_manual_noncatalog_transfer_and_bad_dates(client):

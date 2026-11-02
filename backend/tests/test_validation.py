@@ -85,22 +85,22 @@ def test_json_and_required_field_errors(client):
     )
 
 
-def test_pantry_merge_conflict_and_duplicate_edit(client):
+def test_pantry_lots_merge_by_expiry_and_duplicate_edit(client):
     a = pantry(client, "flour", 1, "kg")
     assert pantry(client, "flour", 500)["quantity"] == 1500
     response = client.post(
         "/api/pantry",
         json={"ingredient_id": "flour", "quantity": 1, "unit": "g", "expiry_date": "2026-11-02"},
     )
-    assert response.status_code == 409
-    assert response.json()["code"] == "EXPIRY_CONFLICT"
+    assert response.status_code == 200
+    assert response.json()["id"] != a["id"]
     b = pantry(client, "egg", 3, "pcs")
     response = client.put(
         f"/api/pantry/{b['id']}",
         json={"ingredient_id": "flour", "quantity": 1, "unit": "g", "expiry_date": "2026-11-01"},
     )
     assert response.status_code == 409
-    assert response.json()["code"] == "DUPLICATE_INGREDIENT"
+    assert response.json()["code"] == "DUPLICATE_LOT"
     assert client.delete(f"/api/pantry/{a['id']}").status_code == 204
     assert client.delete(f"/api/pantry/{a['id']}").status_code == 404
 
