@@ -137,6 +137,28 @@ async function goto(page: Page, path: string): Promise<void> {
   await page.goto(`http://127.0.0.1:${runtime!.port}${path}`);
 }
 
+async function registerUser(page: Page): Promise<{ email: string; password: string }> {
+  const credentials = {
+    email: `e2e-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`,
+    password: `E2E-${Date.now()}-long-password`,
+  };
+  await goto(page, "/register");
+  await page.getByLabel("Email").fill(credentials.email);
+  await page.getByLabel("Password").fill(credentials.password);
+  await page.getByRole("button", { name: "Create account" }).click();
+  await expect(page).toHaveURL(/\/$/);
+  return credentials;
+}
+
+async function openKnownRecipe(page: Page): Promise<void> {
+  await goto(page, "/recipes");
+  await page.getByPlaceholder("Search recipes…").fill("Spaghetti with Spanish flavours");
+  await page.getByRole("link", { name: /Spaghetti with Spanish flavours/ }).click();
+  await expect(
+    page.getByRole("heading", { name: "Spaghetti with Spanish flavours" }),
+  ).toBeVisible();
+}
+
 test.beforeAll(async () => {
   runtime = await startRuntime();
   if (process.env.FRESHFIRST_E2E_FORCE_FAILURE === "1") {
@@ -230,4 +252,120 @@ test("runs the real browser journey against production Compose and survives app 
       exact: true,
     }),
   ).toBeVisible();
+});
+
+test("covers pantry lifecycle filters, edit, expiry, and removal", async ({ page }) => {
+  await registerUser(page);
+  await goto(page, "/pantry");
+  await addPantryItem(page, "Chorizo", "100");
+  await page.getByRole("button", { name: "Add item" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("combobox", { name: "Ingredient" }).click();
+  await page.getByRole("option", { name: "Pasta", exact: true }).click();
+  await dialog.getByLabel("Quantity").fill("400");
+  await dialog.getByLabel("Expiry date").fill("2020-01-01");
+  await dialog.getByRole("button", { name: "Save" }).click();
+  await expect(dialog).toBeHidden();
+
+  await page.getByPlaceholder("Search pantry…").fill("Chorizo");
+  await expect(page.getByText("Chorizo", { exact: true })).toBeVisible();
+  await expect(page.getByText("Pasta", { exact: true })).toBeHidden();
+  await page.getByPlaceholder("Search pantry…").fill("");
+  await page.getByRole("combobox", { name: "Expiry status" }).click();
+  await page.getByRole("option", { name: "Expired", exact: true }).click();
+  await expect(page.getByText("Pasta", { exact: true })).toBeVisible();
+  await page.getByRole("combobox", { name: "Expiry status" }).click();
+  await page.getByRole("option", { name: "Any status", exact: true }).click();
+
+  await page.getByRole("button", { name: "Edit Chorizo" }).click();
+  await page.getByRole("dialog").getByLabel("Quantity").fill("150");
+  await page.getByRole("dialog").getByLabel("Expiry date").fill("2031-12-31");
+  await page.getByRole("dialog").getByRole("button", { name: "Save" }).click();
+  await expect(page.getByText("150 g", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Remove Chorizo" }).click();
+  await expect(page.getByText("Chorizo", { exact: true })).toBeHidden();
+
+  await goto(page, "/shopping");
+  await page.getByLabel("Name").fill("E2E manual oats");
+  await page.getByLabel("Quantity").fill("2");
+  await page.getByLabel("Unit").fill("kg");
+  await page.getByRole("button", { name: "Add manual item" }).click();
+  await expect(page.getByText("E2E manual oats (manual)", { exact: true })).toBeVisible();
+  const quantity = page.getByRole("spinbutton", { name: "Quantity for E2E manual oats" });
+  await quantity.fill("3");
+  await page.getByRole("button", { name: "Save quantity" }).click();
+  await expect(quantity).toHaveValue("3");
+  const purchased = page.getByRole("checkbox", { name: /E2E manual oats/ });
+  await expect(purchased).toBeEnabled();
+  await purchased.click();
+  await expect(purchased).toBeChecked();
+  await page.getByRole("button", { name: "Remove" }).click();
+  await expect(page.getByText("E2E manual oats (manual)", { exact: true })).toBeHidden();
+
+  await page.getByLabel("Catalog ingredient").selectOption({ label: "Parmesan" });
+  await page.getByLabel("Quantity").fill("60");
+  await page.getByRole("button", { name: "Add manual item" }).click();
+  await expect(page.getByText("Parmesan (manual)", { exact: true })).toBeVisible();
+  const parmesanPurchased = page.getByRole("checkbox", { name: /Parmesan/ });
+  await parmesanPurchased.click();
+  await expect(parmesanPurchased).toBeChecked();
+  await page.getByLabel(/Actual quantity/).fill("60");
+  await page.getByLabel("Expiry date").fill("2031-12-31");
+  await page.getByRole("button", { name: "Confirm transfer to pantry" }).click();
+  await expect(page.getByText("Added to pantry", { exact: true })).toBeVisible();
+});
+
+test("covers recipe filters, serving adaptation, and import reporting", async ({ page }) => {
+  await registerUser(page);
+  await goto(page, "/recipes");
+  await page.locator("select").first().selectOption("title");
+  await page.getByRole("combobox").filter({ hasText: "All categories" }).click();
+  const categories = page.getByRole("option");
+  await categories.last().click();
+  await expect(page.getByRole("heading", { name: "Recipes" })).toBeVisible();
+  await page.getByRole("button", { name: "Re-import recipes" }).click();
+  const report = page.getByRole("dialog", { name: "Import report" });
+  await expect(report).toBeVisible({ timeout: 60_000 });
+  await expect(report.getByLabel("Import report results")).toContainText("recipes total");
+  await page.keyboard.press("Escape");
+
+  await openKnownRecipe(page);
+  const increase = page.getByRole("button", { name: /Increase/ });
+  await expect(increase).toBeVisible();
+  await increase.click();
+  await expect(page.getByRole("button", { name: "Add to basket" })).toBeVisible();
+  await page.getByRole("button", { name: "Add to basket" }).click();
+  await page.getByRole("link", { name: "Basket", exact: true }).click();
+  const basketTitle = page.getByText("Spaghetti with Spanish flavours", { exact: true });
+  await expect(basketTitle).toBeVisible();
+  const servings = page.getByRole("combobox", {
+    name: /for Spaghetti with Spanish flavours/,
+  });
+  await servings.selectOption("4");
+  await expect(servings).toHaveValue("4");
+  await page.getByRole("button", { name: "Remove" }).click();
+  await expect(basketTitle).toBeHidden();
+  await expect(page.getByText("Your basket is empty")).toBeVisible();
+});
+
+test("keeps each account's pantry data isolated in the real browser", async ({ page }) => {
+  const first = await registerUser(page);
+  await goto(page, "/pantry");
+  await addPantryItem(page, "Chorizo", "100");
+  await page.getByRole("button", { name: "Log out" }).click();
+
+  await registerUser(page);
+  await goto(page, "/pantry");
+  await expect(page.getByText("Chorizo", { exact: true })).toBeHidden();
+  await addPantryItem(page, "Pasta", "400");
+  await page.getByRole("button", { name: "Log out" }).click();
+
+  await goto(page, "/login");
+  await page.getByLabel("Email").fill(first.email);
+  await page.getByLabel("Password").fill(first.password);
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await goto(page, "/pantry");
+  await expect(page.getByText("Chorizo", { exact: true })).toBeVisible();
+  await expect(page.getByText("Pasta", { exact: true })).toBeHidden();
 });
