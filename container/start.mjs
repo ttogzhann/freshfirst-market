@@ -92,7 +92,7 @@ for (const child of children) {
 function proxy(request, response, destinationPort) {
   const headers = { ...request.headers, host: `127.0.0.1:${destinationPort}` };
   headers["x-forwarded-host"] = request.headers.host ?? "";
-  headers["x-forwarded-proto"] = "http";
+  headers["x-forwarded-proto"] = request.headers["x-forwarded-proto"] ?? "http";
   const upstream = createRequest(
     {
       hostname: "127.0.0.1",

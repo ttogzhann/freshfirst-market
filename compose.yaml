@@ -41,9 +41,30 @@ services:
     networks:
       - freshfirst
 
+  caddy:
+    image: caddy:2.10-alpine
+    profiles: ["https"]
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      FRESHFIRST_DOMAIN: ${FRESHFIRST_DOMAIN:-34.171.30.130.nip.io}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - freshfirst-caddy-data:/data
+      - freshfirst-caddy-config:/config
+    networks:
+      - freshfirst
+
 networks:
   freshfirst:
     driver: bridge
 
 volumes:
   freshfirst-postgres-data:
+  freshfirst-caddy-data:
+  freshfirst-caddy-config:

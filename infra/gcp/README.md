@@ -1,6 +1,6 @@
 # FreshFirst on Google Cloud Compute Engine
 
-This approval-gated deployment uses the existing production [Dockerfile](../../Dockerfile) and [Compose file](../../compose.yaml), one Debian 12 Compute Engine VM, and one attached persistent disk. PostgreSQL remains private inside Compose; only TCP port 80 is allowed by the firewall.
+This approval-gated deployment uses the existing production [Dockerfile](../../Dockerfile) and [Compose file](../../compose.yaml), one Debian 12 Compute Engine VM, and one attached persistent disk. Caddy provides automatic Let's Encrypt HTTPS using the free `nip.io` hostname `34.171.30.130.nip.io`; PostgreSQL remains private inside Compose. TCP/UDP ports 80 and 443 are public, while SSH remains IAP-only.
 
 The default `e2-small` is modest but gives the production image build more headroom than `e2-micro`. The VM, disks, and network traffic can incur charges after trial credits/free allowances. Check current pricing and Free Trial limits for the selected region before applying.
 
@@ -29,7 +29,7 @@ PUBLIC_IP="$(terraform output -raw public_ip)"
 curl --fail --retry 30 --retry-delay 5 "http://${PUBLIC_IP}/healthz"
 ```
 
-The first boot installs Docker, mounts the persistent disk as Docker's data root, clones the selected public Git ref, builds the existing production image, and starts Compose. Compose waits for PostgreSQL's existing health check before starting the app.
+The first boot installs Docker, mounts the persistent disk as Docker's data root, clones the selected public Git ref, builds the existing production image, and starts Compose. HTTPS is enabled after the one-time Caddy setup below; Compose waits for PostgreSQL's existing health check before starting the app.
 
 The startup script configures Docker's official Debian repository before installing Docker CE and the Compose plugin. This is required on Debian 12; the distribution `docker.io` package does not reliably provide `docker-compose-plugin`.
 
@@ -56,9 +56,23 @@ gcloud compute ssh freshfirst --zone us-central1-a --tunnel-through-iap --comman
   'sudo install -o root -g root -m 0750 /tmp/freshfirst-deploy.sh /usr/local/sbin/freshfirst-deploy && sudo rm -f /tmp/freshfirst-deploy.sh'
 ```
 
+Before starting the HTTPS profile, set the existing `/opt/freshfirst/.env` values through an interactive editor or another private method (never commit or print them):
+
+```bash
+gcloud compute ssh freshfirst --zone us-central1-a --tunnel-through-iap
+# Run these commands inside the VM. They change only the two public-origin settings:
+sudo sh -c 'grep -q "^FRESHFIRST_DOMAIN=" /opt/freshfirst/.env && sed -i "s#^FRESHFIRST_DOMAIN=.*#FRESHFIRST_DOMAIN=34.171.30.130.nip.io#" /opt/freshfirst/.env || echo "FRESHFIRST_DOMAIN=34.171.30.130.nip.io" >> /opt/freshfirst/.env'
+sudo sh -c 'grep -q "^FRESHFIRST_TRUSTED_ORIGINS=" /opt/freshfirst/.env && sed -i "s#^FRESHFIRST_TRUSTED_ORIGINS=.*#FRESHFIRST_TRUSTED_ORIGINS=https://34.171.30.130.nip.io#" /opt/freshfirst/.env || echo "FRESHFIRST_TRUSTED_ORIGINS=https://34.171.30.130.nip.io" >> /opt/freshfirst/.env'
+sudo docker compose --profile https up -d
+exit
+```
+
 The approved workflow then connects through IAP and invokes only
 `sudo /usr/local/sbin/freshfirst-deploy`. The helper fetches the approved branch and runs
-`docker compose build --pull` and `docker compose up -d`; it never uses `down -v`.
+`docker compose build --pull` and `docker compose --profile https up -d`; it never uses `down -v`.
+Caddy redirects HTTP to HTTPS, obtains the certificate for the configured hostname, and persists
+certificates/configuration in `freshfirst-caddy-data` and `freshfirst-caddy-config`. Do not remove
+those named volumes. Replace the `nip.io` hostname with a domain you control if one becomes available.
 
 ## Operations and cleanup
 
