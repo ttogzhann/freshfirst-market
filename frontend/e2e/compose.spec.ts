@@ -312,7 +312,7 @@ test("covers pantry lifecycle filters, edit, expiry, and removal", async ({ page
   await page.getByLabel(/Actual quantity/).fill("60");
   await page.getByLabel("Expiry date").fill("2031-12-31");
   await page.getByRole("button", { name: "Confirm transfer to pantry" }).click();
-  await expect(page.getByText("Added to pantry")).toBeVisible();
+  await expect(page.getByText("Added to pantry", { exact: true })).toBeVisible();
 });
 
 test("covers recipe filters, serving adaptation, and import reporting", async ({ page }) => {
