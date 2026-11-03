@@ -1,4 +1,3 @@
-import os
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
@@ -27,10 +26,7 @@ def _client_ip(request):
 
 
 def _cookie_secure(request):
-    return request.url.scheme == "https" or os.getenv("FRESHFIRST_ENV", "").casefold() in {
-        "production",
-        "prod",
-    }
+    return request.url.scheme == "https"
 
 
 def _set_cookie(response, request, token):
