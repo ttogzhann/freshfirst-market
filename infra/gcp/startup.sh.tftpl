@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+exec > >(tee -a /var/log/freshfirst-startup.log) 2>&1
+
+apt-get update
+apt-get install -y ca-certificates curl docker.io docker-compose-plugin git e2fsprogs
+
+DATA_DISK=/dev/disk/by-id/google-freshfirst-postgres
+MOUNT_POINT=/var/lib/freshfirst-docker
+if ! blkid "$DATA_DISK" >/dev/null 2>&1; then mkfs.ext4 -F "$DATA_DISK"; fi
+mkdir -p "$MOUNT_POINT"
+grep -q "$DATA_DISK $MOUNT_POINT" /etc/fstab || echo "$DATA_DISK $MOUNT_POINT ext4 defaults,nofail 0 2" >> /etc/fstab
+mountpoint -q "$MOUNT_POINT" || mount "$MOUNT_POINT"
+
+mkdir -p /etc/docker
+cat >/etc/docker/daemon.json <<'EOF'
+{"data-root":"/var/lib/freshfirst-docker"}
+EOF
+systemctl enable docker
+systemctl restart docker
+
+APP_DIR=/opt/freshfirst
+rm -rf "$APP_DIR"
+git clone --depth 1 --branch '${repository_ref}' '${repository_url}' "$APP_DIR"
+cd "$APP_DIR"
+EXTERNAL_IP="$(curl -fsS http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip -H 'Metadata-Flavor: Google')"
+umask 077
+cat >.env <<EOF
+POSTGRES_DB=freshfirst
+POSTGRES_USER=freshfirst
+POSTGRES_PASSWORD=${postgres_password}
+FRESHFIRST_AUTH_SECRET=${auth_secret}
+FRESHFIRST_PORT=80
+FRESHFIRST_TRUSTED_ORIGINS=http://$${EXTERNAL_IP}
+EOF
+
+docker compose build --pull
+docker compose up -d
+docker compose ps

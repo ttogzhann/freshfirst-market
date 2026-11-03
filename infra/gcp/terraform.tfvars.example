@@ -1,0 +1,7 @@
+project_id        = "your-gcp-project-id"
+region            = "us-central1"
+zone              = "us-central1-a"
+machine_type      = "e2-small"
+repository_ref    = "feature/render-deployment"
+postgres_password = "replace-with-openssl-rand-hex-24"
+auth_secret       = "replace-with-openssl-rand-hex-32"
