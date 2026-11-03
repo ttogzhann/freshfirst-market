@@ -18,7 +18,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { errorMessage, service, useAction, useIngredients, usePantry } from "@/hooks/use-fresh";
+import {
+  errorMessage,
+  service,
+  useAction,
+  useIngredientAutocomplete,
+  useIngredients,
+  usePantry,
+} from "@/hooks/use-fresh";
 import {
   addDays,
   compatibleUnits,
@@ -61,13 +68,16 @@ export function Pantry() {
   const rows = (pantry.data ?? [])
     .map((p) => ({
       p,
-      ing: ingMap.get(p.ingredient_id)!,
+      ing: p.ingredient_id ? ingMap.get(p.ingredient_id) : undefined,
       st: expiryStatus(p.expiry_date, today),
       days: daysUntil(p.expiry_date, today),
     }))
-    .filter((r) => r.ing)
-    .filter((r) => !q || r.ing.name.toLowerCase().includes(q.toLowerCase()))
-    .filter((r) => cat === "all" || r.ing.category === cat)
+    .filter((r) => r.ing || r.p.original_label)
+    .filter(
+      (r) =>
+        !q || (r.ing?.name ?? r.p.original_label ?? "").toLowerCase().includes(q.toLowerCase()),
+    )
+    .filter((r) => cat === "all" || r.ing?.category === cat)
     .filter((r) => status === "all" || r.st === status)
     .sort((a, b) => a.days - b.days);
 
@@ -137,15 +147,19 @@ export function Pantry() {
           >
             <div className="flex items-start justify-between gap-2">
               <div>
-                <p className="font-display text-lg leading-tight">{ing.name}</p>
-                <p className="text-xs text-muted-foreground">{ing.category}</p>
+                <p className="font-display text-lg leading-tight">
+                  {ing?.name ?? p.original_label}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {ing?.category ?? `Unresolved · ${p.resolution_status ?? "unresolved"}`}
+                </p>
               </div>
               <ExpiryBadge status={st} days={days} />
             </div>
             <div className="mt-4 flex items-end justify-between">
               <div>
                 <p className="text-2xl font-semibold tabular-nums">
-                  {formatQty(p.quantity, ing.canonical_unit)}
+                  {formatQty(p.quantity, p.canonical_dimension ?? ing?.canonical_unit ?? "pcs")}
                 </p>
                 <p className="text-xs text-muted-foreground">Best before {p.expiry_date}</p>
               </div>
@@ -153,7 +167,7 @@ export function Pantry() {
                 <Button
                   size="icon"
                   variant="ghost"
-                  aria-label={`Edit ${ing.name}`}
+                  aria-label={`Edit ${ing?.name ?? p.original_label ?? "pantry item"}`}
                   onClick={() => setEditing(p)}
                 >
                   <Pencil className="h-4 w-4" />
@@ -161,7 +175,7 @@ export function Pantry() {
                 <Button
                   size="icon"
                   variant="ghost"
-                  aria-label={`Remove ${ing.name}`}
+                  aria-label={`Remove ${ing?.name ?? p.original_label ?? "pantry item"}`}
                   disabled={remove.isPending}
                   onClick={() => remove.mutate(p.id)}
                 >
@@ -169,6 +183,9 @@ export function Pantry() {
                 </Button>
               </div>
             </div>
+            {p.resolution_status && p.resolution_status !== "resolved" && (
+              <PantryResolution item={p} />
+            )}
           </div>
         ))}
       </div>
@@ -179,9 +196,40 @@ export function Pantry() {
   );
 }
 
+function PantryResolution({ item }: { item: PantryItem }) {
+  const resolve = useAction(
+    (ingredientId: string) => service().resolvePantryItem(item.id, ingredientId),
+    "Ingredient confirmed",
+  );
+  const candidates = item.resolution_candidates ?? [];
+  return (
+    <div className="mt-3 space-y-2 border-t pt-3" aria-label="Ingredient resolution">
+      <p className="text-sm text-muted-foreground">
+        {item.resolution_status === "unresolved"
+          ? "This label is not matched to canonical stock."
+          : "Choose a canonical ingredient to confirm this entry."}
+      </p>
+      {candidates.map((candidate) => (
+        <Button
+          key={candidate.id}
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={resolve.isPending}
+          onClick={() => resolve.mutate(candidate.id)}
+        >
+          Confirm {candidate.name}
+        </Button>
+      ))}
+    </div>
+  );
+}
+
 function PantryForm({ item, onClose }: { item: PantryItem | null; onClose: () => void }) {
   const { data: ingredients = [] } = useIngredients();
   const [ingredientId, setIngredientId] = useState(item?.ingredient_id ?? "");
+  const [label, setLabel] = useState(item?.ingredient_id ? "" : (item?.original_label ?? ""));
+  const autocomplete = useIngredientAutocomplete(label);
   const ing = ingredients.find((i) => i.id === ingredientId);
   const [unit, setUnit] = useState<InputUnit>((ing?.canonical_unit as InputUnit) ?? "pcs");
   const [qty, setQty] = useState(item ? String(item.quantity) : "");
@@ -190,7 +238,9 @@ function PantryForm({ item, onClose }: { item: PantryItem | null; onClose: () =>
   const save = useAction(
     () => {
       const input = {
-        ingredient_id: ingredientId,
+        ...(ingredientId
+          ? { ingredient_id: ingredientId, ...(label.trim() ? { label: label.trim() } : {}) }
+          : { label: label.trim() }),
         quantity: Number(qty),
         unit,
         expiry_date: expiry,
@@ -226,7 +276,7 @@ function PantryForm({ item, onClose }: { item: PantryItem | null; onClose: () =>
   function submit(e: React.FormEvent) {
     e.preventDefault();
     const errs: Record<string, string> = {};
-    if (!ingredientId) errs["ingredient"] = "Choose an ingredient";
+    if (!ingredientId && !label.trim()) errs["ingredient"] = "Choose or enter an ingredient";
     if (!Number.isFinite(Number(qty)) || !(Number(qty) > 0))
       errs["qty"] = "Enter a finite quantity above zero";
     if (!isValidDate(expiry)) errs["expiry"] = "Enter a valid calendar date";
@@ -246,16 +296,48 @@ function PantryForm({ item, onClose }: { item: PantryItem | null; onClose: () =>
         <form onSubmit={submit} className="space-y-4" noValidate>
           <div className="space-y-1.5">
             <Label>Ingredient</Label>
+            <Input
+              aria-label="Free-text ingredient"
+              placeholder="Type a canonical name or alias"
+              value={label}
+              onChange={(e) => {
+                setLabel(e.target.value);
+                setIngredientId("");
+              }}
+            />
+            {label.trim() && autocomplete.data && autocomplete.data.length > 0 && (
+              <div
+                className="rounded-md border p-1"
+                role="listbox"
+                aria-label="Ingredient suggestions"
+              >
+                {autocomplete.data.slice(0, 5).map((match) => (
+                  <button
+                    key={`${match.ingredient_id}-${match.matched_alias}-${match.locale}`}
+                    type="button"
+                    className="block w-full rounded px-2 py-1 text-left text-sm hover:bg-muted"
+                    onClick={() => {
+                      setIngredientId(match.ingredient_id);
+                      const next = ingredients.find((i) => i.id === match.ingredient_id);
+                      if (next) setUnit(next.canonical_unit);
+                    }}
+                  >
+                    {match.canonical_name} · {match.matched_alias} ({match.locale})
+                  </button>
+                ))}
+              </div>
+            )}
             <Select
               value={ingredientId}
               onValueChange={(v) => {
                 setIngredientId(v);
+                setLabel("");
                 const next = ingredients.find((i) => i.id === v);
                 if (next) setUnit(next.canonical_unit);
               }}
             >
               <SelectTrigger aria-label="Ingredient">
-                <SelectValue placeholder="Choose from catalog" />
+                <SelectValue placeholder="Or choose from catalog" />
               </SelectTrigger>
               <SelectContent>
                 {ingredients.map((i) => (

@@ -10,6 +10,7 @@ from ..models import (
     Dashboard,
     ImportReport,
     Ingredient,
+    IngredientAutocomplete,
     RecipeDetail,
     RecipeSummary,
     SubstitutionRule,
@@ -27,6 +28,16 @@ router = APIRouter()
 )
 def ingredients(service: PublicService):
     return service.list_ingredients()
+
+
+@router.get(
+    "/ingredients/autocomplete",
+    response_model=list[IngredientAutocomplete],
+    operation_id="autocompleteIngredients",
+    tags=["Catalog"],
+)
+def autocomplete(service: Service, q: Annotated[str, Query(min_length=1, max_length=120)]):
+    return service.autocomplete_ingredients(q)
 
 
 @router.get(

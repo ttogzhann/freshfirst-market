@@ -7,6 +7,7 @@ import {
   type CookingRecord,
   type FreshService,
   type ImportReport,
+  type IngredientAutocomplete,
   type Ingredient,
   type PantryInput,
   type PantryItem,
@@ -156,6 +157,7 @@ export function createMockService(opts: MockOptions = {}): FreshService {
   }
 
   function validatePantry(input: PantryInput): number {
+    if (!input.ingredient_id) throw bad("Choose an ingredient from the catalog");
     const ing = ingredients.get(input.ingredient_id);
     if (!ing) throw bad("Choose an ingredient from the catalog");
     if (!(Number.isFinite(input.quantity) && input.quantity > 0))
@@ -226,6 +228,20 @@ export function createMockService(opts: MockOptions = {}): FreshService {
 
   const service: FreshService = {
     listIngredients: () => wrap(() => CATALOG),
+    autocompleteIngredients: (query) =>
+      wrap(() => {
+        const q = query.trim().toLowerCase();
+        return CATALOG.filter((item) => item.name.toLowerCase().includes(q)).map(
+          (item): IngredientAutocomplete => ({
+            ingredient_id: item.id,
+            canonical_name: item.name,
+            category: item.category,
+            canonical_unit: item.canonical_unit,
+            matched_alias: item.name,
+            locale: "en",
+          }),
+        );
+      }),
     listSubstitutionRules: () => wrap(() => rules),
 
     listPantry: () => wrap(() => state.pantry),
@@ -246,9 +262,11 @@ export function createMockService(opts: MockOptions = {}): FreshService {
         }
         const item: PantryItem = {
           id: id("p"),
-          ingredient_id: input.ingredient_id,
+          ingredient_id: input.ingredient_id ?? null,
           quantity: q,
           expiry_date: input.expiry_date,
+          original_label: input.label ?? null,
+          resolution_status: "resolved",
         };
         state.pantry.push(item);
         return item;
@@ -270,6 +288,18 @@ export function createMockService(opts: MockOptions = {}): FreshService {
           quantity: q,
           expiry_date: input.expiry_date,
         });
+        return item;
+      }),
+
+    resolvePantryItem: (pid, ingredient_id) =>
+      wrap(() => {
+        const item = state.pantry.find((p) => p.id === pid);
+        if (!item) throw notFound("Pantry item");
+        const ingredient = ingredients.get(ingredient_id);
+        if (!ingredient) throw bad("Choose an ingredient from the catalog");
+        item.ingredient_id = ingredient_id;
+        item.resolution_status = "resolved";
+        item.resolution_candidates = [];
         return item;
       }),
 

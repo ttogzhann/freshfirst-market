@@ -6,10 +6,12 @@ from datetime import date, datetime, timedelta, timezone
 from functools import wraps
 from threading import Lock
 
+from sqlalchemy import select
+
 from ..catalog import RULE_CATEGORIES, RULES
 from ..config import expiry_days as validate_expiry_days
 from ..errors import ServiceError, invalid, missing
-from ..ingredient_aliases import normalize_alias
+from ..ingredient_aliases import normalization_variants, normalize_alias
 from ..models import (
     BasketItem,
     BasketItemWithRecipe,
@@ -21,6 +23,7 @@ from ..models import (
     DemandLine,
     ImportReport,
     ImportSkip,
+    IngredientAutocomplete,
     MatchInfo,
     PantryItem,
     RecipeDetail,
@@ -28,7 +31,7 @@ from ..models import (
     ShoppingItem,
     SubstitutionSuggestion,
 )
-from ..store import SQLiteStore
+from ..store import SQLiteStore, ingredient_aliases
 from .importer import PackagedMealSource, TheMealDBSource, normalize_meal
 from .quantities import FACTORS, decimal, normalize, positive_rounded, rounded, scale
 
@@ -241,12 +244,62 @@ class FreshService:
     def list_ingredients(self):
         return list(self.catalog.values())
 
+    def autocomplete_ingredients(self, query):
+        """Return deterministic catalog/alias matches for an authenticated owner."""
+        normalized = normalize_alias(query)
+        if not normalized:
+            return []
+        variants = set(normalization_variants(query))
+        with self.store.engine.connect() as connection:
+            rows = list(connection.execute(select(ingredient_aliases)).mappings())
+        matches = []
+        for row in rows:
+            text = row["normalized_text"]
+            if text not in variants and not text.startswith(normalized) and normalized not in text:
+                continue
+            ingredient = self.catalog.get(row["ingredient_id"])
+            if ingredient is None:
+                continue
+            matches.append(
+                IngredientAutocomplete(
+                    ingredient_id=ingredient.id,
+                    canonical_name=ingredient.name,
+                    category=ingredient.category,
+                    canonical_unit=ingredient.canonical_unit,
+                    matched_alias=row["alias_text"],
+                    locale=row["locale"],
+                )
+            )
+        unique = {
+            (item.ingredient_id, item.matched_alias.casefold(), item.locale.casefold()): item
+            for item in matches
+        }
+        return sorted(
+            unique.values(),
+            key=lambda item: (
+                item.canonical_name.casefold(),
+                item.matched_alias.casefold(),
+                item.locale.casefold(),
+            ),
+        )[:20]
+
     def list_rules(self):
         return list(RULES.values())
 
-    @atomic
     def list_pantry(self):
-        return list(self.state.pantry.values())
+        result = []
+        for item in self.state.pantry.values():
+            result.append(self._present_pantry(item))
+        return result
+
+    def _present_pantry(self, item):
+        return item.model_copy(update={"resolution_candidates": self._resolution_candidates(item)})
+
+    def _resolution_candidates(self, item):
+        if item.resolution_status not in {"ambiguous", "suggested"} or not item.original_label:
+            return []
+        match = self.store.resolve_alias(item.original_label)
+        return [self.catalog[ingredient_id] for ingredient_id in match.ingredient_ids]
 
     def merge_pantry(
         self,
@@ -300,10 +353,11 @@ class FreshService:
     def _pantry_identity(self, data):
         if data.ingredient_id:
             ing = self.ingredient(data.ingredient_id)
+            label = data.label or ing.name
             return (
                 ing.id,
-                ing.name,
-                normalize_alias(ing.name),
+                label,
+                normalize_alias(label),
                 data.unit,
                 ing.canonical_unit,
                 "resolved",
@@ -315,7 +369,8 @@ class FreshService:
             "ambiguous": "ambiguous",
             "unresolved": "unresolved",
         }[match.status]
-        ingredient_id = match.ingredient_ids[0] if len(match.ingredient_ids) == 1 else None
+        # Suggestions are deliberately unresolved until a user confirms the ID.
+        ingredient_id = match.ingredient_ids[0] if status == "resolved" else None
         dimension = FACTORS[data.unit][0]
         return (
             ingredient_id,
@@ -329,7 +384,8 @@ class FreshService:
     def create_pantry(self, data):
         identity = self._pantry_identity(data)
         with self.store.transaction():
-            return deepcopy(self._save_pantry_input(data, identity))
+            result = deepcopy(self._save_pantry_input(data, identity))
+        return self._present_pantry(result)
 
     def _save_pantry_input(self, data, identity):
         ingredient_id, label, normalized_label, original_unit, dimension, status = identity
@@ -392,7 +448,43 @@ class FreshService:
                 normalized_label,
                 status,
             )
-            return deepcopy(item)
+            result = deepcopy(item)
+        return self._present_pantry(result)
+
+    def resolve_pantry(self, item_id, ingredient_id):
+        current = self.find(self.state.pantry, item_id, "Pantry item")
+        if (
+            current.resolution_status not in {"ambiguous", "suggested"}
+            or not current.original_label
+        ):
+            raise ServiceError(
+                409, "RESOLUTION_NOT_PENDING", "This pantry entry does not need resolution."
+            )
+        match = self.store.resolve_alias(current.original_label)
+        if ingredient_id not in match.ingredient_ids:
+            raise invalid("Choose one of the suggested canonical ingredients")
+        ingredient = self.ingredient(ingredient_id)
+        with self.store.transaction():
+            item = self.find(self.state.pantry, item_id, "Pantry item")
+            quantity = normalize(
+                item.quantity_entered, item.original_unit, ingredient.canonical_unit
+            )
+            duplicate = any(
+                other.id != item_id
+                and other.ingredient_id == ingredient_id
+                and other.canonical_dimension == ingredient.canonical_unit
+                and other.expiry_date == item.expiry_date
+                and other.resolution_status == "resolved"
+                for other in self.state.pantry.values()
+            )
+            if duplicate:
+                raise ServiceError(409, "DUPLICATE_LOT", "An equivalent pantry lot already exists.")
+            item.ingredient_id = ingredient_id
+            item.quantity = quantity
+            item.canonical_dimension = ingredient.canonical_unit
+            item.resolution_status = "resolved"
+            result = deepcopy(item)
+        return self._present_pantry(result)
 
     @atomic
     def delete_pantry(self, item_id):

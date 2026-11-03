@@ -460,6 +460,7 @@ class SQLiteStore:
                 if "owner_id" in table.c:
                     row["owner_id"] = self.owner_id
                 if table is pantry:
+                    row.pop("resolution_candidates", None)
                     row["expiry_date"] = item.expiry_date
                 if table in (pantry, shopping):
                     row["quantity_canonical"] = row.pop("quantity")

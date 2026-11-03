@@ -24,9 +24,11 @@ from app.models import (
     ImportReport,
     ImportSkip,
     Ingredient,
+    IngredientAutocomplete,
     MatchInfo,
     PantryInput,
     PantryItem,
+    PantryResolutionInput,
     Recipe,
     RecipeDetail,
     RecipeIngredient,
@@ -56,14 +58,14 @@ def test_authored_contract_valid_and_all_operations_registered(service):
         for method, op in methods.items()
     }
     assert actual == expected
-    assert len(actual) == 27
+    assert len(actual) == 29
     expected_domain_ids = {
         op["operationId"]
         for path, methods in CONTRACT["paths"].items()
         if not path.startswith("/auth/")
         for op in methods.values()
     }
-    assert len(expected_domain_ids) == 23
+    assert len(expected_domain_ids) == 25
     assert CONTRACT["security"] == [{"SessionCookie": [], "CsrfToken": []}]
     assert set(CONTRACT["components"]["securitySchemes"]) == {"SessionCookie", "CsrfToken"}
     assert CONTRACT["paths"]["/ingredients"]["get"]["security"] == []
@@ -93,9 +95,11 @@ def test_every_object_schema_has_a_transport_model():
         ImportReport,
         ImportSkip,
         Ingredient,
+        IngredientAutocomplete,
         MatchInfo,
         PantryInput,
         PantryItem,
+        PantryResolutionInput,
         Recipe,
         RecipeDetail,
         RecipeIngredient,
@@ -122,6 +126,7 @@ def test_every_object_schema_has_a_transport_model():
 def test_all_23_endpoints_with_real_response_schema_validation(client):
     assert client.get("/openapi.json").json() == CONTRACT
     assert client.get("/api/ingredients").status_code == 200
+    assert client.get("/api/ingredients/autocomplete", params={"q": "milk"}).status_code == 200
     assert client.get("/api/substitution-rules").status_code == 200
     assert client.get("/api/pantry").json() == []
     p = pantry(client, "egg", 6, "pcs")
@@ -138,6 +143,16 @@ def test_all_23_endpoints_with_real_response_schema_validation(client):
         == 200
     )
     assert client.delete(f"/api/pantry/{p['id']}").status_code == 204
+    pending = client.post(
+        "/api/pantry",
+        json={"label": "molok", "quantity": 1, "unit": "ml", "expiry_date": "2026-11-01"},
+    ).json()
+    assert (
+        client.post(
+            f"/api/pantry/{pending['id']}/resolve", json={"ingredient_id": "milk"}
+        ).status_code
+        == 200
+    )
     assert client.get("/api/recipes").status_code == 200
     assert client.get("/api/recipes/rec_test1").status_code == 200
     assert client.post("/api/recipes/import").json()["updated"] == 3
@@ -175,5 +190,30 @@ def test_all_23_endpoints_with_real_response_schema_validation(client):
         if not path.startswith("/auth/")
         for operation in methods.values()
     }
-    assert len(domain_ids) == 23
+    assert len(domain_ids) == 25
+    assert {
+        "listIngredients",
+        "listSubstitutionRules",
+        "listPantry",
+        "createPantryItem",
+        "updatePantryItem",
+        "deletePantryItem",
+        "listRecipes",
+        "getRecipe",
+        "importRecipes",
+        "getBasket",
+        "addToBasket",
+        "updateBasketItem",
+        "removeBasketItem",
+        "getShoppingList",
+        "generateShoppingList",
+        "addShoppingItem",
+        "updateShoppingItem",
+        "removeShoppingItem",
+        "transferToPantry",
+        "previewCook",
+        "confirmCook",
+        "listHistory",
+        "getDashboard",
+    } <= domain_ids
     assert domain_ids <= client.operations

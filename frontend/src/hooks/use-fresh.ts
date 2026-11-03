@@ -5,12 +5,16 @@ import { getService, ServiceError, type ConfirmedSubstitution } from "@/services
 
 const svc = () => getService();
 
-function usePrivateQuery<TData>(queryKey: QueryKey, queryFn: () => Promise<TData>) {
+function usePrivateQuery<TData>(
+  queryKey: QueryKey,
+  queryFn: () => Promise<TData>,
+  options: { enabled?: boolean } = {},
+) {
   const { status } = useAuth();
   return useQuery({
     queryKey,
     queryFn,
-    enabled: status === "authenticated",
+    enabled: status === "authenticated" && (options.enabled ?? true),
   });
 }
 
@@ -25,6 +29,10 @@ export const useIngredients = () =>
     queryKey: ["ingredients"],
     queryFn: () => svc().listIngredients(),
     staleTime: Infinity,
+  });
+export const useIngredientAutocomplete = (query: string) =>
+  usePrivateQuery(["ingredient-autocomplete", query], () => svc().autocompleteIngredients(query), {
+    enabled: query.trim().length > 0,
   });
 export const usePantry = () => usePrivateQuery(["pantry"], () => svc().listPantry());
 export const useRecipes = (query?: string, category?: string, sort: "match" | "title" = "match") =>

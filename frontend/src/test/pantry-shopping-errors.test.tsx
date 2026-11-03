@@ -62,6 +62,27 @@ describe("recoverable pantry and shopping form errors", () => {
     expect((await service.listPantry()).find((item) => item.id === egg.id)?.quantity).toBe(2);
   }, 15_000);
 
+  it("preserves the entered label when autocomplete selects a canonical ID", async () => {
+    show(<Pantry />);
+    const addButton = await screen.findByRole("button", { name: "Add item" });
+    await waitFor(() => expect(addButton).toBeEnabled());
+    fireEvent.click(addButton);
+
+    const freeText = screen.getByLabelText("Free-text ingredient");
+    fireEvent.change(freeText, { target: { value: "Eggs" } });
+    const suggestion = await screen.findByRole("button", { name: /Eggs · Eggs \(en\)/ });
+    fireEvent.click(suggestion);
+
+    expect(freeText).toHaveValue("Eggs");
+    fireEvent.change(screen.getByLabelText("Quantity"), { target: { value: "2" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    const saved = (await service.listPantry())[0];
+    expect(saved?.ingredient_id).toBe("egg");
+    expect(saved?.original_label).toBe("Eggs");
+  });
+
   it("retains a rejected pantry update and retries the corrected value", async () => {
     const egg = await service.createPantryItem({
       ingredient_id: "egg",

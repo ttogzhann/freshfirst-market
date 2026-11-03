@@ -26,6 +26,19 @@ class Ingredient(Model):
     canonical_unit: CanonicalUnit
 
 
+class IngredientAutocomplete(Model):
+    ingredient_id: str
+    canonical_name: str
+    category: str
+    canonical_unit: CanonicalUnit
+    matched_alias: str
+    locale: str
+
+
+class PantryResolutionInput(Model):
+    ingredient_id: Text
+
+
 class PantryItem(Model):
     id: str
     ingredient_id: str | None
@@ -37,6 +50,7 @@ class PantryItem(Model):
     original_label: str | None = None
     normalized_label: str | None = None
     resolution_status: Literal["resolved", "unresolved", "ambiguous", "suggested"] = "resolved"
+    resolution_candidates: list[Ingredient] = Field(default_factory=list)
 
 
 class DatedQuantity(Model):
@@ -62,8 +76,8 @@ class PantryInput(DatedQuantity):
 
     @model_validator(mode="after")
     def exactly_one_identity(self):
-        if bool(self.ingredient_id) == bool(self.label):
-            raise ValueError("Provide exactly one of ingredient_id or label")
+        if not self.ingredient_id and not self.label:
+            raise ValueError("Provide an ingredient_id or label")
         return self
 
 

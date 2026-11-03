@@ -51,7 +51,7 @@ if (
   missingServices.length > 0 ||
   originalDomainIds.size !== 23 ||
   [...originalDomainIds].some((id) => !ids.includes(id)) ||
-  ids.length !== 27
+  ids.length !== 29
 ) {
   throw new Error(
     `OpenAPI service mismatch: ${ids.length} operations, ${methods.length} service methods, duplicate IDs: ${ids.length - new Set(ids).size}, missing services: ${missingServices.join(", ")}, orphan services: ${orphanServices.join(", ")}, original set size: ${originalDomainIds.size}`,
@@ -81,5 +81,5 @@ for (const [route, path] of Object.entries(document.paths)) {
   }
 }
 console.log(
-  `Validated OpenAPI ${document.openapi}: 27 operations map to services; auth security is declared.`,
+  `Validated OpenAPI ${document.openapi}: 29 operations map to services; auth security is declared.`,
 );
