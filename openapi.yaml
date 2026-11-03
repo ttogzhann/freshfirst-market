@@ -943,25 +943,50 @@ components:
           type: string
         ingredient_id:
           type: string
+          nullable: true
         quantity:
           type: number
           minimum: 0
         expiry_date:
           type: string
           format: date
+        quantity_entered:
+          type: number
+          nullable: true
+          minimum: 0
+        original_unit:
+          allOf:
+            - $ref: '#/components/schemas/InputUnit'
+          nullable: true
+        canonical_dimension:
+          allOf:
+            - $ref: '#/components/schemas/CanonicalUnit'
+          nullable: true
+        original_label:
+          type: string
+          nullable: true
+        normalized_label:
+          type: string
+          nullable: true
+        resolution_status:
+          type: string
+          enum: [resolved, unresolved, ambiguous, suggested]
       description: >-
         Quantity is in the catalog ingredient canonical unit. Expired entries remain visible but
         provide zero usable stock.
     PantryInput:
       type: object
       required:
-        - ingredient_id
         - quantity
         - unit
         - expiry_date
       properties:
         ingredient_id:
           type: string
+          nullable: true
+        label:
+          type: string
+          nullable: true
         quantity:
           type: number
           exclusiveMinimum: true
@@ -972,7 +997,7 @@ components:
           type: string
           format: date
       description: >-
-        Positive quantity in a compatible input unit; normalized to canonical units, rounded to two
+        Provide exactly one of ingredient_id or label. Positive quantity in a compatible input unit; normalized to canonical units, rounded to two
         decimals. g/kg map to g; ml/l/tsp/tbsp map to ml (1 tsp = 5 ml, 1 tbsp = 15 ml); pcs maps to
         pcs. No mass/volume conversion. A past expiry date is allowed.
     RecipeIngredient:

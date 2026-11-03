@@ -1,0 +1,58 @@
+name: FreshFirst GCP deployment
+
+on:
+  workflow_run:
+    workflows: ["FreshFirst Render CI/CD"]
+    types: [completed]
+    branches: [feature/render-deployment]
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: Approve the GCP deployment job (the gcp-production environment still requires reviewers)
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: freshfirst-gcp-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy approved application to GCP VM
+    if: >-
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      (github.event_name == 'workflow_dispatch' && inputs.deploy == true)
+    runs-on: ubuntu-24.04
+    environment: gcp-production
+    timeout-minutes: 20
+    steps:
+      - name: Authenticate to Google Cloud with GitHub OIDC
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+      - name: Install gcloud
+        uses: google-github-actions/setup-gcloud@v2
+      - name: Update the existing VM
+        env:
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          GCP_VM_NAME: ${{ vars.GCP_VM_NAME }}
+          GCP_ZONE: ${{ vars.GCP_ZONE }}
+        run: |
+          set -euo pipefail
+          gcloud config set project "$GCP_PROJECT_ID"
+          gcloud compute ssh "$GCP_VM_NAME" --zone "$GCP_ZONE" --tunnel-through-iap --quiet --command \
+            'set -euo pipefail; cd /opt/freshfirst; git fetch --depth=1 origin feature/render-deployment; git reset --hard origin/feature/render-deployment; docker compose build --pull; docker compose up -d; docker compose ps'
+      - name: Verify GCP health
+        env:
+          GCP_VM_NAME: ${{ vars.GCP_VM_NAME }}
+          GCP_ZONE: ${{ vars.GCP_ZONE }}
+        run: |
+          set -euo pipefail
+          ip="$(gcloud compute instances describe "$GCP_VM_NAME" --zone "$GCP_ZONE" --format='value(networkInterfaces[0].accessConfigs[0].natIP)')"
+          curl --fail --retry 18 --retry-delay 10 "http://${ip}/healthz"

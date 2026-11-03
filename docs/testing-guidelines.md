@@ -66,6 +66,8 @@ npm run build
 
 Use `npm ci` when preparing an environment or changing the lockfile; do not reinstall for every unchanged test run. The frontend HTTP suite starts its own FastAPI subprocess and requires `backend/.venv` or the documented `FRESHFIRST_TEST_PYTHON` override. Focused suites include:
 
+The complete setup-and-run sequence is documented in [reproducible local QA](qa-local.md).
+
 ```sh
 npm test -- src/services/httpService.integration.test.ts
 npm test -- src/test/basket-shopping.test.tsx

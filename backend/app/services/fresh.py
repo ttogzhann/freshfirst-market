@@ -6,9 +6,10 @@ from datetime import date, datetime, timedelta, timezone
 from functools import wraps
 from threading import Lock
 
-from ..catalog import CATALOG, RULE_CATEGORIES, RULES
+from ..catalog import RULE_CATEGORIES, RULES
 from ..config import expiry_days as validate_expiry_days
 from ..errors import ServiceError, invalid, missing
+from ..ingredient_aliases import normalize_alias
 from ..models import (
     BasketItem,
     BasketItemWithRecipe,
@@ -29,7 +30,7 @@ from ..models import (
 )
 from ..store import SQLiteStore
 from .importer import PackagedMealSource, TheMealDBSource, normalize_meal
-from .quantities import decimal, normalize, positive_rounded, rounded, scale
+from .quantities import FACTORS, decimal, normalize, positive_rounded, rounded, scale
 
 
 def atomic(method):
@@ -95,9 +96,13 @@ class FreshService:
                 )
 
     def ingredient(self, ingredient_id):
-        if ingredient_id not in CATALOG:
+        if ingredient_id not in self.store.catalog:
             raise invalid("Choose an ingredient from the supported catalog")
-        return CATALOG[ingredient_id]
+        return self.store.catalog[ingredient_id]
+
+    @property
+    def catalog(self):
+        return self.store.catalog
 
     def recipe(self, recipe_id):
         if recipe_id not in self.state.recipes:
@@ -110,11 +115,15 @@ class FreshService:
         return collection[item_id]
 
     def stock(self):
-        return {
-            p.ingredient_id: decimal(p.quantity)
-            for p in self.state.pantry.values()
-            if p.expiry_date >= self.today()
-        }
+        stock = defaultdict(lambda: decimal(0))
+        for item in self.state.pantry.values():
+            if (
+                item.ingredient_id
+                and item.resolution_status == "resolved"
+                and item.expiry_date >= self.today()
+            ):
+                stock[item.ingredient_id] += decimal(item.quantity)
+        return dict(stock)
 
     def demands(self, recipe, servings, substitutions):
         selected = {}
@@ -133,8 +142,8 @@ class FreshService:
                 raise invalid("Invalid, duplicate, or context-incompatible substitution")
             # No rule with incompatible stock dimensions is eligible.
             if (
-                CATALOG[rule.original_ingredient_id].canonical_unit
-                != CATALOG[rule.substitute_ingredient_id].canonical_unit
+                self.catalog[rule.original_ingredient_id].canonical_unit
+                != self.catalog[rule.substitute_ingredient_id].canonical_unit
             ):
                 raise invalid("Substitution requires an unsupported unit conversion")
             selected[sub.original_ingredient_id] = rule
@@ -167,8 +176,8 @@ class FreshService:
         return [
             DemandLine(
                 ingredient_id=i,
-                name=CATALOG[i].name,
-                unit=CATALOG[i].canonical_unit,
+                name=self.catalog[i].name,
+                unit=self.catalog[i].canonical_unit,
                 required=q,
                 available=stock.get(i, 0),
                 sufficient=stock.get(i, 0) >= aggregate[i],
@@ -182,7 +191,7 @@ class FreshService:
         missing_names, expiring = [], []
         covered = 0
         for line in recipe.ingredients:
-            name = CATALOG[line.ingredient_id].name
+            name = self.catalog[line.ingredient_id].name
             available = stock.get(line.ingredient_id, 0)
             if available >= decimal(line.quantity):
                 covered += 1
@@ -190,6 +199,7 @@ class FreshService:
                 missing_names.append(name)
             if available >= decimal(line.quantity) and any(
                 p.ingredient_id == line.ingredient_id
+                and p.resolution_status == "resolved"
                 and 0 <= (p.expiry_date - self.today()).days <= self.expiry_days
                 for p in self.state.pantry.values()
             ):
@@ -229,7 +239,7 @@ class FreshService:
                 raise invalid("The selected substitute has insufficient usable stock")
 
     def list_ingredients(self):
-        return list(CATALOG.values())
+        return list(self.catalog.values())
 
     def list_rules(self):
         return list(RULES.values())
@@ -238,43 +248,151 @@ class FreshService:
     def list_pantry(self):
         return list(self.state.pantry.values())
 
-    def merge_pantry(self, ingredient_id, quantity, expiry_date):
+    def merge_pantry(
+        self,
+        ingredient_id,
+        quantity,
+        expiry_date,
+        *,
+        original_label=None,
+        normalized_label=None,
+        original_unit=None,
+        canonical_dimension=None,
+        resolution_status="resolved",
+        quantity_entered=None,
+    ):
+        canonical_dimension = canonical_dimension or (
+            self.catalog[ingredient_id].canonical_unit if ingredient_id else None
+        )
         existing = next(
-            (p for p in self.state.pantry.values() if p.ingredient_id == ingredient_id), None
+            (
+                p
+                for p in self.state.pantry.values()
+                if p.ingredient_id == ingredient_id
+                and p.canonical_dimension == canonical_dimension
+                and p.expiry_date == expiry_date
+                and p.resolution_status == resolution_status
+                and (ingredient_id or p.normalized_label == normalized_label)
+            ),
+            None,
         )
         if existing:
-            if existing.expiry_date != expiry_date:
-                raise ServiceError(
-                    409, "EXPIRY_CONFLICT", "Edit the existing pantry entry: expiry dates differ."
-                )
             existing.quantity = rounded(decimal(existing.quantity) + decimal(quantity))
+            entered_unit = existing.original_unit or original_unit
+            factor = FACTORS.get(entered_unit, (None, 1))[1]
+            existing.quantity_entered = rounded(decimal(existing.quantity) / decimal(factor))
             return existing
         item = PantryItem(
             id=self.store.next_id("p"),
             ingredient_id=ingredient_id,
             quantity=quantity,
             expiry_date=expiry_date,
+            quantity_entered=quantity_entered or quantity,
+            original_unit=original_unit,
+            canonical_dimension=canonical_dimension,
+            original_label=original_label,
+            normalized_label=normalized_label,
+            resolution_status=resolution_status,
         )
         self.state.pantry[item.id] = item
         return item
 
-    @atomic
-    def create_pantry(self, data):
-        ing = self.ingredient(data.ingredient_id)
-        quantity = normalize(data.quantity, data.unit, ing.canonical_unit)
-        return self.merge_pantry(ing.id, quantity, data.expiry_date)
-
-    @atomic
-    def update_pantry(self, item_id, data):
-        item = self.find(self.state.pantry, item_id, "Pantry item")
-        ing = self.ingredient(data.ingredient_id)
-        quantity = normalize(data.quantity, data.unit, ing.canonical_unit)
-        if any(p.id != item_id and p.ingredient_id == ing.id for p in self.state.pantry.values()):
-            raise ServiceError(
-                409, "DUPLICATE_INGREDIENT", "Another pantry entry uses this ingredient."
+    def _pantry_identity(self, data):
+        if data.ingredient_id:
+            ing = self.ingredient(data.ingredient_id)
+            return (
+                ing.id,
+                ing.name,
+                normalize_alias(ing.name),
+                data.unit,
+                ing.canonical_unit,
+                "resolved",
             )
-        item.ingredient_id, item.quantity, item.expiry_date = ing.id, quantity, data.expiry_date
-        return item
+        match = self.store.resolve_alias(data.label)
+        status = {
+            "exact": "resolved",
+            "suggestion": "suggested",
+            "ambiguous": "ambiguous",
+            "unresolved": "unresolved",
+        }[match.status]
+        ingredient_id = match.ingredient_ids[0] if len(match.ingredient_ids) == 1 else None
+        dimension = FACTORS[data.unit][0]
+        return (
+            ingredient_id,
+            data.label,
+            normalize_alias(data.label),
+            data.unit,
+            dimension,
+            status,
+        )
+
+    def create_pantry(self, data):
+        identity = self._pantry_identity(data)
+        with self.store.transaction():
+            return deepcopy(self._save_pantry_input(data, identity))
+
+    def _save_pantry_input(self, data, identity):
+        ingredient_id, label, normalized_label, original_unit, dimension, status = identity
+        quantity = normalize(data.quantity, data.unit, dimension)
+        if status == "resolved":
+            quantity = normalize(
+                data.quantity, data.unit, self.catalog[ingredient_id].canonical_unit
+            )
+        return self.merge_pantry(
+            ingredient_id,
+            quantity,
+            data.expiry_date,
+            original_label=label,
+            normalized_label=normalized_label,
+            original_unit=original_unit,
+            canonical_dimension=dimension,
+            resolution_status=status,
+            quantity_entered=data.quantity,
+        )
+
+    def update_pantry(self, item_id, data):
+        identity = self._pantry_identity(data)
+        with self.store.transaction():
+            item = self.find(self.state.pantry, item_id, "Pantry item")
+            ingredient_id, label, normalized_label, original_unit, dimension, status = identity
+            quantity = normalize(data.quantity, data.unit, dimension)
+            if status == "resolved":
+                quantity = normalize(
+                    data.quantity, data.unit, self.catalog[ingredient_id].canonical_unit
+                )
+            duplicate = any(
+                p.id != item_id
+                and p.ingredient_id == ingredient_id
+                and p.canonical_dimension == dimension
+                and p.expiry_date == data.expiry_date
+                and p.resolution_status == status
+                and (ingredient_id or p.normalized_label == normalized_label)
+                for p in self.state.pantry.values()
+            )
+            if duplicate:
+                raise ServiceError(409, "DUPLICATE_LOT", "An equivalent pantry lot already exists.")
+            (
+                item.ingredient_id,
+                item.quantity,
+                item.expiry_date,
+                item.quantity_entered,
+                item.original_unit,
+                item.canonical_dimension,
+                item.original_label,
+                item.normalized_label,
+                item.resolution_status,
+            ) = (
+                ingredient_id,
+                quantity,
+                data.expiry_date,
+                data.quantity,
+                original_unit,
+                dimension,
+                label,
+                normalized_label,
+                status,
+            )
+            return deepcopy(item)
 
     @atomic
     def delete_pantry(self, item_id):
@@ -311,7 +429,7 @@ class FreshService:
                     or recipe.category not in RULE_CATEGORIES[rule.id]
                 ):
                     continue
-                substitute = CATALOG[rule.substitute_ingredient_id]
+                substitute = self.catalog[rule.substitute_ingredient_id]
                 if substitute.canonical_unit != line.unit:
                     continue
                 required = positive_rounded(decimal(line.required) * decimal(rule.ratio))
@@ -338,7 +456,10 @@ class FreshService:
     def seed_recipes(self):
         # Validate the complete package before writing anything. Unlike live import,
         # unsupported baseline records are fatal and existing records are never replaced.
-        accepted = [normalize_meal(raw) for raw in PackagedMealSource().meals()]
+        accepted = [
+            normalize_meal(raw, self.catalog, self.store.resolve_alias)
+            for raw in PackagedMealSource().meals()
+        ]
         with self.store.transaction():
             for recipe in accepted:
                 self._upsert_recipe(recipe, missing_only=True)
@@ -364,7 +485,7 @@ class FreshService:
             report, accepted = ImportReport(), {}
             for raw in self.source.meals():
                 try:
-                    recipe = normalize_meal(raw)
+                    recipe = normalize_meal(raw, self.catalog, self.store.resolve_alias)
                 except ServiceError as exc:
                     report.skipped.append(
                         ImportSkip(
@@ -470,9 +591,9 @@ class FreshService:
             item = ShoppingItem(
                 id=self.store.next_id("s"),
                 ingredient_id=i,
-                label=CATALOG[i].name,
+                label=self.catalog[i].name,
                 quantity=rounded(quantity),
-                unit=CATALOG[i].canonical_unit,
+                unit=self.catalog[i].canonical_unit,
                 origin="generated",
                 purchased=False,
                 transferred_to_pantry=False,
@@ -491,7 +612,7 @@ class FreshService:
             match = next(
                 (
                     i
-                    for i in CATALOG.values()
+                    for i in self.catalog.values()
                     if i.name.casefold() == data.label.strip().casefold()
                     and i.canonical_unit == unit
                 ),
@@ -572,14 +693,25 @@ class FreshService:
             self.demands(self.recipe(data.recipe_id), data.servings, data.substitutions)
         )
         for i, required in total.items():
-            pantry = next(
-                p
-                for p in self.state.pantry.values()
-                if p.ingredient_id == i and p.expiry_date >= self.today()
+            remaining = decimal(required)
+            lots = sorted(
+                (
+                    p
+                    for p in self.state.pantry.values()
+                    if p.ingredient_id == i
+                    and p.resolution_status == "resolved"
+                    and p.expiry_date >= self.today()
+                ),
+                key=lambda p: p.expiry_date,
             )
-            pantry.quantity = rounded(decimal(pantry.quantity) - required)
-            if pantry.quantity <= 0:
-                del self.state.pantry[pantry.id]
+            for lot in lots:
+                consumed = min(decimal(lot.quantity), remaining)
+                lot.quantity = rounded(decimal(lot.quantity) - consumed)
+                remaining -= consumed
+                if lot.quantity <= 0:
+                    del self.state.pantry[lot.id]
+                if remaining <= 0:
+                    break
         record = CookingRecord(
             id=self.store.next_id("h"),
             recipe_id=data.recipe_id,

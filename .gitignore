@@ -43,6 +43,10 @@ __pycache__/
 .wrangler/
 .dev.vars
 
+# Render PostgreSQL backups (never commit database exports)
+render-backups/
+private-render-backups/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

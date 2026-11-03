@@ -62,6 +62,7 @@ The near-expiry threshold defaults to **3 days** in both applications. To use 5 
 Values must contain only decimal digits for a nonnegative whole-day integer. Missing values default to 3; **0 means today only**. Explicit blank, negative, fractional, `NaN`, `Infinity` or other text fail early with the responsible variable name (frontend dev/build and backend startup). The technical maximum is 9007199254740991, JavaScript's largest exact integer, shared by both apps; this is a numeric representation limit, not a recommended food-storage interval. The threshold includes today and the final configured day. Yesterday is always expired and supplies zero stock, while today is usable. Configuration changes urgency, badges and counts only, never stored expiry dates or food-safety guarantees.
 
 Run `npm test` after `uv sync --locked`: the frontend suite starts and stops an isolated FastAPI subprocess on a free local port and exercises the actual TypeScript HTTP adapter through all 23 operations. It uses a strictly normalized synthetic source only within tests and requires the backend `.venv` Python executable. Set `FRESHFIRST_TEST_PYTHON` to override that executable. Other frontend tests retain their injected mocks. Run `uv run pytest -q` from `backend/` for the backend suite. See [integration verification](docs/integration.md) for results and limitations.
+For a fresh environment, use the reproducible [local QA setup](docs/qa-local.md) so `uv sync --locked` creates the backend environment before frontend HTTP tests.
 
 ## Run the production container (Part 3, stage 1)
 
@@ -155,3 +156,14 @@ npx --prefix frontend playwright install chromium
 The E2E runner uses only disposable test resources. Do not run `down -v` against the normal
 Compose project or the existing Issue #55 container. SQLite regression tests and the HTTP-level
 Compose integration test remain separate commands and are not replaced by this browser suite.
+
+## Part 3 deployment summary
+
+The verified deployments are:
+
+- Render: [https://freshfirst-yk43.onrender.com](https://freshfirst-yk43.onrender.com/), with the existing Render auto-deploy pipeline gated by GitHub Actions checks.
+- Google Cloud Compute Engine: [http://34.171.30.130/](http://34.171.30.130/), provisioned with [`infra/gcp/`](infra/gcp/). It runs the production Dockerfile with Docker Compose and private PostgreSQL on persistent VM storage.
+
+Part 3 setup includes the production Docker image, PostgreSQL persistence, Docker Compose health-gated startup, real PostgreSQL integration coverage, Terraform Compute Engine provisioning, and pinned Playwright browser E2E coverage. Render CI/CD runs backend, frontend, production-image, Compose PostgreSQL, and Playwright checks before its protected Render deploy job.
+
+The GCP GitHub Actions workflow is approval-gated but is not operational by default: it still requires project-specific GitHub OIDC/Workload Identity configuration, a protected `gcp-production` environment, minimal IAP/OS Login permissions, and operator approval. It does not run `terraform apply`. No GCP deployment is triggered by this documentation update.

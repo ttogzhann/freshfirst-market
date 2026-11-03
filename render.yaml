@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: freshfirst
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    # GitHub Actions triggers the deploy hook only after all required checks pass.
+    autoDeploy: false
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: freshfirst-db
+          property: connectionString
+      - key: FRESHFIRST_AUTH_SECRET
+        generateValue: true
+      - key: FRESHFIRST_ENV
+        value: production
+      - key: FRESHFIRST_EXPIRY_DAYS
+        value: "3"
+
+databases:
+  - name: freshfirst-db
+    plan: free
+    region: singapore
+    databaseName: freshfirst
+    user: freshfirst
