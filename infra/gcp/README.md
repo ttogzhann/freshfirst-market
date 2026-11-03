@@ -46,6 +46,20 @@ The repository workflow `.github/workflows/gcp.yml` deploys only after a success
 
 Grant the deploy service account only the permissions required to connect through the approved administration path and restart this VM. Do not use a JSON service-account key. The workflow does not run `terraform apply`; review and apply Terraform separately with the Cloud Shell procedure above.
 
+Install the root-owned deployment helper once on the existing VM from Cloud Shell. Run these commands from a checkout of this repository, replacing only the project and zone values; they do not stop the database volume or change the existing `.env`:
+
+```bash
+gcloud config set project freshfirst-513520
+gcloud compute scp infra/gcp/freshfirst-deploy.sh freshfirst:/tmp/freshfirst-deploy.sh \
+  --zone us-central1-a --tunnel-through-iap
+gcloud compute ssh freshfirst --zone us-central1-a --tunnel-through-iap --command \
+  'sudo install -o root -g root -m 0750 /tmp/freshfirst-deploy.sh /usr/local/sbin/freshfirst-deploy && sudo rm -f /tmp/freshfirst-deploy.sh'
+```
+
+The approved workflow then connects through IAP and invokes only
+`sudo /usr/local/sbin/freshfirst-deploy`. The helper fetches the approved branch and runs
+`docker compose build --pull` and `docker compose up -d`; it never uses `down -v`.
+
 ## Operations and cleanup
 
 ```bash
