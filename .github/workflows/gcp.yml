@@ -47,7 +47,7 @@ jobs:
           set -euo pipefail
           gcloud config set project "$GCP_PROJECT_ID"
           gcloud compute ssh "$GCP_VM_NAME" --zone "$GCP_ZONE" --tunnel-through-iap --quiet --command \
-            'set -euo pipefail; cd /opt/freshfirst; git fetch --depth=1 origin feature/render-deployment; git reset --hard origin/feature/render-deployment; docker compose build --pull; docker compose up -d; docker compose ps'
+            'sudo /usr/local/sbin/freshfirst-deploy'
       - name: Verify GCP health
         env:
           GCP_VM_NAME: ${{ vars.GCP_VM_NAME }}
