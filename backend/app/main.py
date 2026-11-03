@@ -89,8 +89,7 @@ def create_app(
             response.delete_cookie(
                 "freshfirst_session",
                 path="/api",
-                secure=request.url.scheme == "https"
-                or os.getenv("FRESHFIRST_ENV", "").casefold() in {"production", "prod"},
+                secure=request.url.scheme == "https",
                 samesite="lax",
             )
         return response
