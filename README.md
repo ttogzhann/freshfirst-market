@@ -156,3 +156,14 @@ npx --prefix frontend playwright install chromium
 The E2E runner uses only disposable test resources. Do not run `down -v` against the normal
 Compose project or the existing Issue #55 container. SQLite regression tests and the HTTP-level
 Compose integration test remain separate commands and are not replaced by this browser suite.
+
+## Part 3 deployment summary
+
+The verified deployments are:
+
+- Render: [https://freshfirst-yk43.onrender.com](https://freshfirst-yk43.onrender.com/), with the existing Render auto-deploy pipeline gated by GitHub Actions checks.
+- Google Cloud Compute Engine: [http://34.171.30.130/](http://34.171.30.130/), provisioned with [`infra/gcp/`](infra/gcp/). It runs the production Dockerfile with Docker Compose and private PostgreSQL on persistent VM storage.
+
+Part 3 setup includes the production Docker image, PostgreSQL persistence, Docker Compose health-gated startup, real PostgreSQL integration coverage, Terraform Compute Engine provisioning, and pinned Playwright browser E2E coverage. Render CI/CD runs backend, frontend, production-image, Compose PostgreSQL, and Playwright checks before its protected Render deploy job.
+
+The GCP GitHub Actions workflow is approval-gated but is not operational by default: it still requires project-specific GitHub OIDC/Workload Identity configuration, a protected `gcp-production` environment, minimal IAP/OS Login permissions, and operator approval. It does not run `terraform apply`. No GCP deployment is triggered by this documentation update.
