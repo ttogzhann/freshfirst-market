@@ -3,7 +3,13 @@ set -Eeuo pipefail
 exec > >(tee -a /var/log/freshfirst-startup.log) 2>&1
 
 apt-get update
-apt-get install -y ca-certificates curl docker.io docker-compose-plugin git e2fsprogs
+apt-get install -y ca-certificates curl gnupg git e2fsprogs
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+chmod a+r /etc/apt/keyrings/docker.asc
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian $(. /etc/os-release && echo \"$VERSION_CODENAME\") stable" >/etc/apt/sources.list.d/docker.list
+apt-get update
+apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
 DATA_DISK=/dev/disk/by-id/google-freshfirst-postgres
 MOUNT_POINT=/var/lib/freshfirst-docker

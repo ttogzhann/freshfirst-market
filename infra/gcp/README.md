@@ -11,7 +11,7 @@ Run these commands in Cloud Shell. `terraform.tfvars` is ignored and must not be
 ```bash
 gcloud auth list
 gcloud config set project YOUR_PROJECT_ID
-gcloud services enable compute.googleapis.com
+gcloud services enable compute.googleapis.com iap.googleapis.com oslogin.googleapis.com
 cd infra/gcp
 cp terraform.tfvars.example terraform.tfvars
 chmod 600 terraform.tfvars
@@ -31,10 +31,25 @@ curl --fail --retry 30 --retry-delay 5 "http://${PUBLIC_IP}/healthz"
 
 The first boot installs Docker, mounts the persistent disk as Docker's data root, clones the selected public Git ref, builds the existing production image, and starts Compose. Compose waits for PostgreSQL's existing health check before starting the app.
 
+The startup script configures Docker's official Debian repository before installing Docker CE and the Compose plugin. This is required on Debian 12; the distribution `docker.io` package does not reliably provide `docker-compose-plugin`.
+
+## Verified deployment
+
+The existing VM was provisioned without recreation or `terraform destroy` and verified at `http://34.171.30.130/`. The application returned HTTP 200 from `/healthz`, and both the Compose application and PostgreSQL services were running. This evidence does not authorize future applies or deployments.
+
+## Approval-gated GitHub Actions deployment
+
+The repository workflow `.github/workflows/gcp.yml` deploys only after a successful Render CI/CD workflow and only when the protected GitHub environment `gcp-production` approves the deployment job. Configure that environment with required reviewers and these environment secrets/variables:
+
+- `GCP_WORKLOAD_IDENTITY_PROVIDER` and `GCP_SERVICE_ACCOUNT` for keyless GitHub OIDC authentication.
+- `GCP_PROJECT_ID`, `GCP_VM_NAME`, and `GCP_ZONE` as non-secret environment variables.
+
+Grant the deploy service account only the permissions required to connect through the approved administration path and restart this VM. Do not use a JSON service-account key. The workflow does not run `terraform apply`; review and apply Terraform separately with the Cloud Shell procedure above.
+
 ## Operations and cleanup
 
 ```bash
-gcloud compute ssh freshfirst --zone YOUR_ZONE
+gcloud compute ssh freshfirst --zone YOUR_ZONE --tunnel-through-iap
 sudo docker compose -f /opt/freshfirst/compose.yaml ps
 sudo docker compose -f /opt/freshfirst/compose.yaml logs --tail=100 app db
 ```
@@ -47,4 +62,4 @@ terraform destroy -target=google_compute_instance.app -target=google_compute_fir
 
 Do not destroy `google_compute_disk.postgres` without a verified backup and explicit approval. Full `terraform destroy` deletes the persistent disk and is not routine cleanup.
 
-This configuration intentionally has no SSH firewall rule, Cloud SQL, Kubernetes, load balancer, static IP, or managed secret service. Administration requires an approved access path such as Cloud Console/IAP; adding SSH/IAP is a separate reviewed change.
+The only administration ingress is TCP 22 from Google's IAP TCP forwarding range, used with `--tunnel-through-iap`; application traffic remains the only public ingress. Before using SSH or the GitHub workflow, grant the deploy identity only the required IAP tunnel and OS Login permissions. There is no Cloud SQL, Kubernetes, load balancer, static IP, or managed secret service.

@@ -27,11 +27,24 @@ resource "google_compute_firewall" "http" {
   target_tags   = ["freshfirst-http"]
 }
 
+resource "google_compute_firewall" "iap_ssh" {
+  name    = "freshfirst-allow-iap-ssh"
+  network = data.google_compute_network.default.id
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+
+  source_ranges = ["35.235.240.0/20"]
+  target_tags   = ["freshfirst-iap-ssh"]
+}
+
 resource "google_compute_instance" "app" {
   name         = "freshfirst"
   machine_type = var.machine_type
   zone         = var.zone
-  tags         = ["freshfirst-http"]
+  tags         = ["freshfirst-http", "freshfirst-iap-ssh"]
 
   boot_disk {
     initialize_params {
