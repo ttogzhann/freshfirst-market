@@ -86,9 +86,7 @@ def test_registration_hashes_password_and_rotates_cookie(service, auth_app):
         assert client.get("/api/auth/session").json()["user"] == account
 
 
-def test_http_production_cookie_allows_unauthenticated_register_and_login(
-    service, monkeypatch
-):
+def test_http_production_cookie_allows_unauthenticated_register_and_login(service, monkeypatch):
     monkeypatch.setenv("FRESHFIRST_ENV", "production")
     app = create_app(
         service,
