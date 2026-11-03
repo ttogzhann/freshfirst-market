@@ -86,6 +86,39 @@ def test_registration_hashes_password_and_rotates_cookie(service, auth_app):
         assert client.get("/api/auth/session").json()["user"] == account
 
 
+def test_http_production_cookie_allows_unauthenticated_register_and_login(
+    service, monkeypatch
+):
+    monkeypatch.setenv("FRESHFIRST_ENV", "production")
+    app = create_app(
+        service,
+        startup_import=False,
+        auth_secret=SECRET,
+        trusted_origins=("http://localhost:5173",),
+    )
+    with TestClient(app, base_url="http://gcp.test") as client:
+        anonymous = client.get("/api/auth/session")
+        headers = csrf_headers(anonymous.json()["csrf_token"])
+        registered = client.post(
+            "/api/auth/register",
+            json={"email": "gcp@example.com", "password": PASSWORD},
+            headers=headers,
+        )
+        assert registered.status_code == 201
+        assert "Secure" not in registered.headers["set-cookie"]
+
+        csrf = registered.json()["csrf_token"]
+        client.post("/api/auth/logout", headers=csrf_headers(csrf))
+        anonymous = client.get("/api/auth/session")
+        logged_in = client.post(
+            "/api/auth/login",
+            json={"email": "gcp@example.com", "password": PASSWORD},
+            headers=csrf_headers(anonymous.json()["csrf_token"]),
+        )
+        assert logged_in.status_code == 200
+        assert "Secure" not in logged_in.headers["set-cookie"]
+
+
 def test_duplicate_registration_validation_bounds_and_email_identity(service, auth_app):
     with TestClient(auth_app) as first, TestClient(auth_app) as duplicate:
         created = register(first, "fresh@example.com")
