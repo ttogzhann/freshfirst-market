@@ -387,12 +387,14 @@ test("keeps each account's pantry data isolated in the real browser", async ({ p
   await goto(page, "/pantry");
   await addPantryItem(page, "Chorizo", "100");
   await page.getByRole("button", { name: "Log out" }).click();
+  await expect(page).toHaveURL(/\/login$/);
 
   await registerUser(page);
   await goto(page, "/pantry");
   await expect(page.getByText("Chorizo", { exact: true })).toBeHidden();
   await addPantryItem(page, "Pasta", "400");
   await page.getByRole("button", { name: "Log out" }).click();
+  await expect(page).toHaveURL(/\/login$/);
 
   await goto(page, "/login");
   await page.getByLabel("Email").fill(first.email);
