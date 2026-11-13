@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -35,7 +35,12 @@ import {
   isValidDate,
   todayISO,
 } from "@/services/domain";
-import { ServiceError, type InputUnit, type PantryItem } from "@/services";
+import {
+  ServiceError,
+  type IngredientAutocomplete,
+  type InputUnit,
+  type PantryItem,
+} from "@/services";
 import { Empty, ErrorState, ExpiryBadge, Loading, PageHeader } from "@/components/fresh/ui-bits";
 
 export const Route = createFileRoute("/pantry")({
@@ -232,6 +237,8 @@ function PantryForm({ item, onClose }: { item: PantryItem | null; onClose: () =>
   const autocomplete = useIngredientAutocomplete(label);
   const ing = ingredients.find((i) => i.id === ingredientId);
   const [unit, setUnit] = useState<InputUnit>((ing?.canonical_unit as InputUnit) ?? "pcs");
+  const candidates = autocomplete.data?.slice(0, 5) ?? [];
+  const [highlightedCandidate, setHighlightedCandidate] = useState(0);
   const [qty, setQty] = useState(item ? String(item.quantity) : "");
   const [expiry, setExpiry] = useState(item?.expiry_date ?? addDays(todayISO(), 7));
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -273,6 +280,30 @@ function PantryForm({ item, onClose }: { item: PantryItem | null; onClose: () =>
   const generalMutationError =
     mutationError && !serviceQuantityError && !serviceExpiryError ? actionableMutationMessage : "";
 
+  useEffect(() => {
+    setHighlightedCandidate(0);
+  }, [label, autocomplete.data]);
+
+  function selectCandidate(candidate: IngredientAutocomplete) {
+    setIngredientId(candidate.ingredient_id);
+    const next = ingredients.find((i) => i.id === candidate.ingredient_id);
+    if (next) setUnit(next.canonical_unit);
+  }
+
+  function handleAutocompleteKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (!candidates.length) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHighlightedCandidate((current) => Math.min(current + 1, candidates.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlightedCandidate((current) => Math.max(current - 1, 0));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      selectCandidate(candidates[highlightedCandidate]!);
+    }
+  }
+
   function submit(e: React.FormEvent) {
     e.preventDefault();
     const errs: Record<string, string> = {};
@@ -295,11 +326,20 @@ function PantryForm({ item, onClose }: { item: PantryItem | null; onClose: () =>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-4" noValidate>
           <div className="space-y-1.5">
-            <Label>Ingredient</Label>
+            <Label htmlFor="free-text-ingredient">Ingredient</Label>
             <Input
+              id="free-text-ingredient"
               aria-label="Free-text ingredient"
+              role="combobox"
+              aria-autocomplete="list"
+              aria-controls="pantry-ingredient-suggestions"
+              aria-expanded={candidates.length > 0}
+              aria-activedescendant={
+                candidates.length ? `pantry-ingredient-option-${highlightedCandidate}` : undefined
+              }
               placeholder="Type a canonical name or alias"
               value={label}
+              onKeyDown={handleAutocompleteKeyDown}
               onChange={(e) => {
                 setLabel(e.target.value);
                 setIngredientId("");
@@ -307,20 +347,20 @@ function PantryForm({ item, onClose }: { item: PantryItem | null; onClose: () =>
             />
             {label.trim() && autocomplete.data && autocomplete.data.length > 0 && (
               <div
+                id="pantry-ingredient-suggestions"
                 className="rounded-md border p-1"
                 role="listbox"
                 aria-label="Ingredient suggestions"
               >
-                {autocomplete.data.slice(0, 5).map((match) => (
+                {candidates.map((match, index) => (
                   <button
                     key={`${match.ingredient_id}-${match.matched_alias}-${match.locale}`}
                     type="button"
+                    id={`pantry-ingredient-option-${index}`}
+                    role="option"
+                    aria-selected={index === highlightedCandidate}
                     className="block w-full rounded px-2 py-1 text-left text-sm hover:bg-muted"
-                    onClick={() => {
-                      setIngredientId(match.ingredient_id);
-                      const next = ingredients.find((i) => i.id === match.ingredient_id);
-                      if (next) setUnit(next.canonical_unit);
-                    }}
+                    onClick={() => selectCandidate(match)}
                   >
                     {match.canonical_name} · {match.matched_alias} ({match.locale})
                   </button>
