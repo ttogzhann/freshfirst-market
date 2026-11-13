@@ -369,6 +369,41 @@ test("supports authenticated free-text autocomplete selection before saving", as
   await addFreeTextPantryItem(page, "молоко", "500");
 });
 
+test("keeps unknown labels visible and gates typo resolution on confirmation", async ({ page }) => {
+  await registerUser(page);
+  await goto(page, "/pantry");
+
+  await page.getByRole("button", { name: "Add item" }).click();
+  const dialog = page.getByRole("dialog");
+  const input = dialog.getByRole("combobox", { name: "Free-text ingredient", exact: true });
+  await input.fill("molok");
+  await dialog.getByLabel("Quantity").fill("2");
+  await dialog.getByLabel("Expiry date").fill("2030-12-31");
+  await dialog.getByRole("button", { name: "Save" }).click();
+  await expect(dialog).toBeHidden();
+
+  const typoLot = page.getByText("molok", { exact: true });
+  await expect(typoLot).toBeVisible();
+  await expect(
+    page.getByText("Choose a canonical ingredient to confirm this entry."),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Confirm Milk" })).toBeVisible();
+  await page.getByRole("button", { name: "Confirm Milk" }).click();
+  await expect(page.getByText("Ingredient confirmed", { exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "Add item" }).click();
+  const unknownDialog = page.getByRole("dialog");
+  await unknownDialog
+    .getByRole("combobox", { name: "Free-text ingredient", exact: true })
+    .fill("dragonfruit");
+  await unknownDialog.getByLabel("Quantity").fill("1");
+  await unknownDialog.getByLabel("Expiry date").fill("2030-12-31");
+  await unknownDialog.getByRole("button", { name: "Save" }).click();
+  await expect(unknownDialog).toBeHidden();
+  await expect(page.getByText("dragonfruit", { exact: true })).toBeVisible();
+  await expect(page.getByText("This label is not matched to canonical stock.")).toBeVisible();
+});
+
 test("covers recipe filters, serving adaptation, and import reporting", async ({ page }) => {
   await registerUser(page);
   await goto(page, "/recipes");
