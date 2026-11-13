@@ -255,7 +255,12 @@ class FreshService:
         matches = []
         for row in rows:
             text = row["normalized_text"]
-            if text not in variants and not text.startswith(normalized) and normalized not in text:
+            row_variants = normalization_variants(row["alias_text"])
+            if (
+                not set(row_variants).intersection(variants)
+                and not text.startswith(normalized)
+                and normalized not in text
+            ):
                 continue
             ingredient = self.catalog.get(row["ingredient_id"])
             if ingredient is None:
@@ -270,10 +275,22 @@ class FreshService:
                     locale=row["locale"],
                 )
             )
-        unique = {
-            (item.ingredient_id, item.matched_alias.casefold(), item.locale.casefold()): item
-            for item in matches
-        }
+        # A canonical ingredient is one candidate even when several reviewed aliases
+        # match. Rank exact/shorter aliases first so the selected display is stable
+        # regardless of database row order.
+        ranked = sorted(
+            matches,
+            key=lambda item: (
+                0 if set(normalization_variants(item.matched_alias)).intersection(variants) else 1,
+                len(normalize_alias(item.matched_alias)),
+                item.matched_alias.casefold(),
+                item.locale.casefold(),
+                item.ingredient_id,
+            ),
+        )
+        unique = {}
+        for item in ranked:
+            unique.setdefault(item.ingredient_id, item)
         return sorted(
             unique.values(),
             key=lambda item: (

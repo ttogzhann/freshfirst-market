@@ -14,6 +14,8 @@ type Runtime = {
   project: string;
   envDir: string;
   envFile: string;
+  database: string;
+  databaseUser: string;
   port: number;
 };
 
@@ -84,6 +86,8 @@ async function startRuntime(): Promise<Runtime> {
     project: `freshfirst-e2e-${suffix}`.toLowerCase(),
     envDir: mkdtempSync(resolve(tmpdir(), "freshfirst-e2e-")),
     envFile: "",
+    database: `freshfirst_e2e_${suffix}`,
+    databaseUser: `freshfirst_e2e_${suffix}`,
     port,
   };
   value.envFile = resolve(value.envDir, "compose.env");
@@ -92,8 +96,8 @@ async function startRuntime(): Promise<Runtime> {
   writeFileSync(
     value.envFile,
     [
-      `POSTGRES_DB=freshfirst_e2e_${suffix}`,
-      `POSTGRES_USER=freshfirst_e2e_${suffix}`,
+      `POSTGRES_DB=${value.database}`,
+      `POSTGRES_USER=${value.databaseUser}`,
       `POSTGRES_PASSWORD=${password}`,
       `FRESHFIRST_AUTH_SECRET=${secret}`,
       `FRESHFIRST_PORT=${port}`,
@@ -124,13 +128,41 @@ function cleanupRuntime(value: Runtime | undefined): void {
 async function addPantryItem(page: Page, ingredient: string, quantity: string): Promise<void> {
   await page.getByRole("button", { name: "Add item" }).click();
   const dialog = page.getByRole("dialog");
-  await dialog.getByRole("combobox", { name: "Ingredient" }).click();
+  await dialog.getByRole("combobox", { name: "Ingredient", exact: true }).click();
   await page.getByRole("option", { name: ingredient, exact: true }).click();
   await dialog.getByLabel("Quantity").fill(quantity);
   await dialog.getByLabel("Expiry date").fill("2030-12-31");
   await dialog.getByRole("button", { name: "Save" }).click();
   await expect(dialog).toBeHidden();
   await expect(page.getByText(ingredient, { exact: true })).toBeVisible();
+}
+
+async function addFreeTextPantryItem(page: Page, label: string, quantity: string): Promise<void> {
+  await page.getByRole("button", { name: "Add item" }).click();
+  const dialog = page.getByRole("dialog");
+  const input = dialog.getByRole("combobox", { name: "Free-text ingredient", exact: true });
+  await input.fill(label);
+  await expect(dialog.getByRole("option").first()).toBeVisible();
+  await input.press("ArrowDown");
+  await input.press("Enter");
+  await expect(input).toHaveValue(label);
+  await expect(dialog.getByRole("button", { name: "Save" })).toBeVisible();
+  await expect(page.getByText(label, { exact: true })).toHaveCount(0);
+  await dialog.getByLabel("Quantity").fill(quantity);
+  await dialog.getByLabel("Expiry date").fill("2030-12-31");
+  const createResponse = page.waitForResponse(
+    (response) => response.url().endsWith("/pantry") && response.request().method() === "POST",
+  );
+  await dialog.getByRole("button", { name: "Save" }).click();
+  const created = await createResponse;
+  const pantryItem = (await created.json()) as {
+    ingredient_id: string;
+    original_label: string | null;
+  };
+  expect(pantryItem.ingredient_id).toBe("milk");
+  expect(pantryItem.original_label).toBe(label);
+  await expect(dialog).toBeHidden();
+  await expect(page.getByText("Milk", { exact: true })).toBeVisible();
 }
 
 async function goto(page: Page, path: string): Promise<void> {
@@ -168,6 +200,22 @@ test.beforeAll(async () => {
 
 test.afterAll(() => {
   cleanupRuntime(runtime);
+});
+
+test.beforeEach(() => {
+  if (!runtime) throw new Error("The isolated Compose application is not running.");
+  compose(runtime, [
+    "exec",
+    "-T",
+    "db",
+    "psql",
+    "-U",
+    runtime.databaseUser,
+    "-d",
+    runtime.database,
+    "-c",
+    "TRUNCATE TABLE auth_rate_limits",
+  ]);
 });
 
 test("runs the real browser journey against production Compose and survives app recreation", async ({
@@ -260,7 +308,7 @@ test("covers pantry lifecycle filters, edit, expiry, and removal", async ({ page
   await addPantryItem(page, "Chorizo", "100");
   await page.getByRole("button", { name: "Add item" }).click();
   const dialog = page.getByRole("dialog");
-  await dialog.getByRole("combobox", { name: "Ingredient" }).click();
+  await dialog.getByRole("combobox", { name: "Ingredient", exact: true }).click();
   await page.getByRole("option", { name: "Pasta", exact: true }).click();
   await dialog.getByLabel("Quantity").fill("400");
   await dialog.getByLabel("Expiry date").fill("2020-01-01");
@@ -315,6 +363,12 @@ test("covers pantry lifecycle filters, edit, expiry, and removal", async ({ page
   await expect(page.getByText("Added to pantry", { exact: true })).toBeVisible();
 });
 
+test("supports authenticated free-text autocomplete selection before saving", async ({ page }) => {
+  await registerUser(page);
+  await goto(page, "/pantry");
+  await addFreeTextPantryItem(page, "молоко", "500");
+});
+
 test("covers recipe filters, serving adaptation, and import reporting", async ({ page }) => {
   await registerUser(page);
   await goto(page, "/recipes");
@@ -353,12 +407,14 @@ test("keeps each account's pantry data isolated in the real browser", async ({ p
   await goto(page, "/pantry");
   await addPantryItem(page, "Chorizo", "100");
   await page.getByRole("button", { name: "Log out" }).click();
+  await expect(page).toHaveURL(/\/login$/);
 
   await registerUser(page);
   await goto(page, "/pantry");
   await expect(page.getByText("Chorizo", { exact: true })).toBeHidden();
   await addPantryItem(page, "Pasta", "400");
   await page.getByRole("button", { name: "Log out" }).click();
+  await expect(page).toHaveURL(/\/login$/);
 
   await goto(page, "/login");
   await page.getByLabel("Email").fill(first.email);

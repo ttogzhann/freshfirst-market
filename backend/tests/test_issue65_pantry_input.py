@@ -19,6 +19,60 @@ def test_authenticated_autocomplete_is_deterministic_and_not_anonymous(client):
     assert client.get("/api/ingredients/autocomplete", params={"q": "mol"}).status_code == 401
 
 
+def test_autocomplete_is_account_scoped_and_handles_unicode_empty_and_unknown(client):
+    private = pantry_label(client, "private pantry note")
+    assert private.status_code == 200
+
+    russian_spelling = client.get(
+        "/api/ingredients/autocomplete", params={"q": "\u041c\u0401\u0414"}
+    )
+    russian_folded = client.get("/api/ingredients/autocomplete", params={"q": "\u043c\u0435\u0434"})
+    assert russian_spelling.status_code == russian_folded.status_code == 200
+    assert [row["ingredient_id"] for row in russian_spelling.json()] == ["honey"]
+    assert russian_spelling.json() == russian_folded.json()
+    assert (
+        client.get("/api/ingredients/autocomplete", params={"q": "unknown pantry food"}).json()
+        == []
+    )
+
+    second = client.__class__(client.app, raise_server_exceptions=False)
+    with second:
+        register_test_account(second, "second-autocomplete@example.com")
+        assert second.get("/api/pantry").json() == []
+        assert (
+            second.get("/api/ingredients/autocomplete", params={"q": "private pantry"}).json() == []
+        )
+        assert second.get("/api/ingredients/autocomplete", params={"q": ""}).status_code == 422
+
+    assert len(client.get("/api/pantry").json()) == 1
+
+
+def test_ambiguous_autocomplete_returns_sorted_distinct_candidates(client, service):
+    with service.store.engine.begin() as connection:
+        from app.store import dialect_insert, ingredient_aliases
+
+        for alias_id, ingredient_id in (("issue65-c", "beef"), ("issue65-d", "chicken")):
+            connection.execute(
+                dialect_insert(ingredient_aliases, service.store.engine)
+                .values(
+                    id=alias_id,
+                    ingredient_id=ingredient_id,
+                    locale="en",
+                    alias_text="shared autocomplete food",
+                    normalized_text="shared autocomplete food",
+                    alias_type="reviewed",
+                    confidence=1,
+                    provenance="issue65-test",
+                )
+                .on_conflict_do_nothing(index_elements=["id"])
+            )
+
+    response = client.get("/api/ingredients/autocomplete", params={"q": "shared autocomplete food"})
+    assert response.status_code == 200
+    assert [row["ingredient_id"] for row in response.json()] == ["chicken", "beef"]
+    assert client.get("/api/pantry").json() == []
+
+
 def test_exact_multilingual_label_preserves_input_and_canonical_id(client):
     response = pantry_label(client, " МЁД!!! ", unit="ml")
     assert response.status_code == 200, response.text

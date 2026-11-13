@@ -70,7 +70,7 @@ describe("recoverable pantry and shopping form errors", () => {
 
     const freeText = screen.getByLabelText("Free-text ingredient");
     fireEvent.change(freeText, { target: { value: "Eggs" } });
-    const suggestion = await screen.findByRole("button", { name: /Eggs · Eggs \(en\)/ });
+    const suggestion = await screen.findByRole("option", { name: /Eggs · Eggs \(en\)/ });
     fireEvent.click(suggestion);
 
     expect(freeText).toHaveValue("Eggs");
@@ -81,6 +81,46 @@ describe("recoverable pantry and shopping form errors", () => {
     const saved = (await service.listPantry())[0];
     expect(saved?.ingredient_id).toBe("egg");
     expect(saved?.original_label).toBe("Eggs");
+  });
+
+  it("supports keyboard candidate selection without mutating until save", async () => {
+    vi.spyOn(service, "autocompleteIngredients").mockResolvedValue([
+      {
+        ingredient_id: "milk",
+        canonical_name: "Milk",
+        category: "Dairy & Eggs",
+        canonical_unit: "ml",
+        matched_alias: "Молоко",
+        locale: "ru",
+      },
+    ]);
+    const create = vi.spyOn(service, "createPantryItem");
+    show(<Pantry />);
+    const addButton = await screen.findByRole("button", { name: "Add item" });
+    await waitFor(() => expect(addButton).toBeEnabled());
+    fireEvent.click(addButton);
+
+    const freeText = screen.getByRole("combobox", { name: "Free-text ingredient" });
+    fireEvent.change(freeText, { target: { value: "молоко" } });
+    expect(await screen.findByRole("option", { name: /Milk · Молоко \(ru\)/ })).toBeInTheDocument();
+
+    fireEvent.keyDown(freeText, { key: "ArrowDown" });
+    fireEvent.keyDown(freeText, { key: "Enter" });
+    expect(freeText).toHaveValue("молоко");
+    expect(create).not.toHaveBeenCalled();
+    expect(await service.listPantry()).toEqual([]);
+
+    fireEvent.change(screen.getByLabelText("Quantity"), { target: { value: "100" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() =>
+      expect(create).toHaveBeenCalledWith({
+        ingredient_id: "milk",
+        label: "молоко",
+        quantity: 100,
+        unit: "ml",
+        expiry_date: expect.any(String),
+      }),
+    );
   });
 
   it("retains a rejected pantry update and retries the corrected value", async () => {
@@ -127,14 +167,14 @@ describe("recoverable pantry and shopping form errors", () => {
     await waitFor(() => expect(addButton).toBeEnabled());
     fireEvent.click(addButton);
     await screen.findByRole("dialog");
-    fireEvent.click(screen.getByLabelText("Ingredient"));
+    fireEvent.click(screen.getByRole("combobox", { name: "Ingredient" }));
     fireEvent.click(await screen.findByRole("option", { name: "Eggs" }));
     fireEvent.change(screen.getByLabelText("Quantity"), { target: { value: "3" } });
     fireEvent.change(screen.getByLabelText("Expiry date"), { target: { value: "2026-12-01" } });
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/edit the existing entry/i);
-    expect(screen.getByLabelText("Ingredient")).toHaveTextContent("Eggs");
+    expect(screen.getByRole("combobox", { name: "Ingredient" })).toHaveTextContent("Eggs");
     expect(screen.getByLabelText("Quantity")).toHaveValue(3);
     expect(screen.getByLabelText("Expiry date")).toHaveValue("2026-12-01");
     expect(toast.error).toHaveBeenCalledOnce();
