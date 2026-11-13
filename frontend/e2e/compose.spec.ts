@@ -146,9 +146,19 @@ async function addFreeTextPantryItem(page: Page, label: string, quantity: string
   await expect(page.getByText(label, { exact: true })).toHaveCount(0);
   await dialog.getByLabel("Quantity").fill(quantity);
   await dialog.getByLabel("Expiry date").fill("2030-12-31");
+  const createResponse = page.waitForResponse(
+    (response) => response.url().endsWith("/pantry") && response.request().method() === "POST",
+  );
   await dialog.getByRole("button", { name: "Save" }).click();
+  const created = await createResponse;
+  const pantryItem = (await created.json()) as {
+    ingredient_id: string;
+    original_label: string | null;
+  };
+  expect(pantryItem.ingredient_id).toBe("milk");
+  expect(pantryItem.original_label).toBe(label);
   await expect(dialog).toBeHidden();
-  await expect(page.getByText(label, { exact: true })).toBeVisible();
+  await expect(page.getByText("Milk", { exact: true })).toBeVisible();
 }
 
 async function goto(page: Page, path: string): Promise<void> {
