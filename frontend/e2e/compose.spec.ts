@@ -14,6 +14,8 @@ type Runtime = {
   project: string;
   envDir: string;
   envFile: string;
+  database: string;
+  databaseUser: string;
   port: number;
 };
 
@@ -84,6 +86,8 @@ async function startRuntime(): Promise<Runtime> {
     project: `freshfirst-e2e-${suffix}`.toLowerCase(),
     envDir: mkdtempSync(resolve(tmpdir(), "freshfirst-e2e-")),
     envFile: "",
+    database: `freshfirst_e2e_${suffix}`,
+    databaseUser: `freshfirst_e2e_${suffix}`,
     port,
   };
   value.envFile = resolve(value.envDir, "compose.env");
@@ -92,8 +96,8 @@ async function startRuntime(): Promise<Runtime> {
   writeFileSync(
     value.envFile,
     [
-      `POSTGRES_DB=freshfirst_e2e_${suffix}`,
-      `POSTGRES_USER=freshfirst_e2e_${suffix}`,
+      `POSTGRES_DB=${value.database}`,
+      `POSTGRES_USER=${value.databaseUser}`,
       `POSTGRES_PASSWORD=${password}`,
       `FRESHFIRST_AUTH_SECRET=${secret}`,
       `FRESHFIRST_PORT=${port}`,
@@ -196,6 +200,22 @@ test.beforeAll(async () => {
 
 test.afterAll(() => {
   cleanupRuntime(runtime);
+});
+
+test.beforeEach(() => {
+  if (!runtime) throw new Error("The isolated Compose application is not running.");
+  compose(runtime, [
+    "exec",
+    "-T",
+    "db",
+    "psql",
+    "-U",
+    runtime.databaseUser,
+    "-d",
+    runtime.database,
+    "-c",
+    "TRUNCATE TABLE auth_rate_limits",
+  ]);
 });
 
 test("runs the real browser journey against production Compose and survives app recreation", async ({
