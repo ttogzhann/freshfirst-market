@@ -376,19 +376,19 @@ test("keeps unknown labels visible and gates typo resolution on confirmation", a
   await page.getByRole("button", { name: "Add item" }).click();
   const dialog = page.getByRole("dialog");
   const input = dialog.getByRole("combobox", { name: "Free-text ingredient", exact: true });
-  await input.fill("molok");
+  await input.fill("eggsx");
   await dialog.getByLabel("Quantity").fill("2");
   await dialog.getByLabel("Expiry date").fill("2030-12-31");
   await dialog.getByRole("button", { name: "Save" }).click();
   await expect(dialog).toBeHidden();
 
-  const typoLot = page.getByText("molok", { exact: true });
+  const typoLot = page.getByText("eggsx", { exact: true });
   await expect(typoLot).toBeVisible();
   await expect(
     page.getByText("Choose a canonical ingredient to confirm this entry."),
   ).toBeVisible();
-  await expect(page.getByRole("button", { name: "Confirm Milk" })).toBeVisible();
-  await page.getByRole("button", { name: "Confirm Milk" }).click();
+  await expect(page.getByRole("button", { name: "Confirm Eggs" })).toBeVisible();
+  await page.getByRole("button", { name: "Confirm Eggs" }).click();
   await expect(page.getByText("Ingredient confirmed", { exact: true })).toBeVisible();
 
   await page.getByRole("button", { name: "Add item" }).click();
