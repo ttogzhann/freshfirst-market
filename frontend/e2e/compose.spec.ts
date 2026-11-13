@@ -124,13 +124,31 @@ function cleanupRuntime(value: Runtime | undefined): void {
 async function addPantryItem(page: Page, ingredient: string, quantity: string): Promise<void> {
   await page.getByRole("button", { name: "Add item" }).click();
   const dialog = page.getByRole("dialog");
-  await dialog.getByRole("combobox", { name: "Ingredient" }).click();
+  await dialog.getByRole("combobox", { name: "Ingredient", exact: true }).click();
   await page.getByRole("option", { name: ingredient, exact: true }).click();
   await dialog.getByLabel("Quantity").fill(quantity);
   await dialog.getByLabel("Expiry date").fill("2030-12-31");
   await dialog.getByRole("button", { name: "Save" }).click();
   await expect(dialog).toBeHidden();
   await expect(page.getByText(ingredient, { exact: true })).toBeVisible();
+}
+
+async function addFreeTextPantryItem(page: Page, label: string, quantity: string): Promise<void> {
+  await page.getByRole("button", { name: "Add item" }).click();
+  const dialog = page.getByRole("dialog");
+  const input = dialog.getByRole("combobox", { name: "Free-text ingredient", exact: true });
+  await input.fill(label);
+  await expect(dialog.getByRole("option").first()).toBeVisible();
+  await input.press("ArrowDown");
+  await input.press("Enter");
+  await expect(input).toHaveValue(label);
+  await expect(dialog.getByRole("button", { name: "Save" })).toBeVisible();
+  await expect(page.getByText(label, { exact: true })).toHaveCount(0);
+  await dialog.getByLabel("Quantity").fill(quantity);
+  await dialog.getByLabel("Expiry date").fill("2030-12-31");
+  await dialog.getByRole("button", { name: "Save" }).click();
+  await expect(dialog).toBeHidden();
+  await expect(page.getByText(label, { exact: true })).toBeVisible();
 }
 
 async function goto(page: Page, path: string): Promise<void> {
@@ -260,7 +278,7 @@ test("covers pantry lifecycle filters, edit, expiry, and removal", async ({ page
   await addPantryItem(page, "Chorizo", "100");
   await page.getByRole("button", { name: "Add item" }).click();
   const dialog = page.getByRole("dialog");
-  await dialog.getByRole("combobox", { name: "Ingredient" }).click();
+  await dialog.getByRole("combobox", { name: "Ingredient", exact: true }).click();
   await page.getByRole("option", { name: "Pasta", exact: true }).click();
   await dialog.getByLabel("Quantity").fill("400");
   await dialog.getByLabel("Expiry date").fill("2020-01-01");
@@ -313,6 +331,12 @@ test("covers pantry lifecycle filters, edit, expiry, and removal", async ({ page
   await page.getByLabel("Expiry date").fill("2031-12-31");
   await page.getByRole("button", { name: "Confirm transfer to pantry" }).click();
   await expect(page.getByText("Added to pantry", { exact: true })).toBeVisible();
+});
+
+test("supports authenticated free-text autocomplete selection before saving", async ({ page }) => {
+  await registerUser(page);
+  await goto(page, "/pantry");
+  await addFreeTextPantryItem(page, "молоко", "500");
 });
 
 test("covers recipe filters, serving adaptation, and import reporting", async ({ page }) => {
