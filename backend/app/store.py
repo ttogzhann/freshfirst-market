@@ -525,6 +525,10 @@ class SQLiteStore:
                     row["confirmed_substitutions_json"] = row.pop("substitutions")
                 if table is history:
                     row["consumption_snapshot_json"] = row.pop("consumed")
+                    # Adaptation metadata is derived from the persisted recipe/count and is
+                    # intentionally not a schema change for legacy history rows.
+                    row.pop("original_servings", None)
+                    row.pop("adapted_servings", None)
                 result[table.name][item.id] = row
         result[settings.name][self.owner_id or "state"] = dict(
             id=f"state:{self.owner_id}" if self.owner_id else "state",

@@ -153,6 +153,10 @@ class SubstitutionSuggestion(Model):
 
 class RecipeDetail(RecipeSummary):
     servings: Servings
+    original_servings: Servings
+    adapted_servings: Servings
+    feasible_servings: Annotated[int, Field(ge=0, le=8)]
+    limiting_lines: list[str] = Field(default_factory=list)
     lines: list[DemandLine]
     suggestions: list[SubstitutionSuggestion]
 
@@ -166,6 +170,10 @@ class BasketItem(Model):
 
 class BasketItemWithRecipe(BasketItem):
     recipe: Recipe
+    original_servings: Servings
+    adapted_servings: Servings
+    feasible_servings: Annotated[int, Field(ge=0, le=8)]
+    limiting_lines: list[str] = Field(default_factory=list)
 
 
 class BasketView(Model):
@@ -238,6 +246,10 @@ class CookRequest(Model):
 class CookPreview(Model):
     recipe_id: str
     servings: Servings
+    original_servings: Servings
+    adapted_servings: Servings
+    feasible_servings: Annotated[int, Field(ge=0, le=8)]
+    limiting_lines: list[str] = Field(default_factory=list)
     lines: list[DemandLine]
     can_cook: bool
 
@@ -252,6 +264,8 @@ class CookingRecord(Model):
     recipe_id: str
     recipe_title: str
     servings: Servings
+    original_servings: Servings | None = None
+    adapted_servings: Servings | None = None
     cooked_at: datetime
     consumed: list[Consumption]
 

@@ -1303,11 +1303,27 @@ components:
         - type: object
           required:
             - servings
+            - original_servings
+            - adapted_servings
+            - feasible_servings
+            - limiting_lines
             - lines
             - suggestions
           properties:
             servings:
               $ref: '#/components/schemas/Servings'
+            original_servings:
+              $ref: '#/components/schemas/Servings'
+            adapted_servings:
+              $ref: '#/components/schemas/Servings'
+            feasible_servings:
+              type: integer
+              minimum: 0
+              maximum: 8
+            limiting_lines:
+              type: array
+              items:
+                type: string
             lines:
               type: array
               items:
@@ -1340,9 +1356,25 @@ components:
         - type: object
           required:
             - recipe
+            - original_servings
+            - adapted_servings
+            - feasible_servings
+            - limiting_lines
           properties:
             recipe:
               $ref: '#/components/schemas/Recipe'
+            original_servings:
+              $ref: '#/components/schemas/Servings'
+            adapted_servings:
+              $ref: '#/components/schemas/Servings'
+            feasible_servings:
+              type: integer
+              minimum: 0
+              maximum: 8
+            limiting_lines:
+              type: array
+              items:
+                type: string
     BasketView:
       type: object
       required:
@@ -1498,6 +1530,10 @@ components:
       required:
         - recipe_id
         - servings
+        - original_servings
+        - adapted_servings
+        - feasible_servings
+        - limiting_lines
         - lines
         - can_cook
       properties:
@@ -1505,6 +1541,18 @@ components:
           type: string
         servings:
           $ref: '#/components/schemas/Servings'
+        original_servings:
+          $ref: '#/components/schemas/Servings'
+        adapted_servings:
+          $ref: '#/components/schemas/Servings'
+        feasible_servings:
+          type: integer
+          minimum: 0
+          maximum: 8
+        limiting_lines:
+          type: array
+          items:
+            type: string
         lines:
           type: array
           items:
@@ -1518,6 +1566,8 @@ components:
         - recipe_id
         - recipe_title
         - servings
+        - original_servings
+        - adapted_servings
         - cooked_at
         - consumed
       properties:
@@ -1528,6 +1578,10 @@ components:
         recipe_title:
           type: string
         servings:
+          $ref: '#/components/schemas/Servings'
+        original_servings:
+          $ref: '#/components/schemas/Servings'
+        adapted_servings:
           $ref: '#/components/schemas/Servings'
         cooked_at:
           type: string

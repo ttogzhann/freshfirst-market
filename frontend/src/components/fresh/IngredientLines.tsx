@@ -26,7 +26,7 @@ export function IngredientLines({ lines }: { lines: DemandLine[] }) {
           <span className="tabular-nums">
             {formatQty(l.required, l.unit)}
             <span className="ml-2 text-xs text-muted-foreground">
-              have {formatQty(l.available, l.unit)}
+              have {formatQty(l.available, l.unit)} · allocated {formatQty(l.allocated, l.unit)}
               {l.missing > 0 && ` · missing ${formatQty(l.missing, l.unit)}`}
             </span>
           </span>

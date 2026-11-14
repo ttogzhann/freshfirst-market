@@ -214,4 +214,30 @@ describe("recipe detail saved choices", () => {
     expect(within(mushroomLine!).getByText("substitute")).toBeInTheDocument();
     expect((await service.getBasket()).items).toHaveLength(1);
   });
+
+  it("requires an explicit pantry adaptation choice and carries the explanation", async () => {
+    recipeId = "rec_52959";
+    const getRecipe = vi
+      .spyOn(service, "getRecipe")
+      .mockImplementation(async (id, servings, subs) => {
+        const value = await createMockService({
+          seedPantry: false,
+          today: () => "2026-10-20",
+        }).getRecipe(id, servings, subs);
+        return {
+          ...value,
+          original_servings: value.base_servings,
+          adapted_servings: value.servings,
+          feasible_servings: 1,
+          limiting_lines: ["spinach"],
+        };
+      });
+    show();
+
+    expect(await screen.findByText("1", { selector: "b" })).toBeInTheDocument();
+    expect(screen.getByText(/Limiting ingredients: spinach/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Adapt to my pantry" }));
+    await waitFor(() => expect(screen.getByText("Recipe quantity 1")).toBeInTheDocument());
+    expect(getRecipe).toHaveBeenCalledWith("rec_52959", 1, []);
+  });
 });

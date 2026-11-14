@@ -177,6 +177,12 @@ export function CookDialog({
         )}
         {!preview && loadingPreview && <Loading label="Checking pantry…" />}
         {preview && (
+          <p className="mb-2 text-sm text-muted-foreground">
+            Recipe quantity: {preview.adapted_servings ?? preview.servings}; pantry-fit maximum:
+            {preview.feasible_servings ?? "—"}.
+          </p>
+        )}
+        {preview && (
           <ul className="divide-y rounded-lg border">
             {preview.lines.map((l) => (
               <li
@@ -206,6 +212,11 @@ export function CookDialog({
           <p className="text-sm text-destructive">
             Some ingredients are short. Restock or confirm a substitute first — nothing will be
             deducted.
+          </p>
+        )}
+        {preview && (preview.limiting_lines?.length ?? 0) > 0 && (
+          <p className="text-sm text-destructive">
+            Limiting ingredients: {preview.limiting_lines?.join(", ")}.
           </p>
         )}
         <DialogFooter>

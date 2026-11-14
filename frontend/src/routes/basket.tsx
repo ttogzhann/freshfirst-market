@@ -27,6 +27,10 @@ function BasketSelection({ item }: { item: BasketView["items"][number] }) {
         {item.recipe.title}
       </Link>
       <div className="flex flex-wrap items-center gap-3">
+        <span className="text-sm text-muted-foreground">
+          Selected {item.adapted_servings ?? item.servings} / pantry-fit maximum{" "}
+          {item.feasible_servings ?? "—"}
+        </span>
         <label>
           {quantityControlLabel(item.recipe.base_servings)}{" "}
           <select
@@ -52,6 +56,12 @@ function BasketSelection({ item }: { item: BasketView["items"][number] }) {
       {detail.isLoading && <Loading />}
       {detail.error && <ErrorState error={detail.error} onRetry={detail.refetch} />}
       {detail.data && <IngredientLines lines={detail.data.lines} />}
+      {detail.data && (detail.data.limiting_lines?.length ?? 0) > 0 && (
+        <p className="text-sm text-destructive">
+          Limiting ingredients: {detail.data.limiting_lines?.join(", ")}. This selection remains
+          editable and is not silently reduced.
+        </p>
+      )}
       {detail.data?.suggestions
         .filter((s) => !rejected.includes(s.rule.id))
         .map((s) => (

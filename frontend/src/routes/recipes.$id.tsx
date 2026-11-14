@@ -137,6 +137,32 @@ export function RecipePage() {
               ? "One batch uses the complete source ingredient quantities."
               : `Source ingredient quantities correspond to recipe quantity ${data.base_servings}.`}
           </p>
+          <div className="rounded-lg border border-accent bg-accent/20 px-3 py-2 text-sm">
+            <p>
+              Pantry-fit maximum: <b>{data.feasible_servings ?? data.base_servings}</b> recipe
+              {data.feasible_servings === 1 ? " batch" : " batches"} (selected: {s}).
+            </p>
+            {(data.limiting_lines?.length ?? 0) > 0 && (
+              <p className="text-muted-foreground">
+                Limiting ingredients: {data.limiting_lines?.join(", ")}.
+              </p>
+            )}
+            <Button
+              className="mt-2"
+              size="sm"
+              variant="outline"
+              disabled={!data.feasible_servings || data.feasible_servings === s}
+              onClick={() =>
+                setChoices({
+                  recipeId: id,
+                  servings: data.feasible_servings,
+                  substitutions: subs,
+                })
+              }
+            >
+              Adapt to my pantry
+            </Button>
+          </div>
           {data.match.expiring_used.length > 0 && (
             <p className="rounded-lg bg-warning/25 px-3 py-2 text-sm text-warning-foreground">
               Uses {data.match.expiring_used.join(", ")}, which expire within{" "}
