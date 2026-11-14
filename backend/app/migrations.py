@@ -4,7 +4,7 @@ import time
 
 from sqlalchemy import inspect, text
 
-VERSION = 3
+VERSION = 4
 
 
 def migrate(connection):
@@ -63,6 +63,23 @@ def migrate(connection):
         "ON ingredient_aliases(normalized_text, locale)"
     )
     _migrate_pantry_lots(connection, current)
+    connection.exec_driver_sql(
+        "CREATE TABLE IF NOT EXISTS import_sources ("
+        "id VARCHAR PRIMARY KEY, recipe_id VARCHAR NOT NULL UNIQUE "
+        "REFERENCES recipes(id) ON DELETE CASCADE,"
+        "external_id VARCHAR NOT NULL UNIQUE, source_name VARCHAR NOT NULL,"
+        "source_url VARCHAR NOT NULL, captured_at VARCHAR NOT NULL, imported_at VARCHAR NOT NULL,"
+        "raw_source JSON NOT NULL, raw_sha256 VARCHAR NOT NULL)"
+    )
+    connection.exec_driver_sql(
+        "CREATE TABLE IF NOT EXISTS import_source_lines ("
+        "id VARCHAR PRIMARY KEY, source_id VARCHAR NOT NULL "
+        "REFERENCES import_sources(id) ON DELETE CASCADE,"
+        "line_number INTEGER NOT NULL, raw_name VARCHAR NOT NULL, raw_measure VARCHAR NOT NULL,"
+        "ingredient_id VARCHAR NOT NULL REFERENCES ingredients(id), "
+        "quantity_canonical NUMERIC(14,2) NOT NULL,"
+        "unit VARCHAR NOT NULL)"
+    )
     connection.execute(
         text("INSERT INTO schema_migrations(version, applied_at) VALUES (:version, :applied_at)"),
         {"version": VERSION, "applied_at": int(time.time())},

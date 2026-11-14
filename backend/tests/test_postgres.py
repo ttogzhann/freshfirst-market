@@ -12,6 +12,7 @@ from datetime import date
 from pathlib import Path
 
 import pytest
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 
 from app.auth import AuthService
@@ -23,7 +24,7 @@ from app.models import (
     ShoppingInput,
 )
 from app.services.fresh import FreshService
-from app.store import SQLiteStore, pantry
+from app.store import SQLiteStore, import_source_lines, import_sources, ingredients, pantry, recipes
 
 POSTGRES_URL = os.getenv("FRESHFIRST_POSTGRES_TEST_URL")
 pytestmark = pytest.mark.skipif(
@@ -170,4 +171,60 @@ def test_postgresql_alias_schema_seed_and_resolution():
         assert (
             connection.exec_driver_sql("SELECT COUNT(*) FROM ingredient_aliases").scalar_one() > 0
         )
+    store.close()
+
+
+def test_postgresql_reviewed_new_ingredient_import_repeats_without_duplicates():
+    raw = {
+        "idMeal": "pg-importer-profile",
+        "strMeal": "Postgres reviewed profile",
+        "strCategory": "Test",
+        "strInstructions": "Use the ingredient.",
+        "strMealThumb": "https://example.test/postgres-profile.jpg",
+        "strIngredient1": "PG herb",
+        "strMeasure1": "1kg",
+        "reviewed_ingredient_profiles": {
+            "PG herb": {
+                "canonical_id": "pg_importer_herb",
+                "display_name": "PG herb",
+                "category": "Herbs",
+                "canonical_unit": "g",
+            }
+        },
+    }
+
+    class ProfileSource:
+        def meals(self):
+            return iter([raw])
+
+    store = SQLiteStore(POSTGRES_URL)
+    service = FreshService(store=store, source=ProfileSource(), seed=False)
+    assert service.import_recipes().imported == 1
+    assert service.import_recipes().updated == 1
+    with store.engine.connect() as connection:
+        assert (
+            connection.scalar(
+                select(func.count())
+                .select_from(ingredients)
+                .where(ingredients.c.id == "pg_importer_herb")
+            )
+            == 1
+        )
+        assert (
+            connection.scalar(
+                select(func.count())
+                .select_from(recipes)
+                .where(recipes.c.external_id == "pg-importer-profile")
+            )
+            == 1
+        )
+        assert (
+            connection.scalar(
+                select(func.count())
+                .select_from(import_sources)
+                .where(import_sources.c.external_id == "pg-importer-profile")
+            )
+            == 1
+        )
+        assert connection.scalar(select(func.count()).select_from(import_source_lines)) >= 1
     store.close()
