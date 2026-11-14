@@ -1232,7 +1232,10 @@ components:
         - unit
         - required
         - available
+        - allocated
+        - missing
         - sufficient
+        - allocations
       properties:
         ingredient_id:
           type: string
@@ -1246,8 +1249,28 @@ components:
         available:
           type: number
           minimum: 0
+        allocated:
+          type: number
+          minimum: 0
+        missing:
+          type: number
+          minimum: 0
         sufficient:
           type: boolean
+        allocations:
+          type: array
+          items:
+            type: object
+            required: [lot_id, expiry_date, quantity]
+            properties:
+              lot_id:
+                type: string
+              expiry_date:
+                type: string
+                format: date
+              quantity:
+                type: number
+                minimum: 0
         substituted_from:
           type: string
       description: >-

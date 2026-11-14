@@ -94,7 +94,10 @@ export interface DemandLine {
   unit: CanonicalUnit;
   required: number;
   available: number;
+  allocated: number;
+  missing: number;
   sufficient: boolean;
+  allocations: { lot_id: string; expiry_date: string; quantity: number }[];
   /** Set when this line is a confirmed substitute for another ingredient. */
   substituted_from?: string;
 }
