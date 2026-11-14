@@ -32,6 +32,7 @@ from ..models import (
     SubstitutionSuggestion,
 )
 from ..store import SQLiteStore, ingredient_aliases
+from .allocation import Allocation, allocate
 from .importer import (
     PackagedMealSource,
     TheMealDBSource,
@@ -122,15 +123,25 @@ class FreshService:
         return collection[item_id]
 
     def stock(self):
-        stock = defaultdict(lambda: decimal(0))
-        for item in self.state.pantry.values():
-            if (
-                item.ingredient_id
-                and item.resolution_status == "resolved"
-                and item.expiry_date >= self.today()
-            ):
-                stock[item.ingredient_id] += decimal(item.quantity)
-        return dict(stock)
+        return self.stock_for()
+
+    def allocation(self, ingredient_id, required):
+        ingredient = self.ingredient(ingredient_id)
+        return allocate(
+            self.state.pantry.values(),
+            ingredient_id,
+            ingredient.canonical_unit,
+            required,
+            self.today(),
+        )
+
+    def stock_for(self, ingredient_ids=None):
+        ids = ingredient_ids or self.catalog.keys()
+        return {
+            ingredient_id: result.available
+            for ingredient_id in ids
+            if (result := self.allocation(ingredient_id, 0)).available > 0
+        }
 
     def demands(self, recipe, servings, substitutions):
         selected = {}
@@ -178,37 +189,45 @@ class FreshService:
         return dict(total)
 
     def lines(self, demands):
-        stock = self.stock()
         aggregate = self.aggregate(demands)
+        allocations = {i: self.allocation(i, q) for i, q in aggregate.items()}
         return [
-            DemandLine(
-                ingredient_id=i,
-                name=self.catalog[i].name,
-                unit=self.catalog[i].canonical_unit,
-                required=q,
-                available=stock.get(i, 0),
-                sufficient=stock.get(i, 0) >= aggregate[i],
-                substituted_from=original,
-            )
-            for i, q, original in demands
+            self._line(i, q, original, allocations[i], aggregate[i]) for i, q, original in demands
         ]
 
+    def _line(
+        self, ingredient_id, required, substituted_from, result: Allocation, aggregate_required
+    ):
+        allocated = min(result.allocated, decimal(required))
+        return DemandLine(
+            ingredient_id=ingredient_id,
+            name=self.catalog[ingredient_id].name,
+            unit=self.catalog[ingredient_id].canonical_unit,
+            required=required,
+            available=result.available,
+            allocated=allocated,
+            missing=max(decimal(0), decimal(required) - allocated),
+            sufficient=result.allocated >= decimal(aggregate_required),
+            allocations=[
+                {"lot_id": lot.lot_id, "expiry_date": lot.expiry_date, "quantity": lot.quantity}
+                for lot in result.lots
+            ],
+            substituted_from=substituted_from,
+        )
+
     def summary(self, recipe):
-        stock = self.stock()
         missing_names, expiring = [], []
         covered = 0
         for line in recipe.ingredients:
             name = self.catalog[line.ingredient_id].name
-            available = stock.get(line.ingredient_id, 0)
-            if available >= decimal(line.quantity):
+            result = self.allocation(line.ingredient_id, line.quantity)
+            if result.sufficient:
                 covered += 1
             else:
                 missing_names.append(name)
-            if available >= decimal(line.quantity) and any(
-                p.ingredient_id == line.ingredient_id
-                and p.resolution_status == "resolved"
-                and 0 <= (p.expiry_date - self.today()).days <= self.expiry_days
-                for p in self.state.pantry.values()
+            if result.sufficient and any(
+                0 <= (lot.expiry_date - self.today()).days <= self.expiry_days
+                for lot in result.lots
             ):
                 expiring.append(name)
         total = len(recipe.ingredients)
@@ -237,11 +256,12 @@ class FreshService:
     def validate_new_choices(self, recipe, servings, substitutions, previous=()):
         demands = self.demands(recipe, servings, substitutions)
         total = self.aggregate(demands)
-        stock = self.stock()
         for sub in substitutions:
             if (
                 sub not in previous
-                and stock.get(sub.substitute_ingredient_id, 0) < total[sub.substitute_ingredient_id]
+                and not self.allocation(
+                    sub.substitute_ingredient_id, total[sub.substitute_ingredient_id]
+                ).sufficient
             ):
                 raise invalid("The selected substitute has insufficient usable stock")
 
@@ -532,7 +552,7 @@ class FreshService:
         servings = servings if servings is not None else recipe.base_servings
         demands = self.demands(recipe, servings, substitutions)
         lines = self.lines(demands)
-        stock, suggestions = self.stock(), []
+        suggestions = []
         for line in lines:
             if line.sufficient or line.substituted_from:
                 continue
@@ -547,7 +567,7 @@ class FreshService:
                     continue
                 required = positive_rounded(decimal(line.required) * decimal(rule.ratio))
                 others = sum(decimal(q) for i, q, _ in demands if i == substitute.id)
-                if stock.get(substitute.id, 0) < decimal(required) + others:
+                if not self.allocation(substitute.id, decimal(required) + others).sufficient:
                     continue
                 suggestions.append(
                     SubstitutionSuggestion(
@@ -721,7 +741,6 @@ class FreshService:
                 "EDITS_WOULD_BE_LOST",
                 "Regenerating will overwrite shopping edits. Confirm with force=true.",
             )
-        stock = self.stock()
         totals = self.aggregate(self.basket_demands())
         keep = {
             s.id: s
@@ -729,7 +748,7 @@ class FreshService:
             if s.origin == "manual" and not data.resetAll
         }
         for i, required in totals.items():
-            quantity = max(decimal(0), required - stock.get(i, 0))
+            quantity = self.allocation(i, required).missing
             if quantity <= 0:
                 continue
             item = ShoppingItem(
@@ -836,26 +855,20 @@ class FreshService:
         total = self.aggregate(
             self.demands(self.recipe(data.recipe_id), data.servings, data.substitutions)
         )
-        for i, required in total.items():
-            remaining = decimal(required)
-            lots = sorted(
-                (
-                    p
-                    for p in self.state.pantry.values()
-                    if p.ingredient_id == i
-                    and p.resolution_status == "resolved"
-                    and p.expiry_date >= self.today()
-                ),
-                key=lambda p: p.expiry_date,
-            )
-            for lot in lots:
-                consumed = min(decimal(lot.quantity), remaining)
-                lot.quantity = rounded(decimal(lot.quantity) - consumed)
-                remaining -= consumed
+        allocations = {i: self.allocation(i, required) for i, required in total.items()}
+        for result in allocations.values():
+            if not result.sufficient:
+                raise ServiceError(
+                    409,
+                    "INSUFFICIENT_STOCK",
+                    "Insufficient usable stock. Inventory and history are unchanged.",
+                )
+        for result in allocations.values():
+            for lot_allocation in result.lots:
+                lot = self.state.pantry[lot_allocation.lot_id]
+                lot.quantity = rounded(decimal(lot.quantity) - lot_allocation.quantity)
                 if lot.quantity <= 0:
                     del self.state.pantry[lot.id]
-                if remaining <= 0:
-                    break
         record = CookingRecord(
             id=self.store.next_id("h"),
             recipe_id=data.recipe_id,

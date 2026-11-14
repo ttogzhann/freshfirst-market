@@ -130,8 +130,17 @@ class DemandLine(Model):
     unit: CanonicalUnit
     required: Nonnegative
     available: Nonnegative
+    allocated: Nonnegative
+    missing: Nonnegative
     sufficient: bool
+    allocations: list["LotAllocation"] = Field(default_factory=list)
     substituted_from: str | None = None
+
+
+class LotAllocation(Model):
+    lot_id: str
+    expiry_date: date
+    quantity: Nonnegative
 
 
 class SubstitutionSuggestion(Model):

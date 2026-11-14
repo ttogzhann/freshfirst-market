@@ -156,7 +156,10 @@ export function toLines(
       unit: ing?.canonical_unit ?? "pcs",
       required: d.quantity,
       available,
+      allocated: Math.min(available, d.quantity),
+      missing: Math.max(0, d.quantity - available),
       sufficient: available >= d.quantity,
+      allocations: [],
       ...(d.substituted_from ? { substituted_from: d.substituted_from } : {}),
     };
   });
