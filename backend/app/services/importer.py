@@ -101,7 +101,9 @@ class CuratedCatalogSource:
             required_provenance = {
                 "source_name": "FreshFirst original-authored",
                 "source_url": "original-authored://freshfirst/catalog/v1",
-                "attribution": "Original recipes authored for FreshFirst; no external attribution claimed.",
+                "attribution": (
+                    "Original recipes authored for FreshFirst; no external attribution claimed."
+                ),
                 "captured_at_utc": "2026-11-14T00:00:00+00:00",
             }
             if provenance != required_provenance:
