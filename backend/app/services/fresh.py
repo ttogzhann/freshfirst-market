@@ -34,6 +34,7 @@ from ..models import (
 from ..store import SQLiteStore, ingredient_aliases
 from .allocation import Allocation, allocate
 from .importer import (
+    CuratedCatalogSource,
     PackagedMealSource,
     TheMealDBSource,
     normalize_meal_with_audit,
@@ -611,12 +612,16 @@ class FreshService:
             suggestions=suggestions,
         )
 
-    def seed_recipes(self):
+    def seed_recipes(self, include_catalog=False):
         # Validate the complete package before writing anything. Unlike live import,
         # unsupported baseline records are fatal and existing records are never replaced.
+        sources = [PackagedMealSource()]
+        if include_catalog:
+            sources.append(CuratedCatalogSource())
         accepted = [
             (normalize_meal_with_audit(raw, self.catalog, self.store.resolve_alias), raw)
-            for raw in PackagedMealSource().meals()
+            for source in sources
+            for raw in source.meals()
         ]
         with self.store.transaction():
             for normalized, raw in accepted:

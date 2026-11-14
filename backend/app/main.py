@@ -18,6 +18,7 @@ from .config import expiry_days
 from .errors import ServiceError
 from .routers import auth, basket, catalog, cooking, pantry, shopping
 from .services.fresh import FreshService
+from .services.importer import TheMealDBSource
 
 logger = logging.getLogger(__name__)
 CONTRACT = Path(__file__).resolve().parents[2] / "openapi.yaml"
@@ -40,7 +41,9 @@ def create_app(
     async def lifespan(app):
         try:
             if startup_import:
-                await run_in_threadpool(service.seed_recipes)
+                await run_in_threadpool(
+                    service.seed_recipes, isinstance(service.source, TheMealDBSource)
+                )
             yield
         finally:
             if owns_service:

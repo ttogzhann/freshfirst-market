@@ -115,6 +115,8 @@ ALIASES.update(
         "cheddar cheese": "cheese",
         "parmesan cheese": "parmesan",
         "double cream": "cream",
+        "cream": "cream",
+        "stock": "stock",
         "mushroom": "mushroom",
         "spaghetti": "pasta",
         "penne rigate": "pasta",

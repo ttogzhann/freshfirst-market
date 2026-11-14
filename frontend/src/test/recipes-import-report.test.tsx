@@ -48,6 +48,7 @@ async function openReport() {
 }
 
 beforeEach(() => {
+  HTMLElement.prototype.scrollIntoView = vi.fn();
   service = createMockService({ seedPantry: false });
   setService(service);
   vi.spyOn(service, "importRecipes").mockResolvedValue(importReport);
@@ -87,4 +88,26 @@ describe("recipe import report dialog", () => {
       expect(trigger).toHaveFocus();
     },
   );
+});
+
+describe("recipe discovery filters", () => {
+  it("combines title search and category selection deterministically", async () => {
+    showRecipes();
+    const search = await screen.findByPlaceholderText("Search recipes…");
+    fireEvent.change(search, { target: { value: "Rice" } });
+    expect(await screen.findByText("Chicken Fried Rice")).toBeInTheDocument();
+    expect(await screen.findByText("Salmon Rice Bowl")).toBeInTheDocument();
+
+    fireEvent.click(screen.getAllByRole("combobox")[1]);
+    fireEvent.click(await screen.findByRole("option", { name: "Chicken" }));
+    expect(await screen.findByText("Chicken Fried Rice")).toBeInTheDocument();
+    expect(screen.queryByText("Salmon Rice Bowl")).not.toBeInTheDocument();
+  });
+
+  it("shows an explicit empty state for an unmatched combined filter", async () => {
+    showRecipes();
+    const search = await screen.findByPlaceholderText("Search recipes…");
+    fireEvent.change(search, { target: { value: "No such FreshFirst dish" } });
+    expect(await screen.findByText("No recipes found")).toBeInTheDocument();
+  });
 });
