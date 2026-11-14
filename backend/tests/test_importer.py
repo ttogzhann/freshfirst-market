@@ -296,5 +296,5 @@ def test_startup_seeds_offline_baseline_without_live_import_or_page_read_fetches
         register_test_account(client)
         assert client.get("/api/pantry").json() == []
         for _ in range(3):
-            assert len(client.get("/api/recipes").json()) == 15
+            assert len(client.get("/api/recipes").json()) == 95
     assert source.calls == 0

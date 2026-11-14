@@ -98,7 +98,9 @@ describe("recipe discovery filters", () => {
     expect(await screen.findByText("Chicken Fried Rice")).toBeInTheDocument();
     expect(await screen.findByText("Salmon Rice Bowl")).toBeInTheDocument();
 
-    fireEvent.click(screen.getAllByRole("combobox")[1]);
+    const categoryCombobox = screen.getAllByRole("combobox")[1];
+    if (!categoryCombobox) throw new Error("Category combobox is missing");
+    fireEvent.click(categoryCombobox);
     fireEvent.click(await screen.findByRole("option", { name: "Chicken" }));
     expect(await screen.findByText("Chicken Fried Rice")).toBeInTheDocument();
     expect(screen.queryByText("Salmon Rice Bowl")).not.toBeInTheDocument();
