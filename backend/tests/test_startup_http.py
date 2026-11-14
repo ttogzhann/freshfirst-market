@@ -97,7 +97,7 @@ def test_normal_http_offline_startup_restart_and_failure(tmp_path):
                 "flour": 125,
             },
         }
-        assert len(details) == 15
+        assert len(details) == 95
         for recipe in details:
             assert recipe["id"] == f"rec_{recipe['external_id']}"
             assert recipe["base_servings"] == 1
@@ -140,8 +140,8 @@ def test_normal_http_offline_startup_restart_and_failure(tmp_path):
         assert saved_http_state(client) == before
     with sqlite3.connect(database) as connection:
         assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
-        assert connection.execute("SELECT COUNT(*) FROM recipes").fetchone()[0] == 15
-        assert connection.execute("SELECT COUNT(*) FROM recipe_ingredients").fetchone()[0] == 102
+        assert connection.execute("SELECT COUNT(*) FROM recipes").fetchone()[0] == 95
+        assert connection.execute("SELECT COUNT(*) FROM recipe_ingredients").fetchone()[0] == 422
         assert (
             connection.execute("SELECT COUNT(*) FROM ingredients WHERE id='milk'").fetchone()[0]
             == 1
@@ -175,6 +175,6 @@ def test_actual_adapter_captured_import_preserves_basket_and_ids():
                     "imported": 0,
                     "updated": 15,
                     "skipped": [],
-                    "total_recipes": 15,
+                    "total_recipes": 95,
                 }
                 assert saved_http_state(client) == before

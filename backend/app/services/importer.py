@@ -81,6 +81,69 @@ class PackagedMealSource:
             raise RuntimeError("Packaged recipe baseline is invalid") from exc
 
 
+class CuratedCatalogSource:
+    """Reviewed original-authored records for the expanded production catalog."""
+
+    PATH = Path(__file__).resolve().parents[1] / "data" / "catalog" / "manifest.json"
+
+    def meals(self):
+        try:
+            manifest = json.loads(self.PATH.read_bytes())
+            if manifest.get("catalog_version") != "ff68-original-v1":
+                raise ValueError("Invalid catalog version")
+            encoded = json.dumps(
+                manifest.get("records"), ensure_ascii=False, sort_keys=True, separators=(",", ":")
+            ).encode("utf-8")
+            expected_hash = "sha256:" + hashlib.sha256(encoded).hexdigest()
+            if manifest.get("catalog_hash") != expected_hash:
+                raise ValueError("Catalog manifest hash mismatch")
+            provenance = manifest["provenance"]
+            required_provenance = {
+                "source_name": "FreshFirst original-authored",
+                "source_url": "original-authored://freshfirst/catalog/v1",
+                "attribution": (
+                    "Original recipes authored for FreshFirst; no external attribution claimed."
+                ),
+                "captured_at_utc": "2026-11-14T00:00:00+00:00",
+            }
+            if provenance != required_provenance:
+                raise ValueError("Invalid catalog provenance")
+            records = manifest["records"]
+            if not isinstance(records, list) or not 80 <= len(records) <= 100:
+                raise ValueError("Catalog must contain 80-100 records")
+            ids = [record.get("idMeal") for record in records]
+            titles = [record.get("strMeal", "").strip().casefold() for record in records]
+            if len(set(ids)) != len(ids) or len(set(titles)) != len(titles):
+                raise ValueError("Catalog contains duplicate recipe identities")
+            for record in records:
+                if (
+                    record.get("source_name") != provenance["source_name"]
+                    or record.get("source_url", "").startswith("original-authored://") is False
+                    or not record.get("strDescription", "").strip()
+                    or not record.get("strPrepTime", "").isdigit()
+                    or record.get("catalog_version") != manifest["catalog_version"]
+                    or record.get("provenance")
+                    != "Original recipe authored for FreshFirst; no external attribution claimed."
+                ):
+                    raise ValueError("Invalid catalog record metadata")
+                title = record["strMeal"].strip()
+                if title.startswith("FreshFirst ") and " Recipe " in title:
+                    raise ValueError("Placeholder catalog title")
+                ingredient_names = [
+                    record.get(f"strIngredient{index}", "").strip()
+                    for index in range(1, 21)
+                    if record.get(f"strIngredient{index}", "").strip()
+                ]
+                if len(ingredient_names) < 3 or not all(
+                    name.casefold() in record["strInstructions"].casefold()
+                    for name in ingredient_names
+                ):
+                    raise ValueError("Catalog instructions are generic or incomplete")
+                yield record
+        except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
+            raise RuntimeError("Curated recipe catalog is invalid") from exc
+
+
 class TheMealDBSource:
     BASE_URL = "https://www.themealdb.com/api/json/v1/1/"
 
@@ -207,6 +270,9 @@ def normalize_meal_with_audit(meal: dict, catalog=None, resolver=None):
         )
     if not quantities:
         raise invalid("Recipe has no quantified ingredients")
+    for ingredient_id, quantity in quantities.items():
+        if decimal(quantity) <= 0:
+            raise invalid(f"Ingredient quantity must be positive for {ingredient_id}")
     # TheMealDB has no yield field. One serving represents one complete source recipe
     # batch, explicitly described to users in the backend README; no guessed yield.
     try:
@@ -258,6 +324,10 @@ def normalize_meal_with_audit(meal: dict, catalog=None, resolver=None):
             ),
             "captured_at": meal.get("captured_at", meal.get("captured_at_utc", "unknown")),
             "imported_at": datetime.now(timezone.utc).isoformat(),
+            "description": meal.get("strDescription", ""),
+            "prep_time_minutes": meal.get("strPrepTime", ""),
+            "catalog_version": meal.get("catalog_version", ""),
+            "provenance": meal.get("provenance", ""),
         }
         return recipe, tuple(new_ingredients.values()), tuple(aliases), tuple(source_lines), source
     except ValidationError as exc:

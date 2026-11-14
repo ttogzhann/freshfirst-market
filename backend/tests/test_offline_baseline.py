@@ -179,7 +179,7 @@ def test_explicit_live_import_upsert_and_source_failure(monkeypatch):
         service.source = Source(list(PackagedMealSource().meals()))
         for _ in range(2):
             report = client.post("/api/recipes/import").json()
-            assert (report["imported"], report["updated"], report["total_recipes"]) == (0, 15, 15)
+            assert (report["imported"], report["updated"], report["total_recipes"]) == (0, 15, 95)
         assert service.state == before
         service.source = TheMealDBSource()
         monkeypatch.setattr(TheMealDBSource, "meals", blocked_source)
