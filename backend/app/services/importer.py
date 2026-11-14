@@ -5,7 +5,7 @@ import json
 import ssl
 import string
 from collections.abc import Iterable
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Protocol
 
@@ -14,7 +14,8 @@ from pydantic import ValidationError
 
 from ..catalog import ALIASES, CATALOG
 from ..errors import ServiceError, invalid
-from ..models import Recipe, RecipeIngredient
+from ..ingredient_aliases import normalize_alias
+from ..models import Ingredient, Recipe, RecipeIngredient
 from .quantities import decimal, parse_measure, rounded
 
 
@@ -125,13 +126,25 @@ class TheMealDBSource:
             ) from exc
 
 
-def normalize_meal(meal: dict, catalog=None, resolver=None) -> Recipe:
+def _profiles(meal):
+    profiles = meal.get("reviewed_ingredient_profiles", meal.get("ingredient_profiles", {}))
+    if isinstance(profiles, list):
+        profiles = {item.get("source_name"): item for item in profiles if isinstance(item, dict)}
+    if not isinstance(profiles, dict):
+        return {}
+    return {normalize_alias(str(key)): value for key, value in profiles.items()}
+
+
+def normalize_meal_with_audit(meal: dict, catalog=None, resolver=None):
     if catalog is None:
         catalog = CATALOG
     for key in ("idMeal", "strMeal", "strCategory", "strInstructions", "strMealThumb"):
         if not isinstance(meal.get(key), str) or not meal[key].strip():
             raise invalid(f"Missing required source field {key}")
     quantities = {}
+    new_ingredients = {}
+    source_lines = []
+    profiles = _profiles(meal)
     for index in range(1, 21):
         raw_name = meal.get(f"strIngredient{index}")
         measure = meal.get(f"strMeasure{index}")
@@ -147,17 +160,57 @@ def normalize_meal(meal: dict, catalog=None, resolver=None) -> Recipe:
         ingredient_id = ALIASES.get(name)
         if resolver is not None:
             match = resolver(raw_name)
+            if match.status != "exact" and match.ingredient_ids:
+                raise invalid(f"Ambiguous or unconfirmed ingredient identity {raw_name!r}")
             ingredient_id = match.ingredient_ids[0] if match.status == "exact" else None
         if ingredient_id is None:
-            raise invalid(f"Unsupported ingredient identity {raw_name!r}")
+            profile = profiles.get(normalize_alias(raw_name))
+            if not isinstance(profile, dict):
+                raise invalid(
+                    f"Unsupported ingredient identity {raw_name!r}; "
+                    "unreviewed identity profile required"
+                )
+            canonical_id = profile.get("canonical_id", profile.get("id"))
+            display_name = profile.get("display_name", profile.get("name"))
+            category = profile.get("category")
+            canonical_unit = profile.get("canonical_unit", profile.get("dimension"))
+            if not all(
+                isinstance(value, str) and value.strip()
+                for value in (canonical_id, display_name, category, canonical_unit)
+            ) or canonical_unit not in {"g", "ml", "pcs"}:
+                raise invalid(f"Invalid reviewed identity profile for {raw_name!r}")
+            if canonical_id in catalog and catalog[canonical_id].model_dump() != {
+                "id": canonical_id,
+                "name": display_name.strip(),
+                "category": category.strip(),
+                "canonical_unit": canonical_unit,
+            }:
+                raise invalid(f"Conflicting canonical identity profile for {raw_name!r}")
+            ingredient_id = canonical_id
+            new_ingredients[canonical_id] = Ingredient(
+                id=canonical_id,
+                name=display_name.strip(),
+                category=category.strip(),
+                canonical_unit=canonical_unit,
+            )
+            catalog = {**catalog, canonical_id: new_ingredients[canonical_id]}
         quantity = parse_measure(measure, catalog[ingredient_id].canonical_unit)
         quantities[ingredient_id] = quantities.get(ingredient_id, decimal(0)) + decimal(quantity)
+        source_lines.append(
+            {
+                "raw_name": raw_name,
+                "raw_measure": measure,
+                "ingredient_id": ingredient_id,
+                "quantity_canonical": quantity,
+                "unit": catalog[ingredient_id].canonical_unit,
+            }
+        )
     if not quantities:
         raise invalid("Recipe has no quantified ingredients")
     # TheMealDB has no yield field. One serving represents one complete source recipe
     # batch, explicitly described to users in the backend README; no guessed yield.
     try:
-        return Recipe(
+        recipe = Recipe(
             id=f"rec_{meal['idMeal']}",
             external_id=meal["idMeal"],
             title=meal["strMeal"].strip(),
@@ -170,5 +223,46 @@ def normalize_meal(meal: dict, catalog=None, resolver=None) -> Recipe:
                 for i, q in quantities.items()
             ],
         )
+        aliases = []
+        for ingredient_id in new_ingredients:
+            source_name = next(
+                line["raw_name"] for line in source_lines if line["ingredient_id"] == ingredient_id
+            )
+            normalized = normalize_alias(source_name)
+            alias_id = (
+                "alias_import_"
+                + hashlib.sha256(f"{normalized}|en|{ingredient_id}".encode("utf-8")).hexdigest()[
+                    :32
+                ]
+            )
+            aliases.append(
+                {
+                    "id": alias_id,
+                    "ingredient_id": ingredient_id,
+                    "locale": "en",
+                    "alias_text": source_name.strip(),
+                    "normalized_text": normalized,
+                    "alias_type": "source",
+                    "confidence": 1,
+                    "provenance": meal.get("source_name", "reviewed-source"),
+                }
+            )
+        source = {
+            "source_name": meal.get("source_name", "TheMealDB"),
+            "source_url": meal.get(
+                "source_url",
+                meal.get(
+                    "lookup_url",
+                    f"https://www.themealdb.com/api/json/v1/1/lookup.php?i={meal['idMeal']}",
+                ),
+            ),
+            "captured_at": meal.get("captured_at", meal.get("captured_at_utc", "unknown")),
+            "imported_at": datetime.now(timezone.utc).isoformat(),
+        }
+        return recipe, tuple(new_ingredients.values()), tuple(aliases), tuple(source_lines), source
     except ValidationError as exc:
         raise invalid(f"Invalid source recipe: {exc}") from exc
+
+
+def normalize_meal(meal: dict, catalog=None, resolver=None) -> Recipe:
+    return normalize_meal_with_audit(meal, catalog, resolver)[0]

@@ -26,7 +26,7 @@ def test_fresh_sqlite_schema_is_repeat_safe_and_preserves_lot_columns(tmp_path):
         } <= columns
         assert (
             connection.exec_driver_sql("SELECT MAX(version) FROM schema_migrations").scalar_one()
-            == 3
+            == 4
         )
     first.close()
 
@@ -50,7 +50,7 @@ def test_postgresql_schema_is_repeat_safe():
         assert "resolution_status" in columns
         assert (
             connection.exec_driver_sql("SELECT MAX(version) FROM schema_migrations").scalar_one()
-            == 3
+            == 4
         )
     store.close()
 
@@ -143,7 +143,7 @@ def test_sqlite_migration_failure_rolls_back_and_can_be_retried(tmp_path):
     with store.engine.connect() as connection:
         assert (
             connection.exec_driver_sql("SELECT MAX(version) FROM schema_migrations").scalar_one()
-            == 3
+            == 4
         )
     store.close()
 

@@ -223,6 +223,39 @@ ingredient_aliases = Table(
     Column("provenance", String, nullable=False),
     Index("ix_ingredient_aliases_normalized", "normalized_text", "locale"),
 )
+import_sources = Table(
+    "import_sources",
+    metadata,
+    identity(),
+    Column(
+        "recipe_id",
+        String,
+        ForeignKey("recipes.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+    ),
+    Column("external_id", String, nullable=False, unique=True),
+    Column("source_name", String, nullable=False),
+    Column("source_url", String, nullable=False),
+    Column("captured_at", String, nullable=False),
+    Column("imported_at", String, nullable=False),
+    Column("raw_source", JSON, nullable=False),
+    Column("raw_sha256", String, nullable=False),
+)
+import_source_lines = Table(
+    "import_source_lines",
+    metadata,
+    identity(),
+    Column(
+        "source_id", String, ForeignKey("import_sources.id", ondelete="CASCADE"), nullable=False
+    ),
+    Column("line_number", Integer, nullable=False),
+    Column("raw_name", String, nullable=False),
+    Column("raw_measure", String, nullable=False),
+    Column("ingredient_id", String, ForeignKey("ingredients.id"), nullable=False),
+    Column("quantity_canonical", Numeric(14, 2), nullable=False),
+    Column("unit", String, nullable=False),
+)
 
 
 @dataclass
@@ -522,8 +555,12 @@ class SQLiteStore:
         with self.lock:
             if getattr(self.local, "state", None) is not None:
                 raise RuntimeError("Nested store transactions are not supported")
+            committed = False
+            catalog_before = self._catalog_cache
             try:
                 with self.engine.begin() as connection:
+                    self.local.connection = connection
+                    self.local.audit_ops = []
                     if self.engine.dialect.name == "postgresql":
                         state_id = f"state:{self.owner_id}" if self.owner_id else "state"
                         connection.execute(
@@ -533,8 +570,99 @@ class SQLiteStore:
                     previous = deepcopy(self.local.state)
                     yield self.local.state
                     self._save(connection, previous, self.local.state)
+                    for audit in self.local.audit_ops:
+                        self._write_import_audit(connection, *audit)
+                    committed = True
             finally:
+                if not committed:
+                    self._catalog_cache = catalog_before
+                self.local.connection = None
+                self.local.audit_ops = None
                 self.local.state = None
+
+    def _transaction_connection(self):
+        connection = getattr(self.local, "connection", None)
+        if connection is None:
+            raise RuntimeError("Import writes must occur inside a store transaction")
+        return connection
+
+    def stage_import_catalog(self, new_ingredients, aliases):
+        """Stage reviewed catalog rows and aliases in the caller's transaction."""
+        connection = self._transaction_connection()
+        for ingredient in new_ingredients:
+            connection.execute(
+                dialect_insert(ingredients, self.engine)
+                .values(**ingredient.model_dump())
+                .on_conflict_do_nothing(index_elements=["id"])
+            )
+        for row in aliases:
+            conflicts = (
+                connection.execute(
+                    select(ingredient_aliases.c.ingredient_id).where(
+                        ingredient_aliases.c.normalized_text == row["normalized_text"],
+                        ingredient_aliases.c.locale == row["locale"],
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            if any(ingredient_id != row["ingredient_id"] for ingredient_id in conflicts):
+                raise ValueError(
+                    f"Imported alias conflicts with an existing identity: {row['alias_text']}"
+                )
+            connection.execute(
+                dialect_insert(ingredient_aliases, self.engine)
+                .values(**row)
+                .on_conflict_do_nothing(index_elements=["id"])
+            )
+        if new_ingredients:
+            self._catalog_cache = {**self._catalog_cache, **{i.id: i for i in new_ingredients}}
+
+    def stage_import_audit(self, recipe, raw, source_lines, source):
+        """Persist raw source and every original ingredient line for auditability."""
+        self._transaction_connection()
+        self.local.audit_ops.append((recipe, raw, source_lines, source))
+
+    def _write_import_audit(self, connection, recipe, raw, source_lines, source):
+        import hashlib
+        import json
+
+        encoded = json.dumps(raw, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+        source_id = f"source_{recipe.external_id}"
+        row = {
+            "id": source_id,
+            "recipe_id": recipe.id,
+            "external_id": recipe.external_id,
+            "source_name": source.get("source_name", "TheMealDB"),
+            "source_url": source.get(
+                "source_url",
+                source.get(
+                    "lookup_url",
+                    f"https://www.themealdb.com/api/json/v1/1/lookup.php?i={recipe.external_id}",
+                ),
+            ),
+            "captured_at": str(source.get("captured_at", source.get("captured_at_utc", "unknown"))),
+            "imported_at": source["imported_at"],
+            "raw_source": raw,
+            "raw_sha256": hashlib.sha256(encoded.encode("utf-8")).hexdigest(),
+        }
+        connection.execute(
+            dialect_insert(import_sources, self.engine)
+            .values(**row)
+            .on_conflict_do_update(index_elements=["external_id"], set_=row)
+        )
+        connection.execute(
+            import_source_lines.delete().where(import_source_lines.c.source_id == source_id)
+        )
+        for index, line in enumerate(source_lines, start=1):
+            connection.execute(
+                import_source_lines.insert().values(
+                    id=f"{source_id}:{index}",
+                    source_id=source_id,
+                    line_number=index,
+                    **line,
+                )
+            )
 
     def close(self):
         self.engine.dispose()

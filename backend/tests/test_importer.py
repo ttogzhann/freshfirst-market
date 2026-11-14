@@ -5,12 +5,14 @@ from pathlib import Path
 import httpx
 import pytest
 from conftest import ContractClient, Source, meal, register_test_account
+from sqlalchemy import event, func, select
 
 from app.errors import ServiceError
 from app.main import create_app
 from app.services.fresh import FreshService
 from app.services.importer import TheMealDBSource, normalize_meal
 from app.services.quantities import normalize, parse_measure
+from app.store import SQLiteStore, import_source_lines, import_sources, ingredients, recipes
 
 
 @pytest.mark.parametrize(
@@ -76,21 +78,130 @@ def test_import_is_idempotent_updates_source_ids_and_reports_skips(client, servi
     assert normalize_meal(original).external_id == normalize_meal(updated).external_id
 
 
-def test_import_target_is_bounded_and_duplicates_do_not_count_twice():
+def test_import_accepts_all_valid_reviewed_records_and_duplicates_do_not_count_twice():
     payload = [meal(str(n)) for n in range(25)]
     service = FreshService(source=Source([payload[0], payload[0]] + payload), seed=False)
     first = service.import_recipes()
-    assert first.imported == first.total_recipes == 20
+    assert first.imported == first.total_recipes == 25
     second = service.import_recipes()
     assert second.imported == 0
-    assert second.updated == 20
-    assert len({r.external_id for r in service.state.recipes.values()}) == 20
+    assert second.updated == 25
+    assert len({r.external_id for r in service.state.recipes.values()}) == 25
 
 
 def test_duplicate_ingredient_lines_aggregate_after_normalization():
     recipe = normalize_meal(meal(ingredients=[("Milk", "1 l"), ("Milk", "100ml")]))
     assert len(recipe.ingredients) == 1
     assert recipe.ingredients[0].quantity == 1100
+
+
+def test_import_creates_reviewed_new_ingredient_alias_and_audit_rows(tmp_path):
+    raw = meal("new-profile", ingredients=[("Kelp flakes", "1kg")]) | {
+        "source_name": "reviewed-fixture",
+        "lookup_url": "https://source.example/recipes/new-profile",
+        "captured_at_utc": "2026-11-14T00:00:00+00:00",
+        "reviewed_ingredient_profiles": {
+            "Kelp flakes": {
+                "canonical_id": "kelp_flakes",
+                "display_name": "Kelp flakes",
+                "category": "Pantry staples",
+                "canonical_unit": "g",
+            }
+        },
+    }
+    service = FreshService(
+        store=SQLiteStore(f"sqlite:///{tmp_path / 'new.db'}"), source=Source([raw]), seed=False
+    )
+    report = service.import_recipes()
+    assert (report.imported, report.skipped) == (1, [])
+    with service.store.engine.connect() as connection:
+        ingredient = (
+            connection.execute(select(ingredients).where(ingredients.c.id == "kelp_flakes"))
+            .mappings()
+            .one()
+        )
+        assert (ingredient["category"], ingredient["canonical_unit"]) == ("Pantry staples", "g")
+        assert (
+            connection.scalar(
+                select(func.count())
+                .select_from(import_sources)
+                .where(import_sources.c.external_id == "new-profile")
+            )
+            == 1
+        )
+        line = connection.execute(select(import_source_lines)).mappings().one()
+        assert (line["raw_name"], line["raw_measure"], line["quantity_canonical"]) == (
+            "Kelp flakes",
+            "1kg",
+            1000,
+        )
+    assert service.store.resolve_alias("  KELP   flakes ").ingredient_ids == ("kelp_flakes",)
+    service.store.close()
+    reopened = FreshService(
+        store=SQLiteStore(f"sqlite:///{tmp_path / 'new.db'}"), source=Source([raw]), seed=False
+    )
+    repeat = reopened.import_recipes()
+    assert (repeat.imported, repeat.updated) == (0, 1)
+    with reopened.store.engine.connect() as connection:
+        assert (
+            connection.scalar(
+                select(func.count())
+                .select_from(ingredients)
+                .where(ingredients.c.id == "kelp_flakes")
+            )
+            == 1
+        )
+        assert (
+            connection.scalar(
+                select(func.count())
+                .select_from(import_sources)
+                .where(import_sources.c.external_id == "new-profile")
+            )
+            == 1
+        )
+    reopened.store.close()
+
+
+def test_import_catalog_and_audit_roll_back_on_late_recipe_line_failure(tmp_path):
+    raw = meal("late-failure", ingredients=[("New herb", "1kg")]) | {
+        "reviewed_ingredient_profiles": {
+            "New herb": {
+                "canonical_id": "new_herb",
+                "display_name": "New herb",
+                "category": "Herbs",
+                "canonical_unit": "g",
+            }
+        }
+    }
+    service = FreshService(
+        store=SQLiteStore(f"sqlite:///{tmp_path / 'rollback.db'}"), source=Source([raw]), seed=False
+    )
+
+    def fail(_connection, _cursor, statement, _parameters, _context, _executemany):
+        if "INSERT INTO recipe_ingredients" in statement:
+            raise RuntimeError("injected import line failure")
+
+    event.listen(service.store.engine, "before_cursor_execute", fail)
+    with pytest.raises(RuntimeError, match="injected import line failure"):
+        service.import_recipes()
+    event.remove(service.store.engine, "before_cursor_execute", fail)
+    with service.store.engine.connect() as connection:
+        assert (
+            connection.scalar(
+                select(func.count()).select_from(ingredients).where(ingredients.c.id == "new_herb")
+            )
+            == 0
+        )
+        assert (
+            connection.scalar(
+                select(func.count())
+                .select_from(recipes)
+                .where(recipes.c.external_id == "late-failure")
+            )
+            == 0
+        )
+        assert connection.scalar(select(func.count()).select_from(import_sources)) == 0
+    service.store.close()
 
 
 @pytest.mark.parametrize(
