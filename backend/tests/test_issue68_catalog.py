@@ -7,7 +7,7 @@ from sqlalchemy import func, select
 
 from app.services.fresh import FreshService
 from app.services.importer import CuratedCatalogSource, normalize_meal
-from app.store import SQLiteStore, recipes
+from app.store import SQLiteStore, import_source_lines, import_sources, recipes
 
 
 def test_curated_manifest_is_hashed_substantive_and_strictly_normalizable():
@@ -43,3 +43,50 @@ def test_production_seed_is_repeat_safe_and_supports_combined_discovery(tmp_path
     assert set(service.state.recipes) == first_ids
     with service.store.engine.connect() as connection:
         assert connection.scalar(select(func.count()).select_from(recipes)) == 95
+
+
+def test_catalog_bootstrap_preserves_newer_recipe_and_complete_source_audit(tmp_path):
+    from copy import deepcopy
+
+    from conftest import Source
+
+    database = f"sqlite:///{tmp_path / 'newer-catalog.db'}"
+    raw = deepcopy(next(CuratedCatalogSource().meals()))
+    raw["strMeal"] = "Updated spinach omelet"
+    raw["strMeasure1"] = "4"
+    raw["captured_at_utc"] = "2026-11-15T00:00:00+00:00"
+    service = FreshService(store=SQLiteStore(database), source=Source([raw]), seed=False)
+    service.import_recipes()
+    recipe_id = f"rec_{raw['idMeal']}"
+    expected_recipe = deepcopy(service.state.recipes[recipe_id])
+
+    def audit(store):
+        with store.engine.connect() as connection:
+            source = dict(
+                connection.execute(
+                    select(import_sources).where(import_sources.c.external_id == raw["idMeal"])
+                )
+                .mappings()
+                .one()
+            )
+            lines = [
+                dict(row)
+                for row in connection.execute(
+                    select(import_source_lines)
+                    .where(import_source_lines.c.source_id == source["id"])
+                    .order_by(import_source_lines.c.line_number)
+                ).mappings()
+            ]
+            return source, lines
+
+    expected_audit = audit(service.store)
+    for _ in range(2):
+        service.seed_recipes(include_catalog=True)
+        assert service.state.recipes[recipe_id] == expected_recipe
+        assert audit(service.store) == expected_audit
+    service.store.close()
+    restarted = FreshService(store=SQLiteStore(database), seed=False)
+    restarted.seed_recipes(include_catalog=True)
+    assert restarted.state.recipes[recipe_id] == expected_recipe
+    assert audit(restarted.store) == expected_audit
+    restarted.store.close()

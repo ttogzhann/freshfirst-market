@@ -626,8 +626,8 @@ class FreshService:
         with self.store.transaction():
             for normalized, raw in accepted:
                 recipe, _, _, source_lines, source = normalized
-                self._upsert_recipe(recipe, missing_only=True)
-                self.store.stage_import_audit(recipe, raw, source_lines, source)
+                if self._upsert_recipe(recipe, missing_only=True) is not None:
+                    self.store.stage_import_audit(recipe, raw, source_lines, source)
 
     def _upsert_recipe(self, recipe, missing_only=False):
         existing = next(
