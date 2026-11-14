@@ -112,6 +112,10 @@ export interface SubstitutionSuggestion {
 
 export interface RecipeDetail extends RecipeSummary {
   servings: number;
+  original_servings?: number;
+  adapted_servings?: number;
+  feasible_servings?: number;
+  limiting_lines?: string[];
   lines: DemandLine[];
   suggestions: SubstitutionSuggestion[];
 }
@@ -121,6 +125,10 @@ export interface BasketItem {
   recipe_id: string;
   servings: number;
   substitutions: ConfirmedSubstitution[];
+  original_servings?: number;
+  adapted_servings?: number;
+  feasible_servings?: number;
+  limiting_lines?: string[];
 }
 
 export interface BasketView {
@@ -149,6 +157,10 @@ export interface CookRequest {
 export interface CookPreview {
   recipe_id: string;
   servings: number;
+  original_servings?: number;
+  adapted_servings?: number;
+  feasible_servings?: number;
+  limiting_lines?: string[];
   lines: DemandLine[];
   can_cook: boolean;
 }
@@ -158,6 +170,8 @@ export interface CookingRecord {
   recipe_id: string;
   recipe_title: string;
   servings: number;
+  original_servings?: number;
+  adapted_servings?: number;
   cooked_at: string;
   consumed: { ingredient_id: string; quantity: number }[];
 }

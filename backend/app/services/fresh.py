@@ -195,6 +195,26 @@ class FreshService:
             self._line(i, q, original, allocations[i], aggregate[i]) for i, q, original in demands
         ]
 
+    def feasible_servings(self, recipe, substitutions):
+        """Return the greatest fully covered recipe quantity in the supported range."""
+        feasible = 0
+        for servings in range(1, 9):
+            if all(
+                line.sufficient
+                for line in self.lines(self.demands(recipe, servings, substitutions))
+            ):
+                feasible = servings
+            else:
+                # Requirements only grow with servings, so later counts cannot recover.
+                break
+        return feasible
+
+    def limiting_lines(self, recipe, substitutions, feasible):
+        if feasible >= 8:
+            return []
+        lines = self.lines(self.demands(recipe, max(1, feasible + 1), substitutions))
+        return [line.ingredient_id for line in lines if not line.sufficient]
+
     def _line(
         self, ingredient_id, required, substituted_from, result: Allocation, aggregate_required
     ):
@@ -552,6 +572,7 @@ class FreshService:
         servings = servings if servings is not None else recipe.base_servings
         demands = self.demands(recipe, servings, substitutions)
         lines = self.lines(demands)
+        feasible = self.feasible_servings(recipe, substitutions)
         suggestions = []
         for line in lines:
             if line.sufficient or line.substituted_from:
@@ -582,6 +603,10 @@ class FreshService:
         return RecipeDetail(
             **self.summary(recipe).model_dump(),
             servings=servings,
+            original_servings=recipe.base_servings,
+            adapted_servings=servings,
+            feasible_servings=feasible,
+            limiting_lines=self.limiting_lines(recipe, substitutions, feasible),
             lines=lines,
             suggestions=suggestions,
         )
@@ -682,11 +707,22 @@ class FreshService:
     @atomic
     def get_basket(self):
         totals = self.aggregate(self.basket_demands())
+        items = []
+        for item in self.state.basket.values():
+            recipe = self.recipe(item.recipe_id)
+            feasible = self.feasible_servings(recipe, item.substitutions)
+            items.append(
+                BasketItemWithRecipe(
+                    **item.model_dump(),
+                    recipe=recipe,
+                    original_servings=recipe.base_servings,
+                    adapted_servings=item.servings,
+                    feasible_servings=feasible,
+                    limiting_lines=self.limiting_lines(recipe, item.substitutions, feasible),
+                )
+            )
         return BasketView(
-            items=[
-                BasketItemWithRecipe(**item.model_dump(), recipe=self.recipe(item.recipe_id))
-                for item in self.state.basket.values()
-            ],
+            items=items,
             totals=self.lines([(i, q, None) for i, q in totals.items()]),
         )
 
@@ -830,11 +866,17 @@ class FreshService:
         return item
 
     def preview(self, data):
-        demands = self.demands(self.recipe(data.recipe_id), data.servings, data.substitutions)
+        recipe = self.recipe(data.recipe_id)
+        demands = self.demands(recipe, data.servings, data.substitutions)
         lines = self.lines(demands)
+        feasible = self.feasible_servings(recipe, data.substitutions)
         return CookPreview(
             recipe_id=data.recipe_id,
             servings=data.servings,
+            original_servings=recipe.base_servings,
+            adapted_servings=data.servings,
+            feasible_servings=feasible,
+            limiting_lines=self.limiting_lines(recipe, data.substitutions, feasible),
             lines=lines,
             can_cook=all(line.sufficient for line in lines),
         )
@@ -874,6 +916,8 @@ class FreshService:
             recipe_id=data.recipe_id,
             recipe_title=self.recipe(data.recipe_id).title,
             servings=data.servings,
+            original_servings=self.recipe(data.recipe_id).base_servings,
+            adapted_servings=data.servings,
             cooked_at=datetime.now(timezone.utc),
             consumed=[Consumption(ingredient_id=i, quantity=q) for i, q in total.items()],
         )
@@ -882,12 +926,26 @@ class FreshService:
 
     @atomic
     def list_history(self):
-        return self.state.history
+        records = []
+        for record in self.state.history:
+            if record.original_servings is None or record.adapted_servings is None:
+                recipe = self.recipe(record.recipe_id)
+                record.original_servings = recipe.base_servings
+                record.adapted_servings = record.servings
+            records.append(record)
+        return records
 
     @atomic
     def dashboard(self):
         ranked = self.rank([self.summary(r) for r in self.state.recipes.values()])
         urgent = [r for r in ranked if r.match.expiring_used]
+        recent = []
+        for record in self.state.history[:5]:
+            if record.original_servings is None or record.adapted_servings is None:
+                recipe = self.recipe(record.recipe_id)
+                record.original_servings = recipe.base_servings
+                record.adapted_servings = record.servings
+            recent.append(record)
         return Dashboard(
             total_items=len(self.state.pantry),
             expiring_soon=sum(
@@ -896,5 +954,5 @@ class FreshService:
             ),
             expired=sum(p.expiry_date < self.today() for p in self.state.pantry.values()),
             recommendations=(urgent or ranked)[:4],
-            recent_history=self.state.history[:5],
+            recent_history=recent,
         )
