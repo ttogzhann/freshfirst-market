@@ -26,9 +26,7 @@ def test_curated_manifest_is_hashed_substantive_and_strictly_normalizable():
 def test_manifest_rejects_placeholder_or_generic_records(tmp_path, monkeypatch):
     manifest = json.loads(CuratedCatalogSource.PATH.read_text(encoding="utf8"))
     manifest["records"][0]["strMeal"] = "FreshFirst Breakfast Recipe 001"
-    monkeypatch.setattr(
-        CuratedCatalogSource, "PATH", tmp_path / "manifest.json"
-    )
+    monkeypatch.setattr(CuratedCatalogSource, "PATH", tmp_path / "manifest.json")
     tmp_path.joinpath("manifest.json").write_text(json.dumps(manifest), encoding="utf8")
     with pytest.raises(RuntimeError, match="invalid"):
         list(CuratedCatalogSource().meals())
