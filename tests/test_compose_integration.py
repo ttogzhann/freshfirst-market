@@ -244,6 +244,47 @@ def test_real_compose_postgres_workflow():
         if os.getenv("FRESHFIRST_COMPOSE_TEST_FORCE_FAILURE") == "1":
             raise AssertionError("forced cleanup probe")
 
+        # Execute the same full-corpus rollback/retry/restart probe used by the
+        # SQLite suite against a fresh isolated PostgreSQL database in this stack.
+        # Runtime dependencies suffice; no pytest or dev packages enter the image.
+        probe = (ROOT / "backend/tests/catalog_transaction_probe.py").read_text(
+            encoding="utf8"
+        )
+        probe += """
+from sqlalchemy import create_engine
+from sqlalchemy.engine import make_url
+import uuid
+probe_name = "ff68_probe_" + uuid.uuid4().hex
+admin = create_engine(os.environ["DATABASE_URL"], isolation_level="AUTOCOMMIT")
+probe_url = make_url(os.environ["DATABASE_URL"]).set(database=probe_name).render_as_string(hide_password=False)
+with admin.connect() as connection:
+    connection.exec_driver_sql('CREATE DATABASE "' + probe_name + '"')
+try:
+    report = verify_catalog_transactions(probe_url)
+    print("FF68_PG_PROBE:" + json.dumps(report, sort_keys=True))
+finally:
+    with admin.connect() as connection:
+        connection.exec_driver_sql('DROP DATABASE "' + probe_name + '" WITH (FORCE)')
+    admin.dispose()
+"""
+        result = runtime.run("exec", "-T", "app", "python", "-c", probe, timeout=120)
+        report_line = next(
+            line
+            for line in result.stdout.splitlines()
+            if line.startswith("FF68_PG_PROBE:")
+        )
+        report = json.loads(report_line.removeprefix("FF68_PG_PROBE:"))
+        assert report == {
+            "accepted_catalog": 80,
+            "catalog_lines": 492,
+            "late_failure_rolled_back": True,
+            "restart_unchanged": True,
+            "baseline_preserved": 15,
+        }
+        print(
+            "Expanded PostgreSQL catalog: 80 records / 492 lines; late failure, repeat and process restart PASS"
+        )
+
         owner.restore()
         owner.register(email, password)
         recipes = owner.request("GET", "/api/recipes", expected={200})[1]
