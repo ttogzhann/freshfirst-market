@@ -4,6 +4,9 @@ import difflib
 import unicodedata
 from dataclasses import dataclass
 
+FUZZY_MATCH_THRESHOLD = 0.86
+FUZZY_MATCH_MARGIN = 0.04
+
 
 def normalize_alias(value: str) -> str:
     """Normalize human/source text without changing its meaning."""
@@ -61,13 +64,16 @@ def resolve_rows(rows, value: str) -> AliasMatch:
         )
     if len(ids) > 1:
         return AliasMatch("ambiguous", ids)
-    best = []
+    best_by_ingredient = {}
     for row in rows:
         score = difflib.SequenceMatcher(None, normalized, row["normalized_text"]).ratio()
-        if score >= 0.86:
-            best.append((score, row))
+        if score >= FUZZY_MATCH_THRESHOLD:
+            current = best_by_ingredient.get(row["ingredient_id"])
+            if current is None or score > current[0]:
+                best_by_ingredient[row["ingredient_id"]] = (score, row)
+    best = list(best_by_ingredient.values())
     best.sort(key=lambda item: (-item[0], item[1]["normalized_text"], item[1]["ingredient_id"]))
-    if best and (len(best) == 1 or best[0][0] > best[1][0] + 0.04):
+    if best and (len(best) == 1 or best[0][0] > best[1][0] + FUZZY_MATCH_MARGIN):
         score, row = best[0]
         return AliasMatch(
             "suggestion",

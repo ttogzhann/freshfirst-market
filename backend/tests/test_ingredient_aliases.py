@@ -81,6 +81,32 @@ def test_ambiguous_alias_is_not_auto_resolved_and_typo_requires_confirmation(tmp
     store.close()
 
 
+def test_fuzzy_resolution_compares_canonical_candidates_not_duplicate_aliases(tmp_path):
+    store = SQLiteStore(f"sqlite:///{tmp_path / 'fuzzy.db'}")
+    with store.engine.begin() as connection:
+        for alias_id, alias_text in (("test-milk-a", "milko"), ("test-milk-b", "milkos")):
+            connection.execute(
+                dialect_insert(ingredient_aliases, store.engine)
+                .values(
+                    id=alias_id,
+                    ingredient_id="milk",
+                    locale="en",
+                    alias_text=alias_text,
+                    normalized_text=normalize_alias(alias_text),
+                    alias_type="typo",
+                    confidence=0.5,
+                    provenance="test",
+                )
+                .on_conflict_do_nothing(index_elements=["id"])
+            )
+
+    match = store.resolve_alias("milko")
+    assert match.status == "suggestion"
+    assert match.ingredient_ids == ("milk",)
+    assert match.requires_confirmation is True
+    store.close()
+
+
 def test_database_catalog_is_authoritative_after_restart(tmp_path):
     url = f"sqlite:///{tmp_path / 'catalog.db'}"
     store = SQLiteStore(url)

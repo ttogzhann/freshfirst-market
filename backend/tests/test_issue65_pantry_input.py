@@ -150,6 +150,29 @@ def test_suggestion_and_ambiguity_require_explicit_confirmation(client, service)
     }
 
 
+def test_rejected_or_incompatible_resolution_does_not_mutate_unknown_lot(client, service):
+    response = pantry_label(client, "molok", quantity=2, unit="g")
+    assert response.status_code == 200
+    item = response.json()
+    before = item.copy()
+
+    rejected = client.post(f"/api/pantry/{item['id']}/resolve", json={"ingredient_id": "beef"})
+    assert rejected.status_code == 422
+    unchanged = client.get("/api/pantry").json()[0]
+    assert unchanged["ingredient_id"] == before["ingredient_id"] is None
+    assert unchanged["resolution_status"] == before["resolution_status"] == "suggested"
+    assert unchanged["original_label"] == before["original_label"] == "molok"
+    assert service.stock() == {}
+
+    incompatible = client.post(f"/api/pantry/{item['id']}/resolve", json={"ingredient_id": "milk"})
+    assert incompatible.status_code == 422
+    unchanged = client.get("/api/pantry").json()[0]
+    assert unchanged["ingredient_id"] is None
+    assert unchanged["resolution_status"] == "suggested"
+    assert unchanged["quantity"] == 2
+    assert service.stock() == {}
+
+
 def test_unresolved_input_survives_restart_and_invalid_input_is_atomic(client, service):
     unresolved = pantry_label(client, "dragonfruit", quantity=5)
     assert unresolved.status_code == 200

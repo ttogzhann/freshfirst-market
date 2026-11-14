@@ -123,6 +123,34 @@ describe("recoverable pantry and shopping form errors", () => {
     );
   });
 
+  it("requires explicit confirmation before an unresolved pantry lot becomes stock", async () => {
+    const unresolved = {
+      id: "p-unresolved",
+      ingredient_id: null,
+      quantity: 2,
+      expiry_date: "2026-11-30",
+      original_label: "molok",
+      resolution_status: "suggested" as const,
+      resolution_candidates: [
+        { id: "milk", name: "Milk", category: "Dairy & Eggs", canonical_unit: "ml" as const },
+      ],
+    };
+    vi.spyOn(service, "listPantry").mockResolvedValue([unresolved]);
+    const resolve = vi.spyOn(service, "resolvePantryItem").mockResolvedValue({
+      ...unresolved,
+      ingredient_id: "milk",
+      resolution_status: "resolved",
+      resolution_candidates: [],
+    });
+
+    show(<Pantry />);
+    expect(await screen.findByText("molok", { exact: true })).toBeInTheDocument();
+    expect(screen.getByText(/Choose a canonical ingredient/)).toBeInTheDocument();
+    expect(screen.getByText("2 pcs")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Confirm Milk" }));
+    await waitFor(() => expect(resolve).toHaveBeenCalledWith("p-unresolved", "milk"));
+  });
+
   it("retains a rejected pantry update and retries the corrected value", async () => {
     const egg = await service.createPantryItem({
       ingredient_id: "egg",
