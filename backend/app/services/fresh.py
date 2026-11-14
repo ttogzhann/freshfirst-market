@@ -32,7 +32,11 @@ from ..models import (
     SubstitutionSuggestion,
 )
 from ..store import SQLiteStore, ingredient_aliases
-from .importer import PackagedMealSource, TheMealDBSource, normalize_meal
+from .importer import (
+    PackagedMealSource,
+    TheMealDBSource,
+    normalize_meal_with_audit,
+)
 from .quantities import FACTORS, decimal, normalize, positive_rounded, rounded, scale
 
 
@@ -566,12 +570,14 @@ class FreshService:
         # Validate the complete package before writing anything. Unlike live import,
         # unsupported baseline records are fatal and existing records are never replaced.
         accepted = [
-            normalize_meal(raw, self.catalog, self.store.resolve_alias)
+            (normalize_meal_with_audit(raw, self.catalog, self.store.resolve_alias), raw)
             for raw in PackagedMealSource().meals()
         ]
         with self.store.transaction():
-            for recipe in accepted:
+            for normalized, raw in accepted:
+                recipe, _, _, source_lines, source = normalized
                 self._upsert_recipe(recipe, missing_only=True)
+                self.store.stage_import_audit(recipe, raw, source_lines, source)
 
     def _upsert_recipe(self, recipe, missing_only=False):
         existing = next(
@@ -582,19 +588,22 @@ class FreshService:
             if missing_only:
                 return None
             recipe.id = existing.id
-        elif not missing_only and len(self.state.recipes) >= 20:
-            return None
         self.state.recipes[recipe.id] = recipe
         return "updated" if existing else "imported"
 
     def import_recipes(self):
-        # Network I/O outside inventory lock; serialize importers and commit only after
-        # a successful source traversal. A failed fetch cannot partially replace recipes.
+        # Reviewed import policy: accept every source record that passes strict
+        # identity-profile/alias and exact-quantity validation; there is no count
+        # ceiling that can silently discard otherwise valid reviewed records.
+        # Network I/O stays outside the write transaction, so failed traversal
+        # cannot partially replace recipes.
         with self.import_lock:
             report, accepted = ImportReport(), {}
             for raw in self.source.meals():
                 try:
-                    recipe = normalize_meal(raw, self.catalog, self.store.resolve_alias)
+                    normalized = normalize_meal_with_audit(
+                        raw, self.catalog, self.store.resolve_alias
+                    )
                 except ServiceError as exc:
                     report.skipped.append(
                         ImportSkip(
@@ -604,12 +613,38 @@ class FreshService:
                         )
                     )
                     continue
-                accepted[recipe.external_id] = recipe
-                if len(accepted) >= 20:
-                    break
+                recipe, new_ingredients, aliases, source_lines, source = normalized
+                accepted[recipe.external_id] = (
+                    recipe,
+                    new_ingredients,
+                    aliases,
+                    source_lines,
+                    source,
+                    raw,
+                )
             with self.store.transaction():
-                for recipe in accepted.values():
+                staged_ingredients = {}
+                staged_aliases = {}
+                for _, (_, new_ingredients, aliases, _, _, _) in accepted.items():
+                    for ingredient in new_ingredients:
+                        previous = staged_ingredients.get(ingredient.id)
+                        if previous is not None and previous != ingredient:
+                            raise invalid(f"Conflicting identity profile for {ingredient.id!r}")
+                        staged_ingredients[ingredient.id] = ingredient
+                    for alias in aliases:
+                        previous = staged_aliases.get(alias["normalized_text"])
+                        if (
+                            previous is not None
+                            and previous["ingredient_id"] != alias["ingredient_id"]
+                        ):
+                            raise invalid(f"Conflicting imported alias {alias['alias_text']!r}")
+                        staged_aliases[alias["normalized_text"]] = alias
+                self.store.stage_import_catalog(
+                    tuple(staged_ingredients.values()), tuple(staged_aliases.values())
+                )
+                for recipe, _, _, source_lines, source, raw in accepted.values():
                     result = self._upsert_recipe(recipe)
+                    self.store.stage_import_audit(recipe, raw, source_lines, source)
                     if result == "updated":
                         report.updated += 1
                     elif result == "imported":
