@@ -9,6 +9,7 @@ import json
 import re
 
 from ..catalog import ALIASES, CATALOG
+from ..ingredient_aliases import normalize_alias
 from .quantities import parse_measure
 
 VERSION = "ff68-original-v2"
@@ -123,7 +124,9 @@ def validate_catalog(manifest):
         title = record.get("strMeal", "")
         if not isinstance(title, str) or not title.strip():
             raise CatalogValidationError("MISSING_TITLE", identity)
-        normalized_title = " ".join(title.casefold().split())
+        normalized_title = normalize_alias(title)
+        if normalized_title.startswith("freshfirst ") and " recipe " in f" {normalized_title} ":
+            raise CatalogValidationError("PLACEHOLDER_TITLE", identity)
         if identity in ids or normalized_title in titles:
             raise CatalogValidationError("DUPLICATE_IDENTITY", identity)
         ids.add(identity)
@@ -156,7 +159,8 @@ def validate_catalog(manifest):
             0 <= cook <= 180
             and 0 <= extra <= 240
             and 1 <= portions <= 8
-            and record.get("base_servings") == 1
+            and type(record.get("base_servings")) is int
+            and record["base_servings"] == 1
         ):
             raise CatalogValidationError("INVALID_TIMING_OR_YIELD", identity)
         expected_heading = (

@@ -109,6 +109,7 @@ def _manifest_with_change(monkeypatch, tmp_path, mutate):
         ("duplicate_amounts", "DUPLICATE_CORE_INGREDIENTS"),
         ("duplicate_changed_amounts", "DUPLICATE_CORE_INGREDIENTS"),
         ("generic", "GENERIC_INSTRUCTIONS"),
+        ("placeholder", "PLACEHOLDER_TITLE"),
         ("missing_vanilla", "MISSING_DEFINING_INGREDIENT"),
         ("missing_parsley", "MISSING_DEFINING_INGREDIENT"),
         ("bad_unit", "INVALID_QUANTITY_OR_UNIT"),
@@ -132,6 +133,8 @@ def test_editorial_checks_reject_resigned_invalid_records(monkeypatch, tmp_path,
                     target[key] = value
             if defect == "duplicate_changed_amounts":
                 target["strMeasure1"] = "8"
+        elif defect == "placeholder":
+            target["strMeal"] = "FreshFirst Breakfast Recipe 080"
         elif defect == "generic":
             target["strInstructions"] = (
                 target["strInstructions"].split(". ", 2)[0]

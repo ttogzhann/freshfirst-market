@@ -10,14 +10,14 @@ import subprocess
 import sys
 from copy import deepcopy
 
-from sqlalchemy import select, text
+from sqlalchemy import func, select, text
 from sqlalchemy.exc import IntegrityError
 
 from app.auth import AuthService
 from app.models import BasketInput, CookRequest, PantryInput, ShoppingInput
 from app.services.fresh import FreshService
 from app.services.importer import CuratedCatalogSource
-from app.store import SQLiteStore, metadata
+from app.store import SQLiteStore, import_source_lines, import_sources, metadata
 
 
 def snapshot(store):
@@ -98,6 +98,12 @@ def verify_catalog_transactions(database_url):
     assert owner.state.shopping == user_before.shopping
     assert owner.state.history == user_before.history
 
+    with store.engine.connect() as connection:
+        catalog_lines = connection.scalar(
+            select(func.count())
+            .select_from(import_source_lines.join(import_sources))
+            .where(import_sources.c.external_id.like("ff-original-%"))
+        )
     raw = deepcopy(next(CuratedCatalogSource().meals()))
     raw["strMeal"] = "Newer owner-preserved omelet source"
     raw["strMeasure1"] = "5"
@@ -113,7 +119,10 @@ def verify_catalog_transactions(database_url):
     service.seed_recipes(include_catalog=True)
     assert snapshot(store) == before_restart
     store.close()
-    script = "from app.services.fresh import FreshService; s=FreshService(seed=False); s.seed_recipes(include_catalog=True); s.store.close(); print('restart-ok')"
+    script = (
+        "from app.services.fresh import FreshService; s=FreshService(seed=False); "
+        "s.seed_recipes(include_catalog=True); s.store.close(); print('restart-ok')"
+    )
     result = subprocess.run(
         [sys.executable, "-c", script],
         env={**os.environ, "DATABASE_URL": database_url},
@@ -127,8 +136,8 @@ def verify_catalog_transactions(database_url):
     assert snapshot(restarted) == before_restart
     restarted.close()
     return {
-        "accepted_catalog": 80,
-        "catalog_lines": 492,
+        "accepted_catalog": first.imported,
+        "catalog_lines": catalog_lines,
         "late_failure_rolled_back": True,
         "restart_unchanged": True,
         "baseline_preserved": len(before["recipes"]),

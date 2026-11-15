@@ -141,7 +141,8 @@ def test_normal_http_offline_startup_restart_and_failure(tmp_path):
     with sqlite3.connect(database) as connection:
         assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
         assert connection.execute("SELECT COUNT(*) FROM recipes").fetchone()[0] == 95
-        assert connection.execute("SELECT COUNT(*) FROM recipe_ingredients").fetchone()[0] == 422
+        # 102 genuine baseline lines plus 492 fully accounted authored-catalog lines.
+        assert connection.execute("SELECT COUNT(*) FROM recipe_ingredients").fetchone()[0] == 594
         assert (
             connection.execute("SELECT COUNT(*) FROM ingredients WHERE id='milk'").fetchone()[0]
             == 1

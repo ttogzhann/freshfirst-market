@@ -460,3 +460,178 @@ test("keeps each account's pantry data isolated in the real browser", async ({ p
   await expect(page.getByText("Chorizo", { exact: true })).toBeVisible();
   await expect(page.getByText("Pasta", { exact: true })).toBeHidden();
 });
+
+test("combines authenticated expanded-catalog filters with truthful loading, empty and error states", async ({
+  page,
+}) => {
+  await registerUser(page);
+  await goto(page, "/recipes");
+  await page.getByLabel("Sort recipes").selectOption("title");
+  await page.getByPlaceholder("Search recipes…").fill("salmon");
+  await page.getByRole("combobox").filter({ hasText: "All categories" }).click();
+  await page.getByRole("option", { name: "Seafood", exact: true }).click();
+  const cards = page.locator('a[href^="/recipes/rec_"]');
+  const seafood = [4, 13, 24, 33, 44, 64, 73].map(
+    (id) => `/recipes/rec_ff-original-${String(id).padStart(3, "0")}`,
+  );
+  await expect(cards).toHaveCount(seafood.length);
+  const firstOrder = await cards.evaluateAll((links) =>
+    links.map((link) => link.getAttribute("href")),
+  );
+  expect([...firstOrder].sort()).toEqual([...seafood].sort());
+  const titles = await cards.locator("p.font-display").allTextContents();
+  expect(titles).toEqual([...titles].sort((a, b) => a.localeCompare(b)));
+
+  // Combined filter must remain AND, rather than finding the dessert in Seafood.
+  await page.getByPlaceholder("Search recipes…").fill("Butter vanilla loaf");
+  await expect(page.getByText("No recipes found", { exact: true })).toBeVisible();
+  await expect(cards).toHaveCount(0);
+  await page.getByRole("combobox").filter({ hasText: "Seafood" }).click();
+  await page.getByRole("option", { name: "Dessert", exact: true }).click();
+  await expect(cards).toHaveCount(1);
+  await expect(cards.first()).toHaveAttribute("href", "/recipes/rec_ff-original-009");
+
+  let release!: () => void;
+  const gate = new Promise<void>((resolveGate) => {
+    release = resolveGate;
+  });
+  const handler = async (route: import("@playwright/test").Route) => {
+    if (new URL(route.request().url()).searchParams.get("query") !== "catalog-error-probe") {
+      await route.continue();
+      return;
+    }
+    await gate;
+    await route.fulfill({
+      status: 503,
+      contentType: "application/json",
+      body: JSON.stringify({
+        code: "CATALOG_UNAVAILABLE",
+        message: "Catalog verification temporarily unavailable",
+      }),
+    });
+  };
+  await page.route("**/api/recipes?**", handler);
+  await page.getByPlaceholder("Search recipes…").fill("catalog-error-probe");
+  await expect(page.getByText("Loading…", { exact: true })).toBeVisible();
+  await expect(cards).toHaveCount(0);
+  release();
+  await expect(
+    page.getByText("Catalog verification temporarily unavailable", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("No recipes found", { exact: true })).toBeHidden();
+  await expect(cards).toHaveCount(0);
+  await page.unroute("**/api/recipes?**", handler);
+  await page.getByPlaceholder("Search recipes…").fill("Butter vanilla loaf");
+  await expect(cards).toHaveCount(1);
+});
+
+test("cooks an expanded-catalog recipe through scaled basket, edited purchase, retry and restart", async ({
+  page,
+  browser,
+}) => {
+  const account = await registerUser(page);
+  await goto(page, "/pantry");
+  await addPantryItem(page, "Eggs", "8");
+  await addPantryItem(page, "Spinach", "200");
+  await addPantryItem(page, "Cheddar cheese", "80");
+  await addPantryItem(page, "Butter", "20");
+  await goto(page, "/recipes");
+  await page.getByPlaceholder("Search recipes…").fill("Spinach and cheddar omelet");
+  const omelet = page.locator('a[href="/recipes/rec_ff-original-001"]');
+  await expect(omelet).toContainText("4/5 ingredients covered");
+  await omelet.click();
+  await expect(
+    page.getByRole("heading", { name: "Spinach and cheddar omelet", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText(/One batch makes 2 portions/)).toBeVisible();
+  const eggLine = page.locator("li").filter({ has: page.getByText("Eggs", { exact: true }) });
+  await expect(eggLine).toContainText("4 pcs");
+  await page.getByRole("button", { name: "Increase batches" }).click();
+  await expect(eggLine).toContainText("8 pcs");
+  await expect(
+    page.locator("li").filter({ has: page.getByText("Spinach", { exact: true }) }),
+  ).toContainText("200 g");
+  await page.getByRole("button", { name: "Add to basket" }).click();
+  await goto(page, "/basket");
+  const scale = page.getByRole("combobox", { name: /for Spinach and cheddar omelet/ });
+  await expect(scale).toHaveValue("2");
+  await page.reload();
+  await expect(scale).toHaveValue("2");
+  await page.getByRole("link", { name: "Open shopping list" }).click();
+  await page.getByRole("button", { name: "Generate from basket" }).click();
+  const salt = page.locator("li").filter({ hasText: "Salt (generated)" });
+  await expect(salt.getByLabel("Quantity for Salt")).toHaveValue("2");
+  await salt.getByLabel("Quantity for Salt").fill("3");
+  await salt.getByRole("button", { name: "Save quantity" }).click();
+  await expect(salt.getByLabel("Quantity for Salt")).toHaveValue("3");
+  await salt.getByRole("checkbox").check();
+  await salt.getByLabel("Actual quantity (ml)").fill("3");
+  await salt.getByLabel("Expiry date").fill("2030-12-31");
+  const transferResponse = page.waitForResponse(
+    (response) =>
+      response.url().includes("/transfer-to-pantry") && response.request().method() === "POST",
+  );
+  await salt.getByRole("button", { name: "Confirm transfer to pantry" }).click();
+  const transferred = await transferResponse;
+  expect(transferred.status()).toBe(200);
+  await expect(salt.getByText("Added to pantry", { exact: true })).toBeVisible();
+
+  // A replay with the same authenticated request must not add another 3 ml.
+  const origin = `http://127.0.0.1:${runtime!.port}`;
+  const session = await (await page.request.get(`${origin}/api/auth/session`)).json();
+  const replay = await page.request.post(transferred.url(), {
+    data: { quantity: 3, expiry_date: "2030-12-31" },
+    headers: { Origin: origin, "X-CSRF-Token": session.csrf_token },
+  });
+  expect(replay.status()).toBe(200);
+  const pantryBefore = await (await page.request.get(`${origin}/api/pantry`)).json();
+  expect(
+    pantryBefore
+      .filter((item: { ingredient_id: string }) => item.ingredient_id === "salt")
+      .reduce((sum: number, item: { quantity: number }) => sum + item.quantity, 0),
+  ).toBe(3);
+
+  await goto(page, "/basket");
+  await page.getByRole("button", { name: "I Cooked This" }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByRole("button", { name: "Confirm & deduct" })).toBeEnabled();
+  await dialog.getByRole("button", { name: "Confirm & deduct" }).click();
+  await expect(dialog).toBeHidden();
+  let history = await (await page.request.get(`${origin}/api/cooking/history`)).json();
+  expect(history).toHaveLength(1);
+  expect(history[0]).toMatchObject({ recipe_id: "rec_ff-original-001", servings: 2 });
+  expect(
+    history[0].consumed.find((line: { ingredient_id: string }) => line.ingredient_id === "egg")
+      .quantity,
+  ).toBe(8);
+  await goto(page, "/");
+  await expect(
+    page
+      .locator("#cooking-history-records")
+      .getByText("Spinach and cheddar omelet", { exact: true }),
+  ).toBeVisible();
+  await recreateApp(runtime!);
+  await page.reload();
+  await expect(page.getByText(account.email, { exact: true })).toBeVisible();
+  history = await (await page.request.get(`${origin}/api/cooking/history`)).json();
+  expect(history).toHaveLength(1);
+  await goto(page, "/basket");
+  await expect(scale).toHaveValue("2");
+
+  const otherContext = await browser.newContext();
+  try {
+    const other = await otherContext.newPage();
+    await registerUser(other);
+    await goto(other, "/recipes");
+    await other.getByPlaceholder("Search recipes…").fill("Spinach and cheddar omelet");
+    await expect(other.locator('a[href="/recipes/rec_ff-original-001"]')).toContainText(
+      "0/5 ingredients covered",
+    );
+    const otherHistory = await (await other.request.get(`${origin}/api/cooking/history`)).json();
+    expect(otherHistory).toEqual([]);
+    const otherBasket = await (await other.request.get(`${origin}/api/basket`)).json();
+    expect(otherBasket.items).toEqual([]);
+  } finally {
+    await otherContext.close();
+  }
+});
