@@ -562,9 +562,31 @@ test("cooks an expanded-catalog recipe through scaled basket, edited purchase, r
   const salt = page.locator("li").filter({ hasText: "Salt (generated)" });
   await expect(salt.getByLabel("Quantity for Salt")).toHaveValue("2");
   await salt.getByLabel("Quantity for Salt").fill("3");
+  const savedQuantity = page.waitForResponse(
+    (response) =>
+      response.url().includes("/shopping-list/items/") &&
+      response.request().method() === "PATCH" &&
+      response.request().postDataJSON()?.quantity === 3,
+  );
   await salt.getByRole("button", { name: "Save quantity" }).click();
+  const quantityResponse = await savedQuantity;
+  expect(quantityResponse.status()).toBe(200);
+  expect(await quantityResponse.json()).toMatchObject({ quantity: 3, purchased: false });
+  await expect(salt.getByRole("button", { name: "Save quantity" })).toBeEnabled();
   await expect(salt.getByLabel("Quantity for Salt")).toHaveValue("3");
-  await salt.getByRole("checkbox").check();
+  const savedPurchase = page.waitForResponse(
+    (response) =>
+      response.url() === quantityResponse.url() &&
+      response.request().method() === "PATCH" &&
+      response.request().postDataJSON()?.purchased === true,
+  );
+  // The checkbox is server-controlled: await the mutation and refreshed state,
+  // rather than check()'s immediate state assertion after the native click.
+  await salt.getByRole("checkbox").click();
+  const purchaseResponse = await savedPurchase;
+  expect(purchaseResponse.status()).toBe(200);
+  expect(await purchaseResponse.json()).toMatchObject({ quantity: 3, purchased: true });
+  await expect(salt.getByRole("checkbox")).toBeChecked();
   await salt.getByLabel("Actual quantity (ml)").fill("3");
   await salt.getByLabel("Expiry date").fill("2030-12-31");
   const transferResponse = page.waitForResponse(
