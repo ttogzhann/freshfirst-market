@@ -40,7 +40,7 @@ def create_app(
     async def lifespan(app):
         try:
             if startup_import:
-                await run_in_threadpool(service.seed_recipes)
+                await run_in_threadpool(service.seed_recipes, True)
             yield
         finally:
             if owns_service:

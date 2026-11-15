@@ -81,6 +81,21 @@ class PackagedMealSource:
             raise RuntimeError("Packaged recipe baseline is invalid") from exc
 
 
+class CuratedCatalogSource:
+    """Explicitly authored recipes; full validation precedes any admitted record."""
+
+    PATH = Path(__file__).resolve().parents[1] / "data" / "catalog" / "manifest.json"
+
+    def meals(self):
+        from .catalog_quality import CatalogValidationError, validate_catalog
+
+        try:
+            manifest = json.loads(self.PATH.read_bytes())
+        except (OSError, ValueError, TypeError) as exc:
+            raise CatalogValidationError("UNREADABLE_MANIFEST") from exc
+        return iter(validate_catalog(manifest))
+
+
 class TheMealDBSource:
     BASE_URL = "https://www.themealdb.com/api/json/v1/1/"
 
@@ -207,6 +222,9 @@ def normalize_meal_with_audit(meal: dict, catalog=None, resolver=None):
         )
     if not quantities:
         raise invalid("Recipe has no quantified ingredients")
+    for ingredient_id, quantity in quantities.items():
+        if decimal(quantity) <= 0:
+            raise invalid(f"Ingredient quantity must be positive for {ingredient_id}")
     # TheMealDB has no yield field. One serving represents one complete source recipe
     # batch, explicitly described to users in the backend README; no guessed yield.
     try:
@@ -258,6 +276,10 @@ def normalize_meal_with_audit(meal: dict, catalog=None, resolver=None):
             ),
             "captured_at": meal.get("captured_at", meal.get("captured_at_utc", "unknown")),
             "imported_at": datetime.now(timezone.utc).isoformat(),
+            "description": meal.get("strDescription", ""),
+            "prep_time_minutes": meal.get("strPrepTime", ""),
+            "catalog_version": meal.get("catalog_version", ""),
+            "provenance": meal.get("provenance", ""),
         }
         return recipe, tuple(new_ingredients.values()), tuple(aliases), tuple(source_lines), source
     except ValidationError as exc:
