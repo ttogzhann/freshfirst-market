@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
@@ -6,12 +7,52 @@ import { RecipeImage } from "@/components/fresh/ui-bits";
 
 const catalog = JSON.parse(
   readFileSync(resolve("../backend/app/data/catalog/manifest.json"), "utf8"),
-) as { records: { idMeal: string; strMeal: string; strMealThumb: string }[] };
+) as {
+  catalog_hash: string;
+  records: { idMeal: string; strMeal: string; strMealThumb: string }[];
+};
 const fallback = "/recipe-images/fallback.webp";
 
 afterEach(cleanup);
 
 describe("RecipeImage", () => {
+  it("ships each catalog illustration and fallback with matching provenance and integrity", () => {
+    const directory = resolve("public/recipe-images");
+    const manifest = JSON.parse(readFileSync(resolve(directory, "manifest.json"), "utf8")) as {
+      sourceCatalogHash: string;
+      assets: {
+        id: string;
+        title: string;
+        file: string;
+        sha256: string;
+        width: number;
+        height: number;
+        bytes: number;
+      }[];
+    };
+    expect(manifest.sourceCatalogHash).toBe(catalog.catalog_hash);
+    expect(manifest.assets.length).toBeGreaterThanOrEqual(1);
+    expect(manifest.assets.some((asset) => asset.id === "fallback")).toBe(true);
+    const validIds = new Set([...catalog.records.map((recipe) => recipe.idMeal), "fallback"]);
+    for (const asset of manifest.assets) {
+      expect(validIds.has(asset.id)).toBe(true);
+      expect(asset.file).toBe(`${asset.id}.webp`);
+      const bytes = readFileSync(resolve(directory, asset.file));
+      expect(bytes.subarray(0, 4).toString()).toBe("RIFF");
+      expect(bytes.subarray(8, 12).toString()).toBe("WEBP");
+      expect(bytes.length).toBe(asset.bytes);
+      expect(createHash("sha256").update(bytes).digest("hex")).toBe(asset.sha256);
+      expect(asset.width).toBeGreaterThan(0);
+      expect(asset.height).toBeGreaterThan(0);
+      if (asset.id !== "fallback") {
+        expect(asset.title).toBe(
+          catalog.records.find((recipe) => recipe.idMeal === asset.id)?.strMeal,
+        );
+      }
+    }
+    expect(new Set(manifest.assets.map((asset) => asset.sha256)).size).toBe(manifest.assets.length);
+  });
+
   it.each(catalog.records)("uses the local illustration for $strMeal", (recipe) => {
     render(<RecipeImage src={recipe.strMealThumb} alt={recipe.strMeal} />);
     const image = screen.getByRole("img", { name: recipe.strMeal });
