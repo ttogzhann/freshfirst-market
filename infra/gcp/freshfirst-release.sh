@@ -32,7 +32,7 @@ if [[ $environment == dev ]]; then
   for key in POSTGRES_PASSWORD FRESHFIRST_AUTH_SECRET; do
     dev_value=$(grep -m1 "^$key=" "$env_file")
     [[ -n ${dev_value#*=} && $dev_value != *REPLACE* ]] || fail 'Replace dev secret placeholders'
-    [[ $dev_value != "$(grep -m1 "^$key=" "$app_dir/.env")" ]] || fail 'Dev and production secrets must differ'
+    # Dev secrets are independently generated at installation; never read production .env.
   done
 fi
 [[ -f $env_file && $(stat -c %u "$env_file") == 0 && $(stat -c %a "$env_file") == 600 ]] || fail 'Root-owned mode 0600 environment file required'

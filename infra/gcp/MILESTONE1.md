@@ -48,8 +48,9 @@ records and the artifact before OIDC authentication, then pulls that same digest
   metadata before expiry if a longer rollback window is required.
 - Configure `gcp-development` (automatic, no approval gate) and `gcp-production`
   (required reviewers, restricted deployment branch). In each set
-  `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT`, `GCP_PROJECT_ID`,
-  `GCP_VM_NAME`, `GCP_ZONE`. Dev also needs `GCP_ARTIFACT_REGISTRY_HOST`
+  `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_PROJECT_ID`, `GCP_VM_NAME`, `GCP_ZONE`.
+  Dev uses `GCP_DEPLOY_SERVICE_ACCOUNT`; production uses `GCP_SERVICE_ACCOUNT`.
+  Dev also needs `GCP_ARTIFACT_REGISTRY_HOST`
   (`us-central1-docker.pkg.dev`) and `GCP_IMAGE_REPOSITORY`
   (`us-central1-docker.pkg.dev/PROJECT/REPOSITORY/app`).
 - Reuse keyless OIDC, restrict trust to this repository/approved workflow and
@@ -78,6 +79,8 @@ Keep production `/opt/freshfirst/.env` values unchanged; ensure root ownership
 and mode 0600. Use an independent `/etc/freshfirst/dev.env` (root:root, 0600)
 from `dev.env.example`, replacing both secret placeholders with independently
 generated values. Never copy production secrets or data into dev.
+Dev secret independence is established by generating new values at installation;
+the dev helper does not read or compare production's environment file.
 
 | Environment | Compose project         | PostgreSQL volume                                | App endpoint                                  |
 | ----------- | ----------------------- | ------------------------------------------------ | --------------------------------------------- |
@@ -113,7 +116,7 @@ production retains its existing metadata-token login.
 ## Short-lived dev registry authentication
 
 After the build, a second existing OIDC auth action requests a **600-second**
-OAuth access token for `GCP_SERVICE_ACCOUNT`. It also refreshes the runner's
+OAuth access token for `GCP_DEPLOY_SERVICE_ACCOUNT`. It also refreshes the runner's
 temporary federated credential file for IAP/SSH, so a long build cannot leave SSH
 using an expired original GitHub OIDC credential. Action post-job cleanup removes
 both auth steps' temporary files; no service-account key is created. The action

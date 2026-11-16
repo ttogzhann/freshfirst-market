@@ -304,12 +304,12 @@ def test_helper_rejects_invalid_input_without_docker_or_network(
     assert not log.exists()
 
 
-def test_dev_cannot_reuse_production_secrets(shell_runtime):
+def test_dev_does_not_read_production_secrets(shell_runtime):
     run, log, _, config = shell_runtime
-    path = config / "dev.env"
-    path.write_text(path.read_text().replace("dev-password", "prod-password"))
-    assert run("dev").returncode != 0
-    assert not log.exists()
+    (config.parent / "app/.env").unlink()
+    result = run("dev")
+    assert result.returncode == 0, result.stderr
+    assert "metadata" not in log.read_text()
 
 
 def test_dev_cannot_override_isolation_with_duplicate_keys(shell_runtime):
@@ -385,6 +385,15 @@ def test_dev_workflow_mints_token_after_build_and_transports_only_via_stdin(
     )
     assert steps.index(token) + 1 == steps.index(deploy)
     assert token["with"]["token_format"] == "access_token"
+    assert token["with"]["service_account"] == "${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}"
+    assert (
+        next(
+            s
+            for s in steps
+            if s.get("uses", "").startswith("google-github-actions/auth")
+        )["with"]["service_account"]
+        == "${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}"
+    )
     assert token["with"]["access_token_lifetime"] == "600s"
     assert token["with"]["create_credentials_file"] == "true"
     assert token["with"]["export_environment_variables"] == "true"
