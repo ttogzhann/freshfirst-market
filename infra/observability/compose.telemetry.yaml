@@ -1,0 +1,10 @@
+# Explicit opt-in only; append after the image and dev overlays.
+services:
+  app:
+    environment:
+      FRESHFIRST_TELEMETRY_ENABLED: "true"
+      FRESHFIRST_TELEMETRY_ENVIRONMENT: ${FRESHFIRST_TELEMETRY_ENVIRONMENT:-dev}
+      FRESHFIRST_TELEMETRY_SAMPLE_RATIO: ${FRESHFIRST_TELEMETRY_SAMPLE_RATIO:-0.1}
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:?Supply collector or managed OTLP HTTP base endpoint}
+      OTEL_EXPORTER_OTLP_HEADERS: ${OTEL_EXPORTER_OTLP_HEADERS:-}

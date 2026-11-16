@@ -30,6 +30,7 @@ def create_app(
     trusted_origins: tuple[str, ...] | str | None = None,
 ):
     owns_service = service is None
+    telemetry = None
     service = (
         service
         if service is not None
@@ -43,6 +44,8 @@ def create_app(
                 await run_in_threadpool(service.seed_recipes, True)
             yield
         finally:
+            if telemetry is not None:
+                await run_in_threadpool(telemetry.shutdown)
             if owns_service:
                 await run_in_threadpool(service.store.close)
 
@@ -138,6 +141,12 @@ def create_app(
         return app.openapi_schema
 
     app.openapi = contract_openapi
+    if os.getenv("FRESHFIRST_TELEMETRY_ENABLED", "").lower() == "true":
+        from .telemetry import RequestTelemetry, configure
+
+        telemetry = configure(service.store.engine)
+        app.state.telemetry = telemetry
+        app.add_middleware(RequestTelemetry, telemetry=telemetry)
     return app
 
 

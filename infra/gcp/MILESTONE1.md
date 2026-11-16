@@ -4,6 +4,9 @@ Repository preparation only; none of these prerequisites has been installed or
 verified against production by this change. Existing VM, Terraform resources,
 persistent disk, Caddy URL and `render.yml` CI are retained.
 
+Optional backend telemetry is documented in [the observability setup](../observability/README.md).
+It is disabled by default and its separate overlay is not loaded by the release helper.
+
 ## Release path
 
 **Current state: check-only pushes; dev activation is held.** The Render workflow
