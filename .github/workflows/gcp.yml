@@ -1,58 +1,174 @@
-name: FreshFirst GCP deployment
+﻿name: FreshFirst GCP deployment
 
 on:
   workflow_run:
-    workflows: ["FreshFirst Render CI/CD"]
+    workflows: ["FreshFirst checks"]
     types: [completed]
     branches: [feature/render-deployment]
   workflow_dispatch:
     inputs:
       deploy:
-        description: Approve the GCP deployment job (the gcp-production environment still requires reviewers)
+        description: Explicitly approve promoting the verified dev digest to production
         required: true
         default: false
         type: boolean
+      dev_run_id:
+        description: Successful automatic GCP dev run ID (also used for rollback)
+        required: true
+        type: string
+      digest:
+        description: Exact sha256 digest recorded by that dev run
+        required: true
+        type: string
+      source_sha:
+        description: Full source commit recorded by that dev run
+        required: true
+        type: string
 
 permissions:
   contents: read
-  id-token: write
-
-concurrency:
-  group: freshfirst-gcp-production
-  cancel-in-progress: false
+  actions: read
 
 jobs:
-  deploy:
-    name: Deploy approved application to GCP VM
+  build-dev:
+    # Activation hold: remove false only after all MILESTONE1.md prerequisites are verified.
     if: >-
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
-      (github.event_name == 'workflow_dispatch' && inputs.deploy == true)
+      false &&
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'feature/render-deployment' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-24.04
-    environment: gcp-production
-    timeout-minutes: 20
+    environment: gcp-development
+    permissions:
+      contents: read
+      id-token: write
+    concurrency:
+      group: freshfirst-gcp-dev
+      cancel-in-progress: false
+    timeout-minutes: 30
     steps:
-      - name: Authenticate to Google Cloud with GitHub OIDC
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - uses: docker/setup-buildx-action@v3
+      - name: Authenticate Artifact Registry
+        env:
+          REGISTRY: ${{ vars.GCP_ARTIFACT_REGISTRY_HOST }}
+        run: gcloud auth configure-docker "$REGISTRY" --quiet
+      - name: Build the release image once
+        id: image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ vars.GCP_IMAGE_REPOSITORY }}:${{ github.event.workflow_run.head_sha }}
+          platforms: linux/amd64
+      - name: Mint short-lived dev pull credential after the build
+        id: dev-pull-token
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
-      - name: Install gcloud
-        uses: google-github-actions/setup-gcloud@v2
-      - name: Update the existing VM
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+          token_format: access_token
+          access_token_lifetime: 600s
+          create_credentials_file: true
+          export_environment_variables: true
+          cleanup_credentials: true
+      - name: Deploy immutable release to dev
         env:
+          REGISTRY_ACCESS_TOKEN: ${{ steps.dev-pull-token.outputs.access_token }}
+          IMAGE: ${{ vars.GCP_IMAGE_REPOSITORY }}@${{ steps.image.outputs.digest }}
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          GCP_VM_NAME: ${{ vars.GCP_VM_NAME }}
+          GCP_ZONE: ${{ vars.GCP_ZONE }}
+        run: |
+          set +x
+          set -euo pipefail
+          [[ "$IMAGE" =~ ^[a-z0-9-]+-docker\.pkg\.dev/[a-z0-9-]+/[a-z0-9_-]+/[a-z0-9/_-]+@sha256:[a-f0-9]{64}$ ]]
+          test -n "$REGISTRY_ACCESS_TOKEN"
+          printf '%s\n' "$REGISTRY_ACCESS_TOKEN" \
+            | gcloud compute ssh "$GCP_VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --tunnel-through-iap --quiet --ssh-flag=-T \
+              --command "sudo -n /usr/local/sbin/freshfirst-release dev '$IMAGE' --registry-token-stdin"
+          unset REGISTRY_ACCESS_TOKEN
+      - name: Record healthy dev release
+        env:
+          IMAGE: ${{ vars.GCP_IMAGE_REPOSITORY }}@${{ steps.image.outputs.digest }}
+          DIGEST: ${{ steps.image.outputs.digest }}
+          SOURCE_SHA: ${{ github.event.workflow_run.head_sha }}
+          CI_RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          release = {"image": os.environ["IMAGE"], "digest": os.environ["DIGEST"],
+                     "source_sha": os.environ["SOURCE_SHA"], "ci_run_id": int(os.environ["CI_RUN_ID"]),
+                     "repository": os.environ["GITHUB_REPOSITORY"],
+                     "dev_run_id": int(os.environ["GITHUB_RUN_ID"]), "dev_healthy": True}
+          with open("release.json", "w") as f: json.dump(release, f)
+          PY
+          cat release.json >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: healthy-dev-release
+          path: release.json
+          retention-days: 90
+
+  promote-production:
+    if: github.event_name == 'workflow_dispatch' && inputs.deploy == true && github.ref == 'refs/heads/feature/render-deployment'
+    runs-on: ubuntu-24.04
+    environment: gcp-production
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    concurrency:
+      group: freshfirst-gcp-production
+      cancel-in-progress: false
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: healthy-dev-release
+          run-id: ${{ inputs.dev_run_id }}
+          github-token: ${{ github.token }}
+          path: release
+      - name: Verify successful dev metadata and exact promotion inputs
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ inputs.dev_run_id }}
+          DIGEST: ${{ inputs.digest }}
+          SOURCE_SHA: ${{ inputs.source_sha }}
+        run: |
+          set -euo pipefail
+          [[ "$RUN_ID" =~ ^[0-9]+$ ]]
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID" > release/run.json
+          ci_run_id=$(python3 -c 'import json; r=json.load(open("release/release.json")); n=r["ci_run_id"]; assert type(n) is int and n > 0; print(n)')
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$ci_run_id" > release/ci.json
+          image=$(python3 infra/gcp/verify-promotion.py release/release.json release/run.json release/ci.json "$GITHUB_REPOSITORY" "$DIGEST" "$SOURCE_SHA" "$RUN_ID")
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Promote the dev-tested digest without rebuilding
+        env:
+          IMAGE: ${{ steps.release.outputs.image }}
           GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
           GCP_VM_NAME: ${{ vars.GCP_VM_NAME }}
           GCP_ZONE: ${{ vars.GCP_ZONE }}
         run: |
           set -euo pipefail
-          gcloud config set project "$GCP_PROJECT_ID"
-          gcloud compute ssh "$GCP_VM_NAME" --zone "$GCP_ZONE" --tunnel-through-iap --quiet --command \
-            'sudo /usr/local/sbin/freshfirst-deploy'
-      - name: Verify GCP health
-        env:
-          GCP_VM_NAME: ${{ vars.GCP_VM_NAME }}
-          GCP_ZONE: ${{ vars.GCP_ZONE }}
-        run: |
-          set -euo pipefail
-          ip="$(gcloud compute instances describe "$GCP_VM_NAME" --zone "$GCP_ZONE" --format='value(networkInterfaces[0].accessConfigs[0].natIP)')"
-          curl --fail --retry 18 --retry-delay 10 "http://${ip}/healthz"
+          gcloud compute ssh "$GCP_VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --tunnel-through-iap --quiet \
+            --command "sudo /usr/local/sbin/freshfirst-release prod '$IMAGE'"
