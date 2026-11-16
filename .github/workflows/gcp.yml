@@ -2,11 +2,16 @@
 
 on:
   workflow_run:
-    workflows: ["FreshFirst Render CI/CD"]
+    workflows: ["FreshFirst checks"]
     types: [completed]
     branches: [feature/render-deployment]
   workflow_dispatch:
     inputs:
+      deploy:
+        description: Explicitly approve promoting the verified dev digest to production
+        required: true
+        default: false
+        type: boolean
       dev_run_id:
         description: Successful automatic GCP dev run ID (also used for rollback)
         required: true
@@ -26,7 +31,9 @@ permissions:
 
 jobs:
   build-dev:
+    # Activation hold: remove false only after all MILESTONE1.md prerequisites are verified.
     if: >-
+      false &&
       github.event_name == 'workflow_run' &&
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'push' &&
@@ -98,7 +105,7 @@ jobs:
           retention-days: 90
 
   promote-production:
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/feature/render-deployment'
+    if: github.event_name == 'workflow_dispatch' && inputs.deploy == true && github.ref == 'refs/heads/feature/render-deployment'
     runs-on: ubuntu-24.04
     environment: gcp-production
     permissions:

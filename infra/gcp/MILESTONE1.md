@@ -6,7 +6,23 @@ persistent disk, Caddy URL and `render.yml` CI are retained.
 
 ## Release path
 
-Successful **push** CI on `feature/render-deployment` triggers `gcp.yml` to check
+**Current state: check-only pushes; dev activation is held.** The Render workflow
+is now named `FreshFirst checks`, so its completion does not match the legacy
+default-branch GCP workflow's `FreshFirst Render CI/CD` listener. All five test/
+build jobs are retained. Render deployment requires manual dispatch with
+`deploy=true`, the feature branch, successful checks and the `render-production`
+environment gate. Keep Render service auto-deploy disabled (`render.yaml`).
+Existing queued/running deployments and older workflow revisions are not
+cancelled by these local changes; review them before any authorized push.
+
+The prepared `gcp.yml` listens to the new CI name but its dev job has an explicit
+`false &&` activation hold. Do not remove it until every prerequisite below is
+verified. GCP production requires manual dispatch with `deploy=true`, exact
+successful dev metadata and the `gcp-production` environment gate. Required
+environment reviewers must be configured externally; YAML alone cannot install
+approval protection. No deployment is enabled or performed by this local work.
+
+After activation, successful **push** CI on `feature/render-deployment` triggers `gcp.yml` to check
 out that CI run's exact SHA, build one release image, publish its SHA tag to
 Artifact Registry, and deploy its immutable digest to dev. Existing CI image
 builds remain checks; the published release is never rebuilt on either VM.
@@ -20,7 +36,9 @@ records and the artifact before OIDC authentication, then pulls that same digest
 - Merge/install the reviewed `gcp.yml` workflow **and its promotion verifier** on
   the repository default branch: `workflow_run` does not activate just because
   its file exists on a feature branch. Dispatch production from
-  `feature/render-deployment`. Existing Render CI/deploy workflow is unchanged.
+  `feature/render-deployment`. Replace the legacy GCP listener with this reviewed
+  revision; do not restore its old CI-name listener. Configure `render-production`
+  required reviewers and deployment branch restrictions before manual Render use.
 - Create/reuse one regional Docker Artifact Registry repository, preferably
   `us-central1`, and enable its API. Retain deployed/rollback digests; cleanup
   must not delete them. Artifact retention here is 90 days: archive release
@@ -88,7 +106,8 @@ their env files. The helper uses the VM token through ephemeral Docker login.
 
 ## Deploy, health and rollback
 
-After external prerequisites, the next step is a reviewed push/CI run (not
+After external prerequisites are verified, a separately reviewed change may remove
+the dev job's `false &&` hold. The next step is an authorized push/CI run (not
 performed here). Confirm successful automatic dev health and save `release.json`.
 Test dev through an IAP SSH local-forward tunnel to port 8081. Promote manually
 in the GCP workflow with that exact run ID/SHA/digest, then verify production

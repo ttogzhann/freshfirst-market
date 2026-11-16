@@ -89,6 +89,13 @@ def test_workflow_preserves_ci_sha_and_manual_production_gate():
         Loader=yaml.BaseLoader,
     )
     dev, prod = workflow["jobs"]["build-dev"], workflow["jobs"]["promote-production"]
+    assert dev["if"].strip().startswith("false &&")
+    assert workflow["on"]["workflow_dispatch"]["inputs"]["deploy"] == {
+        "description": "Explicitly approve promoting the verified dev digest to production",
+        "required": "true",
+        "default": "false",
+        "type": "boolean",
+    }
     for guard in (
         "conclusion == 'success'",
         "event == 'push'",
@@ -98,6 +105,9 @@ def test_workflow_preserves_ci_sha_and_manual_production_gate():
         assert guard in dev["if"]
     assert dev["steps"][0]["with"]["ref"] == "${{ github.event.workflow_run.head_sha }}"
     assert "github.event_name == 'workflow_dispatch'" in prod["if"]
+    assert "inputs.deploy == true" in prod["if"]
+    assert "github.ref == 'refs/heads/feature/render-deployment'" in prod["if"]
+    assert "||" not in prod["if"]
     assert prod["environment"] == "gcp-production"
     assert (
         sum(
@@ -115,6 +125,38 @@ def test_workflow_preserves_ci_sha_and_manual_production_gate():
         if step.get("uses", "").startswith("google-github-actions/auth")
     )
     assert verify_index < auth_index
+
+
+def test_check_only_ci_does_not_trigger_legacy_production_listener():
+    def workflow(name):
+        return yaml.load(
+            (ROOT / f".github/workflows/{name}.yml").read_text(encoding="utf-8-sig"),
+            Loader=yaml.BaseLoader,
+        )
+
+    ci, gcp = workflow("render"), workflow("gcp")
+    assert ci["name"] == "FreshFirst checks"
+    assert ci["name"] != "FreshFirst Render CI/CD"  # Legacy workflow_run listener.
+    assert gcp["on"]["workflow_run"]["workflows"] == [ci["name"]]
+    assert ci["on"]["push"]["branches"] == ["feature/render-deployment"]
+    assert "pull_request" in ci["on"]
+    assert ci["on"]["workflow_dispatch"]["inputs"]["deploy"]["default"] == "false"
+    deploy = ci["jobs"]["deploy-render"]
+    assert deploy["if"].strip() == (
+        "github.event_name == 'workflow_dispatch' && inputs.deploy == true && "
+        "github.ref == 'refs/heads/feature/render-deployment'"
+    )
+    assert deploy["environment"] == "render-production"
+    assert set(deploy["needs"]) == {
+        "backend",
+        "frontend",
+        "production-image",
+        "compose-integration",
+        "playwright-e2e",
+    }
+    assert set(ci["jobs"]) == set(deploy["needs"]) | {"deploy-render"}
+    blueprint = yaml.safe_load((ROOT / "render.yaml").read_text())
+    assert blueprint["services"][0]["autoDeploy"] is False
 
 
 @pytest.fixture
