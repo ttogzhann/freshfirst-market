@@ -90,9 +90,7 @@ jobs:
           printf '%s\n' 'SSH/sudo preflight passed. Auditing remains UNVERIFIED; deployments remain held.' >> "$GITHUB_STEP_SUMMARY"
 
   build-dev:
-    # Activation hold: remove false only after all MILESTONE1.md prerequisites are verified.
     if: >-
-      false &&
       github.event_name == 'workflow_run' &&
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'push' &&
