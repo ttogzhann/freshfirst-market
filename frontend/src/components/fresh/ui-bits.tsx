@@ -1,9 +1,10 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { errorMessage } from "@/hooks/use-fresh";
 import type { ExpiryStatus } from "@/services";
+import { recipeImageSource, RECIPE_IMAGE_FALLBACK } from "@/lib/recipe-images";
 
 export function PageHeader({
   title,
@@ -91,16 +92,29 @@ export function RecipeImage({
 }) {
   return (
     <div className={`relative overflow-hidden bg-hero ${className}`}>
-      <span className="absolute inset-0 flex items-center justify-center font-display text-4xl text-primary-foreground/80">
-        {alt.charAt(0)}
-      </span>
-      <img
-        src={src}
-        alt={alt}
-        loading="lazy"
-        className="relative h-full w-full object-cover"
-        onError={(e) => (e.currentTarget.style.display = "none")}
-      />
+      <RecipePhoto key={src} src={recipeImageSource(src)} alt={alt} />
     </div>
+  );
+}
+
+function RecipePhoto({ src, alt }: { src: string; alt: string }) {
+  const [failed, setFailed] = useState(false);
+  const imageSource = failed ? RECIPE_IMAGE_FALLBACK : src;
+  return (
+    <img
+      key={imageSource}
+      src={imageSource}
+      alt={alt}
+      loading="lazy"
+      className="relative h-full w-full object-cover"
+      onError={(event) => {
+        if (imageSource === RECIPE_IMAGE_FALLBACK) {
+          // Do not request a failing fallback repeatedly or expose a broken-image icon.
+          event.currentTarget.style.visibility = "hidden";
+        } else {
+          setFailed(true);
+        }
+      }}
+    />
   );
 }

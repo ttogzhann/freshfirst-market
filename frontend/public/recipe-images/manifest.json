@@ -1,0 +1,266 @@
+{
+  "sourceCatalogHash": "sha256:68a4bd3c3ba67889fcca7eafcc3b1265b7b09c97327a09617702faff8ae1583c",
+  "assets": [
+    {
+      "id": "fallback",
+      "title": "Culinary fallback illustration",
+      "file": "fallback.webp",
+      "sha256": "3b464ad5886e864598c7101c664a13158dba68d501d925259593146817955994",
+      "width": 640,
+      "height": 480,
+      "bytes": 36408
+    },
+    {
+      "id": "ff-original-001",
+      "title": "Spinach and cheddar omelet",
+      "file": "ff-original-001.webp",
+      "sha256": "1f9152ed0bf04bff1fb4fe95b3546dd402afd6825e87dc2de5bbd02204f2cf4b",
+      "width": 640,
+      "height": 480,
+      "bytes": 38900
+    },
+    {
+      "id": "ff-original-002",
+      "title": "Chicken garlic rice",
+      "file": "ff-original-002.webp",
+      "sha256": "5e01d797b35a2e16799471dae0b3fe0f5dc3fe123634d6b6b089b294aa7194c2",
+      "width": 640,
+      "height": 480,
+      "bytes": 35366
+    },
+    {
+      "id": "ff-original-003",
+      "title": "Beef tomato rice skillet",
+      "file": "ff-original-003.webp",
+      "sha256": "04df27298b98d8e6515955e12564a312f5736329a65851e6ead966500078bac1",
+      "width": 640,
+      "height": 480,
+      "bytes": 50360
+    },
+    {
+      "id": "ff-original-004",
+      "title": "Lemon salmon with wilted spinach",
+      "file": "ff-original-004.webp",
+      "sha256": "cafc9de4a692fe9974cf14d22f9a1ba940e06b4c39486ecbf59ef4b31c5a7de3",
+      "width": 640,
+      "height": 480,
+      "bytes": 48000
+    },
+    {
+      "id": "ff-original-005",
+      "title": "Mushroom cream pasta",
+      "file": "ff-original-005.webp",
+      "sha256": "625c4ee19af23374b2eeea46d5ded94214bb908cc68ef07d73ee4b13f6c74f87",
+      "width": 640,
+      "height": 480,
+      "bytes": 39068
+    },
+    {
+      "id": "ff-original-006",
+      "title": "Garlic tomato penne",
+      "file": "ff-original-006.webp",
+      "sha256": "e7b7fd8a69fe5dcbedd8ace72493677e5ff6771b495886d3fe4f834421cb0ce2",
+      "width": 640,
+      "height": 480,
+      "bytes": 47382
+    },
+    {
+      "id": "ff-original-007",
+      "title": "Carrot potato soup",
+      "file": "ff-original-007.webp",
+      "sha256": "7488c1ca6f93f2c7a80b1c996e47e96bcf0ab4e84300133b37452335c28eb1ae",
+      "width": 640,
+      "height": 480,
+      "bytes": 17314
+    },
+    {
+      "id": "ff-original-008",
+      "title": "Tomato pepper salad with lemon",
+      "file": "ff-original-008.webp",
+      "sha256": "69476689a3508b5829f7f3bab7407c9115ef7afb5e76f6c2b1838fd312d777ee",
+      "width": 640,
+      "height": 480,
+      "bytes": 44590
+    },
+    {
+      "id": "ff-original-009",
+      "title": "Butter vanilla loaf",
+      "file": "ff-original-009.webp",
+      "sha256": "20ddb18d7dfcef26c3c558aedfb7e33f719c8c18a5c82b94b2fa13b9eb5884b9",
+      "width": 640,
+      "height": 480,
+      "bytes": 38706
+    },
+    {
+      "id": "ff-original-010",
+      "title": "Banana honey oat breakfast bake",
+      "file": "ff-original-010.webp",
+      "sha256": "2a24acb3a57e9b5ffe603487ccb52f9d3bf9d6a657955c6efdc1e4a4bba2d081",
+      "width": 640,
+      "height": 480,
+      "bytes": 47212
+    },
+    {
+      "id": "ff-original-011",
+      "title": "Soy chicken noodles with carrot",
+      "file": "ff-original-011.webp",
+      "sha256": "570287f528059d0980857df3377b243e2f426929751ec26633817ef0d50445fb",
+      "width": 640,
+      "height": 480,
+      "bytes": 36114
+    },
+    {
+      "id": "ff-original-012",
+      "title": "Beef mushroom toast",
+      "file": "ff-original-012.webp",
+      "sha256": "196e19b3f8aa792749648ee018bae7281f49697bf34b1c77c129447d9a25ad8e",
+      "width": 640,
+      "height": 480,
+      "bytes": 48664
+    },
+    {
+      "id": "ff-original-013",
+      "title": "Salmon soy rice bowl",
+      "file": "ff-original-013.webp",
+      "sha256": "a41b05f400bc063039146e3fca8b353a6aef31a9aac7613fe6b1a9605f91e0f8",
+      "width": 640,
+      "height": 480,
+      "bytes": 35766
+    },
+    {
+      "id": "ff-original-014",
+      "title": "Spinach fresh tomato pasta",
+      "file": "ff-original-014.webp",
+      "sha256": "8af3f93c996cad58ac5ce12598db3d6917ecbdbdf9bb01eabce7477630a99eb6",
+      "width": 640,
+      "height": 480,
+      "bytes": 47620
+    },
+    {
+      "id": "ff-original-015",
+      "title": "Creamy cheddar potato bake",
+      "file": "ff-original-015.webp",
+      "sha256": "2e6599b4fc313c0c94ba631a5e9ec80d407984350d75a132cafd031b43a97975",
+      "width": 640,
+      "height": 480,
+      "bytes": 39238
+    },
+    {
+      "id": "ff-original-016",
+      "title": "Lemon garlic mushrooms",
+      "file": "ff-original-016.webp",
+      "sha256": "85474987c2d1b95521e03c3f2bac21f6a95ceef031ef666a2188af0d04cabaad",
+      "width": 640,
+      "height": 480,
+      "bytes": 51630
+    },
+    {
+      "id": "ff-original-017",
+      "title": "Warm beetroot apple salad",
+      "file": "ff-original-017.webp",
+      "sha256": "f0cc6aae00248f974eacc0581d53dfeb0ecdeb07a03f491d260229aa6e94ac24",
+      "width": 640,
+      "height": 480,
+      "bytes": 40736
+    },
+    {
+      "id": "ff-original-018",
+      "title": "Apple cinnamon porridge",
+      "file": "ff-original-018.webp",
+      "sha256": "891ede3aa844385d7139c09dfe52f9aa9b205077920d03a27a4dae7ac12bb436",
+      "width": 640,
+      "height": 480,
+      "bytes": 30546
+    },
+    {
+      "id": "ff-original-019",
+      "title": "Chocolate banana cake",
+      "file": "ff-original-019.webp",
+      "sha256": "436c7f2f24e01193cbe4c8e02c9c0a839a744a67d81a6e329ec23485ac98b7f0",
+      "width": 640,
+      "height": 480,
+      "bytes": 54362
+    },
+    {
+      "id": "ff-original-020",
+      "title": "Honey cocoa oat squares",
+      "file": "ff-original-020.webp",
+      "sha256": "84d44546dd84c76a2f6ed3c57e2717ec99d7c5472d80de8a4bb43372ec196d8a",
+      "width": 640,
+      "height": 480,
+      "bytes": 64384
+    },
+    {
+      "id": "ff-original-021",
+      "title": "Parsley potato frittata",
+      "file": "ff-original-021.webp",
+      "sha256": "3d5b366887fa1223188295687773494a873e4691cc86bf7171ab870e7a4781eb",
+      "width": 640,
+      "height": 480,
+      "bytes": 49934
+    },
+    {
+      "id": "ff-original-022",
+      "title": "Parsley yogurt chicken",
+      "file": "ff-original-022.webp",
+      "sha256": "4ed34d34c1db5dc70ae69533486cc7b5c0e4e7967c78ca4951ba93cccc5f5370",
+      "width": 640,
+      "height": 480,
+      "bytes": 50610
+    },
+    {
+      "id": "ff-original-023",
+      "title": "Beef parsley patties with tomato",
+      "file": "ff-original-023.webp",
+      "sha256": "5d32dacbc61d818f24a0d24d8a259e98baba52d6c5fa0d233a5b47abf169b640",
+      "width": 640,
+      "height": 480,
+      "bytes": 61608
+    },
+    {
+      "id": "ff-original-024",
+      "title": "Parsley salmon potato tray bake",
+      "file": "ff-original-024.webp",
+      "sha256": "eff6d22339f6b2280b34e22293e414cca0738e5b77a5444cbef9d7f56b8ef7b2",
+      "width": 640,
+      "height": 480,
+      "bytes": 73360
+    },
+    {
+      "id": "ff-original-025",
+      "title": "Mushroom parsley rice",
+      "file": "ff-original-025.webp",
+      "sha256": "259a57f363161a7fc7081ce8c4cef9fa05786a6304cae6475fee626bcb88a3ea",
+      "width": 640,
+      "height": 480,
+      "bytes": 71446
+    },
+    {
+      "id": "ff-original-026",
+      "title": "Garlic tomato cheese toast",
+      "file": "ff-original-026.webp",
+      "sha256": "4aaf846f478e70e1b5f10c91efc5bba3e025497b47b6fe2b7d76d04aed4d7113",
+      "width": 640,
+      "height": 480,
+      "bytes": 62792
+    },
+    {
+      "id": "ff-original-058",
+      "title": "Apple cinnamon yogurt cake",
+      "file": "ff-original-058.webp",
+      "sha256": "e0eaf310174424c7da4523e2a1d5e53bdacf62751d8a7ff0b5a08f24bd42b452",
+      "width": 640,
+      "height": 480,
+      "bytes": 53416
+    },
+    {
+      "id": "ff-original-078",
+      "title": "Apple cinnamon French toast",
+      "file": "ff-original-078.webp",
+      "sha256": "568ac54decdb5f8e97822996ed8790c0b9066cac49c15fc4233497684b06a367",
+      "width": 640,
+      "height": 480,
+      "bytes": 39976
+    }
+  ]
+}
