@@ -54,11 +54,13 @@ records and the artifact before OIDC authentication, then pulls that same digest
   (`us-central1-docker.pkg.dev/PROJECT/REPOSITORY/app`).
 - Reuse keyless OIDC, restrict trust to this repository/approved workflow and
   environments. Dev builder needs Artifact Registry Writer on this repository;
-  runtime VM identity needs Reader. Deploy identities need only existing IAP/
-  SSH permissions and permission to invoke the root-owned release helper.
-  The VM's existing OAuth access scopes must permit Artifact Registry access;
-  IAM alone is insufficient. Changing scopes/identity is an operator task,
-  never a reason to recreate this VM or disk. No service-account JSON key.
+  the existing federated deployer must be allowed to mint its access token through
+  the restricted `roles/iam.workloadIdentityUser` binding on that service account.
+  Deploy identities also need existing IAP/SSH permissions and noninteractive
+  permission to invoke the root-owned release helper. Dev needs no attached VM
+  service account, metadata token, VM scope change or restart. No permanent key.
+  Production retains its previous metadata-token login; its separate runtime
+  identity/scope prerequisite remains for any future production promotion.
 - Review host memory/disk headroom for two app/PostgreSQL stacks on the current
   VM. Both use the same Docker data-root on the existing persistent disk, but
   distinct named volumes; no mandatory new cloud resources.
@@ -105,7 +107,61 @@ Verify the existing production project/volume identities before installation;
 if they differ from this table, reconcile the reviewed configuration first.
 Normal releases require a healthy existing database and update **only app**;
 they do not recreate PostgreSQL, Caddy, networks or volumes. Secrets remain in
-their env files. The helper uses the VM token through ephemeral Docker login.
+their env files. Dev uses the short-lived stdin credential described below;
+production retains its existing metadata-token login.
+
+## Short-lived dev registry authentication
+
+After the build, a second existing OIDC auth action requests a **600-second**
+OAuth access token for `GCP_SERVICE_ACCOUNT`. It also refreshes the runner's
+temporary federated credential file for IAP/SSH, so a long build cannot leave SSH
+using an expired original GitHub OIDC credential. Action post-job cleanup removes
+both auth steps' temporary files; no service-account key is created. The action
+masks its token output. The deploy step receives it via an environment value and
+pipes it directly to `gcloud compute ssh --ssh-flag=-T`, then
+`sudo -n /usr/local/sbin/freshfirst-release dev IMAGE@sha256:DIGEST --registry-token-stdin`.
+The token never appears in the SSH command, process arguments, release metadata,
+artifacts or persistent environment files. Do not upload auth-generated
+`gha-creds-*.json` files or the workspace wholesale. Shell tracing is disabled
+before handling the token.
+
+The helper requires a bounded, nonempty token line for dev, never falls back to
+metadata, and passes it to `docker login --password-stdin` against the configured
+registry only. Missing/malformed tokens fail before Docker is called; rejected or
+expired tokens fail login/pull without updating app. Docker credentials live in
+a root-only temporary `/run/freshfirst-registry.*` directory with `umask 077`.
+They are deleted immediately after pull and on ordinary failure/INT/TERM; the
+token shell variable is unset after login. No app-container credential is added.
+An uncatchable kill can leave the private temporary config until operator cleanup
+or reboot; the credential still expires. Never archive `/run` credentials.
+
+Before activation, verify the existing sudo policy permits the exact dev command
+without a password or TTY, and that SSH/sudo/session auditing does **not record
+stdin** for this command (for example, applicable sudo `log_input` must be off).
+Do not use `sudo -S`, PTY allocation, shell tracing, verbose request dumps or token
+files to work around access failures. Tokens inherit the deployer's IAM scope;
+keep Artifact Registry Writer repository-scoped rather than project-wide.
+
+This prepares dev authentication only. Production token-stdin mode is rejected;
+its workflow and manual approval gate are unchanged. Operator CLI dev invocations
+must also supply a freshly minted token on stdin, never as a command argument.
+
+Reference: [OIDC auth action](https://github.com/google-github-actions/auth) and
+[Artifact Registry access-token login](https://docs.cloud.google.com/artifact-registry/docs/docker/authentication).
+
+Activation requires separate approvals, in this order:
+
+1. Verify/create the registry and restricted OIDC/IAM/IAP configuration; set the
+   documented environment variables and production environment reviewer gates.
+2. Install this exact helper and reviewed Compose files on the existing VM;
+   verify `/run` is temporary/private, the sudo/stdin conditions above, host
+   headroom, independent `0600` dev secrets, project/volume isolation and the
+   healthy dev database. Do not attach an identity or restart the VM for dev pulls.
+3. Publish the reviewed branch, run check-only CI, and install the held workflow
+   and promotion verifier on the default branch while GCP remains disabled.
+4. Only after prerequisites pass, separately review removal of `false &&`,
+   enable the new GCP workflow and authorize a feature push. Save the healthy dev
+   artifact and verify dev through the SSH tunnel. Do not dispatch production.
 
 ## Deploy, health and rollback
 

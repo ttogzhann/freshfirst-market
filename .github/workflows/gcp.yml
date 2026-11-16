@@ -71,17 +71,33 @@ jobs:
           push: true
           tags: ${{ vars.GCP_IMAGE_REPOSITORY }}:${{ github.event.workflow_run.head_sha }}
           platforms: linux/amd64
+      - name: Mint short-lived dev pull credential after the build
+        id: dev-pull-token
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+          token_format: access_token
+          access_token_lifetime: 600s
+          create_credentials_file: true
+          export_environment_variables: true
+          cleanup_credentials: true
       - name: Deploy immutable release to dev
         env:
+          REGISTRY_ACCESS_TOKEN: ${{ steps.dev-pull-token.outputs.access_token }}
           IMAGE: ${{ vars.GCP_IMAGE_REPOSITORY }}@${{ steps.image.outputs.digest }}
           GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
           GCP_VM_NAME: ${{ vars.GCP_VM_NAME }}
           GCP_ZONE: ${{ vars.GCP_ZONE }}
         run: |
+          set +x
           set -euo pipefail
           [[ "$IMAGE" =~ ^[a-z0-9-]+-docker\.pkg\.dev/[a-z0-9-]+/[a-z0-9_-]+/[a-z0-9/_-]+@sha256:[a-f0-9]{64}$ ]]
-          gcloud compute ssh "$GCP_VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --tunnel-through-iap --quiet \
-            --command "sudo /usr/local/sbin/freshfirst-release dev '$IMAGE'"
+          test -n "$REGISTRY_ACCESS_TOKEN"
+          printf '%s\n' "$REGISTRY_ACCESS_TOKEN" \
+            | gcloud compute ssh "$GCP_VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --tunnel-through-iap --quiet --ssh-flag=-T \
+              --command "sudo -n /usr/local/sbin/freshfirst-release dev '$IMAGE' --registry-token-stdin"
+          unset REGISTRY_ACCESS_TOKEN
       - name: Record healthy dev release
         env:
           IMAGE: ${{ vars.GCP_IMAGE_REPOSITORY }}@${{ steps.image.outputs.digest }}

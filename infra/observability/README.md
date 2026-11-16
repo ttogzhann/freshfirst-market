@@ -112,10 +112,10 @@ normal release disables telemetry again. Before persistent activation, separatel
 review adding this overlay to **dev only** in that helper. Production stays off;
 no GCP deployment hold or GitHub environment setting is changed here.
 
-With no attached VM service account, telemetry can still use the managed token,
-but the current GCP release helper's metadata-token Artifact Registry login cannot
-work. Resolve that separate runtime image-pull identity prerequisite with explicit
-approval before enabling the GCP pipeline; telemetry does not resolve it.
+With no attached VM service account, telemetry can still use the managed token.
+Dev image pulls are now prepared to use the deployer's short-lived OIDC token
+over SSH stdin; complete the separate [release prerequisites](../gcp/MILESTONE1.md#short-lived-dev-registry-authentication)
+before enabling GCP. Production's existing metadata-token prerequisite is unchanged.
 
 In hosted Grafana, use Explore's managed Prometheus, Tempo and Loki sources.
 Find `service.name=freshfirst-api`, inspect a trace with database child spans,

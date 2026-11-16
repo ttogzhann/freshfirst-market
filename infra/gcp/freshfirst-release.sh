@@ -1,10 +1,16 @@
 #!/usr/bin/env bash
+set +x # Tokens must never enter shell tracing, including bash -x invocations.
 set -Eeuo pipefail
 fail() { echo "$*" >&2; exit 1; }
-[[ $# == 2 && ( $1 == dev || $1 == prod ) ]] || fail 'Usage: freshfirst-release dev|prod REGISTRY_IMAGE@sha256:DIGEST'
+[[ ( $# == 3 && $1 == dev && $3 == --registry-token-stdin ) || ( $# == 2 && $1 == prod ) ]] || fail 'Usage: freshfirst-release dev IMAGE@sha256:DIGEST --registry-token-stdin | prod IMAGE@sha256:DIGEST'
 environment=$1
 image=$2
 [[ $image =~ ^[a-z0-9-]+-docker\.pkg\.dev/[a-z0-9-]+/[a-z0-9_-]+/[a-z0-9/_-]+@sha256:[a-f0-9]{64}$ ]] || fail 'Invalid immutable image reference'
+if [[ $environment == dev ]]; then
+  IFS= read -r -t 10 -n 4097 registry_token || fail 'Missing registry token on stdin'
+  [[ ${#registry_token} -le 4096 && $registry_token =~ ^[A-Za-z0-9._~+/-]+={0,2}$ ]] || fail 'Invalid registry token'
+  exec 0</dev/null
+fi
 config=/etc/freshfirst/deploy.conf
 [[ -f $config && $(stat -c %u "$config") == 0 && $(stat -c %a "$config") == 600 ]] || fail 'Root-owned mode 0600 deploy.conf required'
 source "$config"
@@ -46,14 +52,38 @@ db_id=$("${compose[@]}" ps -q db)
 [[ -n $db_id && $(docker inspect --format '{{.State.Health.Status}}' "$db_id") == healthy ]] || fail 'Existing healthy environment database required'
 previous=$("${compose[@]}" ps -q app)
 if [[ -n $previous ]]; then docker inspect --format '{{.Config.Image}}' "$previous" >"$state/previous-image"; fi
-credentials=$(mktemp -d)
-trap 'rm -f -- "$credentials/config.json"; rmdir -- "$credentials"' EXIT
+umask 077
+if [[ $environment == dev ]]; then
+  credentials=$(mktemp -d /run/freshfirst-registry.XXXXXX)
+else
+  credentials=$(mktemp -d)
+fi
+cleanup_credentials() {
+  unset registry_token
+  if [[ -n $credentials ]]; then
+    rm -f -- "$credentials/config.json"
+    rmdir -- "$credentials"
+    credentials=
+  fi
+}
+trap cleanup_credentials EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 export DOCKER_CONFIG=$credentials
-curl --fail --silent --show-error -H 'Metadata-Flavor: Google' \
-  http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token \
-  | python3 -c 'import json,sys; print(json.load(sys.stdin)["access_token"])' \
-  | docker login --username oauth2accesstoken --password-stdin "https://${IMAGE_REPOSITORY%%/*}" >/dev/null
+if [[ $environment == dev ]]; then
+  printf '%s\n' "$registry_token" \
+    | docker login --username oauth2accesstoken --password-stdin "https://${IMAGE_REPOSITORY%%/*}" >/dev/null 2>&1 \
+    || fail 'Registry token login failed'
+  unset registry_token
+else
+  curl --fail --silent --show-error -H 'Metadata-Flavor: Google' \
+    http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token \
+    | python3 -c 'import json,sys; print(json.load(sys.stdin)["access_token"])' \
+    | docker login --username oauth2accesstoken --password-stdin "https://${IMAGE_REPOSITORY%%/*}" >/dev/null
+fi
 "${compose[@]}" pull app
+cleanup_credentials
+unset DOCKER_CONFIG
 printf '%s\n' "$image" >"$state/pending-image"
 "${compose[@]}" up -d --no-deps --no-build --pull never app
 for attempt in {1..30}; do

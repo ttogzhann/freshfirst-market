@@ -19,6 +19,7 @@ SPEC.loader.exec_module(PROMOTION)
 DIGEST = "sha256:" + "a" * 64
 SHA = "b" * 40
 IMAGE = "us-central1-docker.pkg.dev/test-project/freshfirst/app@" + DIGEST
+TEST_TOKEN = "ya29.isolated-short-lived-test-token"
 
 
 def metadata():
@@ -188,6 +189,9 @@ def shell_runtime(tmp_path):
         script.replace("/etc/freshfirst", config.as_posix())
         .replace("/opt/freshfirst", app.as_posix())
         .replace("/var/lib/freshfirst-releases", state.as_posix())
+        .replace(
+            "/run/freshfirst-registry.XXXXXX", (tmp_path / "registry.XXXXXX").as_posix()
+        )
     )
     helper = tmp_path / "release.sh"
     helper.write_text(script, newline="\n")
@@ -199,7 +203,13 @@ def shell_runtime(tmp_path):
         "python3": "#!/bin/sh\ncat >/dev/null\necho dummy\n",
         "docker": '#!/bin/sh\necho "$*" >> "$CALL_LOG"\ncase "$*" in *"ps -q db") echo db;; *"ps -q app") echo app;; *".State.Health.Status"*) echo healthy;; *".Config.Image"*) echo "us-central1-docker.pkg.dev/test-project/freshfirst/app@sha256:'
         + "c" * 64
-        + '";; *login*) cat >/dev/null;; esac\n',
+        + '";; *login*) token=$(cat)\n'
+        '[ "$token" = "$EXPECTED_TOKEN" ] || exit 42\n'
+        'printf "%s\\n" "$DOCKER_CONFIG" > "$CREDENTIAL_PATH"\n'
+        'printf "%s" "$token" > "$DOCKER_CONFIG/config.json"\n'
+        'if [ "$FAIL_AT" = login ]; then echo "$token" >&2; exit 1; fi;;\n'
+        '*"up -d"*) [ ! -e "$(cat "$CREDENTIAL_PATH")/config.json" ] || exit 43;;\n'
+        '*"pull app") [ "$FAIL_AT" != pull ] || exit 1;; esac\n',
     }
     for name, content in mocks.items():
         path = binaries / name
@@ -212,6 +222,7 @@ def shell_runtime(tmp_path):
         + (":" if os.name != "nt" else ";")
         + os.environ["PATH"],
         "CALL_LOG": log.as_posix(),
+        "CREDENTIAL_PATH": (tmp_path / "credential-path").as_posix(),
     }
     # Git Bash converts the Windows inherited PATH to POSIX; prepend inside bash instead.
     runner = tmp_path / "runner.sh"
@@ -219,20 +230,36 @@ def shell_runtime(tmp_path):
     if os.name == "nt":
         binary_path = "/" + binary_path[0].lower() + binary_path[2:]
     runner.write_text(
-        f'#!/bin/bash\nexport PATH="{binary_path}:$PATH"\nexec bash "{helper.as_posix()}" "$@"\n',
+        f'#!/bin/bash\nexport PATH="{binary_path}:$PATH"\nexec bash $HELPER_TRACE "{helper.as_posix()}" "$@"\n',
         newline="\n",
     )
 
-    def run(environment, image=IMAGE):
-        return subprocess.run(
-            [bash, str(runner), environment, image],
-            env=env,
+    def run(
+        environment,
+        image=IMAGE,
+        token=TEST_TOKEN,
+        token_mode=None,
+        fail_at="",
+        traced=False,
+    ):
+        args = [environment, image]
+        if token_mode is True or (token_mode is None and environment == "dev"):
+            args.append("--registry-token-stdin")
+        result = subprocess.run(
+            [bash, *(["-x"] if traced else []), str(runner), *args],
+            env={
+                **env,
+                "EXPECTED_TOKEN": (token or "") if environment == "dev" else "dummy",
+                "FAIL_AT": fail_at,
+                "HELPER_TRACE": "-x" if traced else "",
+            },
+            input=b"" if token is None else (token + "\n").encode(),
             capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
             check=False,
         )
+        result.stdout = result.stdout.decode("utf-8", errors="replace")
+        result.stderr = result.stderr.decode("utf-8", errors="replace")
+        return result
 
     return run, log, state, config
 
@@ -255,6 +282,10 @@ def test_helper_updates_only_selected_app_and_records_digest(
     assert (
         (state / environment / "previous-image").read_text().strip().endswith("c" * 64)
     )
+    assert ("metadata" in calls) == (environment == "prod")
+    credentials = Path((log.parent / "credential-path").read_text().strip())
+    assert not credentials.exists()
+    assert TEST_TOKEN not in calls + result.stdout + result.stderr
 
 
 @pytest.mark.parametrize(
@@ -296,6 +327,108 @@ def test_dev_requires_overlay_but_production_does_not(shell_runtime):
     assert not log.exists()
     assert run("prod").returncode == 0
     assert "compose.dev.yaml" not in log.read_text()
+
+
+@pytest.mark.parametrize("fail_at", ["", "login", "pull"])
+def test_dev_token_is_not_logged_and_credentials_removed_on_success_or_failure(
+    shell_runtime, fail_at
+):
+    run, log, state, _ = shell_runtime
+    result = run("dev", fail_at=fail_at, traced=True)
+    assert (result.returncode == 0) == (not fail_at), result.stderr
+    calls = log.read_text()
+    assert "metadata" not in calls
+    assert TEST_TOKEN not in result.stdout + result.stderr + calls
+    credentials = Path((log.parent / "credential-path").read_text().strip())
+    assert not credentials.exists()
+    for path in state.rglob("*"):
+        if path.is_file():
+            assert TEST_TOKEN not in path.read_text()
+    if fail_at:
+        assert "up -d" not in calls
+        assert not (state / "dev/current-image").exists()
+
+
+@pytest.mark.parametrize(
+    "token", [None, "", "contains whitespace", "bad\r", "a" * 4097]
+)
+def test_dev_rejects_missing_or_malformed_token_without_metadata_fallback(
+    shell_runtime, token
+):
+    run, log, _, _ = shell_runtime
+    result = run("dev", token=token)
+    assert result.returncode != 0
+    assert not log.exists()
+
+
+def test_token_mode_is_required_for_dev_and_rejected_for_production(shell_runtime):
+    run, log, _, _ = shell_runtime
+    assert run("dev", token_mode=False).returncode != 0
+    assert run("prod", token_mode=True).returncode != 0
+    assert not log.exists()
+
+
+def test_dev_workflow_mints_token_after_build_and_transports_only_via_stdin(
+    shell_runtime,
+):
+    _, log, _, _ = shell_runtime
+    workflow = yaml.load(
+        (ROOT / ".github/workflows/gcp.yml").read_text(), Loader=yaml.BaseLoader
+    )
+    steps = workflow["jobs"]["build-dev"]["steps"]
+    token = next(s for s in steps if s.get("id") == "dev-pull-token")
+    deploy = next(
+        s for s in steps if s.get("name") == "Deploy immutable release to dev"
+    )
+    assert next(i for i, s in enumerate(steps) if s.get("id") == "image") < steps.index(
+        token
+    )
+    assert steps.index(token) + 1 == steps.index(deploy)
+    assert token["with"]["token_format"] == "access_token"
+    assert token["with"]["access_token_lifetime"] == "600s"
+    assert token["with"]["create_credentials_file"] == "true"
+    assert token["with"]["export_environment_variables"] == "true"
+    assert token["with"]["cleanup_credentials"] == "true"
+    assert "gha-creds-*.json" in (ROOT / ".gitignore").read_text()
+    assert "**/gha-creds-*.json" in (ROOT / ".dockerignore").read_text()
+    assert (
+        deploy["env"]["REGISTRY_ACCESS_TOKEN"]
+        == "${{ steps.dev-pull-token.outputs.access_token }}"
+    )
+    binaries = log.parent / "bin"
+    mock = binaries / "gcloud"
+    mock.write_text(
+        '#!/bin/sh\nprintf "%s\\n" "$*" > "$CALL_LOG"\n'
+        'IFS= read -r received\n[ "$received" = "$REGISTRY_ACCESS_TOKEN" ]\n',
+        newline="\n",
+    )
+    mock.chmod(0o755)
+    binary_path = binaries.as_posix()
+    bash = shutil.which("bash")
+    if os.name == "nt":
+        bash = r"C:\Program Files\Git\bin\bash.exe"
+        binary_path = "/" + binary_path[0].lower() + binary_path[2:]
+    result = subprocess.run(
+        [bash, "-x", "-c", f'export PATH="{binary_path}:$PATH"\n' + deploy["run"]],
+        check=False,
+        env={
+            **os.environ,
+            "REGISTRY_ACCESS_TOKEN": TEST_TOKEN,
+            "IMAGE": IMAGE,
+            "GCP_VM_NAME": "test-vm",
+            "GCP_PROJECT_ID": "test-project",
+            "GCP_ZONE": "test-zone",
+            "CALL_LOG": log.as_posix(),
+        },
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    args = log.read_text()
+    assert "--ssh-flag=-T" in args
+    assert "sudo -n /usr/local/sbin/freshfirst-release dev" in args
+    assert "--registry-token-stdin" in args
+    assert TEST_TOKEN not in args + result.stdout + result.stderr
 
 
 @pytest.mark.skipif(not shutil.which("docker"), reason="Docker Compose CLI required")
