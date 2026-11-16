@@ -85,7 +85,7 @@ jobs:
           REMOTE
           )
           gcloud compute ssh "$GCP_VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" \
-            --tunnel-through-iap --quiet --ssh-flag=-T --ssh-key-expiration=5m \
+            --tunnel-through-iap --quiet --ssh-flag=-T --ssh-key-expire-after=5m \
             --command "$remote_command" </dev/null
           printf '%s\n' 'SSH/sudo preflight passed. Auditing remains UNVERIFIED; deployments remain held.' >> "$GITHUB_STEP_SUMMARY"
 
