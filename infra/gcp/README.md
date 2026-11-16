@@ -1,5 +1,9 @@
 # FreshFirst on Google Cloud Compute Engine
 
+For the new build-once dev-to-production pipeline and its pending operator setup,
+see [Milestone 1](MILESTONE1.md). The legacy build-on-VM procedure below remains
+historical guidance; the new GCP workflow does not invoke that legacy helper.
+
 This approval-gated deployment uses the existing production [Dockerfile](../../Dockerfile) and [Compose file](../../compose.yaml), one Debian 12 Compute Engine VM, and one attached persistent disk. Caddy provides automatic Let's Encrypt HTTPS using the free `nip.io` hostname `34.171.30.130.nip.io`; PostgreSQL remains private inside Compose. TCP/UDP ports 80 and 443 are public, while SSH remains IAP-only.
 
 The default `e2-small` is modest but gives the production image build more headroom than `e2-micro`. The VM, disks, and network traffic can incur charges after trial credits/free allowances. Check current pricing and Free Trial limits for the selected region before applying.

@@ -1,0 +1,2 @@
+# Install root-owned mode 0600 as /etc/freshfirst/deploy.conf.
+IMAGE_REPOSITORY=us-central1-docker.pkg.dev/YOUR_PROJECT/freshfirst/app
