@@ -7,6 +7,11 @@ on:
     branches: [feature/render-deployment]
   workflow_dispatch:
     inputs:
+      preflight:
+        description: Run token-free OIDC SSH/sudo checks only (main branch)
+        required: true
+        default: false
+        type: boolean
       deploy:
         description: Explicitly approve promoting the verified dev digest to production
         required: true
@@ -14,15 +19,15 @@ on:
         type: boolean
       dev_run_id:
         description: Successful automatic GCP dev run ID (also used for rollback)
-        required: true
+        required: false
         type: string
       digest:
         description: Exact sha256 digest recorded by that dev run
-        required: true
+        required: false
         type: string
       source_sha:
         description: Full source commit recorded by that dev run
-        required: true
+        required: false
         type: string
 
 permissions:
@@ -30,6 +35,60 @@ permissions:
   actions: read
 
 jobs:
+  oidc-preflight:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.preflight == true && inputs.deploy != true
+    runs-on: ubuntu-24.04
+    environment: gcp-development
+    permissions:
+      contents: read
+      id-token: write
+    concurrency:
+      group: freshfirst-gcp-dev
+      cancel-in-progress: false
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+          cleanup_credentials: true
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Verify OIDC deployer SSH and token-free sudo rejection
+        env:
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          GCP_VM_NAME: ${{ vars.GCP_VM_NAME }}
+          GCP_ZONE: ${{ vars.GCP_ZONE }}
+        run: |
+          set +x
+          set -euo pipefail
+          remote_command=$(cat <<'REMOTE'
+          set -eu
+          test ! -t 0 && test ! -t 1
+          printf 'Noninteractive SSH identity: %s (uid=%s)\n' "$(id -un)" "$(id -u)"
+          helper=/usr/local/sbin/freshfirst-release
+          test -f "$helper" && test ! -L "$helper"
+          test "$(stat -c '%u:%g:%a' "$helper")" = '0:0:750'
+          image=us-central1-docker.pkg.dev/freshfirst-513520/freshfirst/app@sha256:0000000000000000000000000000000000000000000000000000000000000000
+          printf 'Applicable command-specific sudo policy (inspect input/session logging):\n'
+          sudo -n -ll "$helper" dev "$image" --registry-token-stdin
+          rc=0
+          result=$(sudo -n "$helper" dev "$image" --registry-token-stdin </dev/null 2>&1) || rc=$?
+          if [ "$rc" -ne 1 ] || [ "$result" != 'Missing registry token on stdin' ]; then
+            printf 'FAIL: expected missing-token rejection; exit=%s\n' "$rc" >&2
+            exit 1
+          fi
+          printf 'PASS: SSH and passwordless sudo without TTY; helper rejected EOF before Docker.\n'
+          printf 'AUDITING: UNVERIFIED. Administrator must confirm no stdin/session recording before any registry token is sent.\n'
+          REMOTE
+          )
+          gcloud compute ssh "$GCP_VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" \
+            --tunnel-through-iap --quiet --ssh-flag=-T --ssh-key-expiration=5m \
+            --command "$remote_command" </dev/null
+          printf '%s\n' 'SSH/sudo preflight passed. Auditing remains UNVERIFIED; deployments remain held.' >> "$GITHUB_STEP_SUMMARY"
+
   build-dev:
     # Activation hold: remove false only after all MILESTONE1.md prerequisites are verified.
     if: >-
@@ -121,7 +180,8 @@ jobs:
           retention-days: 90
 
   promote-production:
-    if: github.event_name == 'workflow_dispatch' && inputs.deploy == true && github.ref == 'refs/heads/feature/render-deployment'
+    # Production requires a separate reviewed activation and independent approval.
+    if: false && github.event_name == 'workflow_dispatch' && inputs.deploy == true && github.ref == 'refs/heads/feature/render-deployment'
     runs-on: ubuntu-24.04
     environment: gcp-production
     permissions:
