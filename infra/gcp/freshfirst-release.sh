@@ -34,6 +34,10 @@ fi
 unset COMPOSE_FILE COMPOSE_PROJECT_NAME POSTGRES_DB POSTGRES_USER POSTGRES_PASSWORD FRESHFIRST_AUTH_SECRET FRESHFIRST_PORT FRESHFIRST_TRUSTED_ORIGINS
 export FRESHFIRST_IMAGE=$image
 compose=(docker compose --project-directory "$app_dir" --project-name "$project" --env-file "$env_file" -f "$app_dir/compose.yaml" -f "$app_dir/infra/gcp/compose.image.yaml")
+if [[ $environment == dev ]]; then
+  [[ -f $app_dir/infra/gcp/compose.dev.yaml ]] || fail 'Install reviewed dev resource overlay first'
+  compose+=(-f "$app_dir/infra/gcp/compose.dev.yaml")
+fi
 state=/var/lib/freshfirst-releases/$environment
 install -d -m 0700 "$state"
 exec 9>"$state/lock"

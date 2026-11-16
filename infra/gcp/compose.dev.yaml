@@ -1,0 +1,25 @@
+# Dev only. Load after compose.yaml and compose.image.yaml (Compose >= 2.24.4).
+services:
+  app:
+    mem_limit: 384m
+    memswap_limit: 384m # Equal to RAM disables container swap.
+    cpus: 0.25
+    restart: "no"
+    ports: !override
+      - "127.0.0.1:8081:8000"
+  db:
+    mem_limit: 128m
+    memswap_limit: 128m
+    cpus: 0.15
+    restart: "no"
+    command:
+      - postgres
+      - -c
+      - shared_buffers=16MB
+      - -c
+      - work_mem=1MB
+      - -c
+      - maintenance_work_mem=16MB
+      - -c
+      - max_connections=20
+  caddy: !reset null

@@ -129,8 +129,11 @@ def shell_runtime(tmp_path):
     ]
     for path in (app / "infra/gcp", config, binaries):
         path.mkdir(parents=True)
+    for environment in ("dev", "prod"):
+        (state / environment).mkdir(parents=True)
     (app / "compose.yaml").write_text("services: {}")
     (app / "infra/gcp/compose.image.yaml").write_text("services: {}")
+    (app / "infra/gcp/compose.dev.yaml").write_text("services: {}")
     (config / "deploy.conf").write_text("IMAGE_REPOSITORY=" + IMAGE.split("@")[0])
     (app / ".env").write_text(
         "POSTGRES_PASSWORD=prod-password\nFRESHFIRST_AUTH_SECRET=prod-secret\n"
@@ -147,7 +150,7 @@ def shell_runtime(tmp_path):
     helper = tmp_path / "release.sh"
     helper.write_text(script, newline="\n")
     mocks = {
-        "install": '#!/bin/sh\nmkdir -p "$4"\n',
+        "install": "#!/bin/sh\nexit 0\n",  # State directories prepared above.
         "stat": '#!/bin/sh\ncase "$2" in %u) echo 0;; %a) echo 600;; esac\n',
         "flock": "#!/bin/sh\nexit 0\n",
         "curl": '#!/bin/sh\necho metadata >> "$CALL_LOG"\nprintf \'{"access_token":"dummy"}\'\n',
@@ -203,6 +206,7 @@ def test_helper_updates_only_selected_app_and_records_digest(
     assert result.returncode == 0, result.stderr
     calls = log.read_text()
     assert f"--project-name {project} " in calls
+    assert ("/infra/gcp/compose.dev.yaml" in calls) == (environment == "dev")
     assert "up -d --no-deps --no-build --pull never app" in calls
     assert "up -d db" not in calls and " down " not in calls
     assert (state / environment / "current-image").read_text().strip() == IMAGE
@@ -241,3 +245,98 @@ def test_dev_cannot_override_isolation_with_duplicate_keys(shell_runtime):
         f.write("FRESHFIRST_PORT=80\n")
     assert run("dev").returncode != 0
     assert not log.exists()
+
+
+def test_dev_requires_overlay_but_production_does_not(shell_runtime):
+    run, log, _, config = shell_runtime
+    (config.parent / "app/infra/gcp/compose.dev.yaml").unlink()
+    assert run("dev").returncode != 0
+    assert not log.exists()
+    assert run("prod").returncode == 0
+    assert "compose.dev.yaml" not in log.read_text()
+
+
+@pytest.mark.skipif(not shutil.which("docker"), reason="Docker Compose CLI required")
+def test_merged_dev_resources_and_production_isolation(tmp_path):
+    import json
+
+    configs = {}
+    for name, project in (("prod", "freshfirst"), ("dev", "freshfirst-dev")):
+        env_file = tmp_path / f"{name}.env"
+        env_file.write_text(
+            f"POSTGRES_DB={project.replace('-', '_')}\n"
+            f"POSTGRES_USER={project.replace('-', '_')}\n"
+            f"POSTGRES_PASSWORD={name}-password\n"
+            f"FRESHFIRST_AUTH_SECRET={name}-secret\n"
+            f"FRESHFIRST_IMAGE={IMAGE}\n"
+        )
+        # Ignore host Compose/interpolation settings; use only disposable values.
+        env = {
+            k: v
+            for k, v in os.environ.items()
+            if not k.startswith(("COMPOSE_", "POSTGRES_", "FRESHFIRST_"))
+        }
+        command = [
+            "docker",
+            "compose",
+            "--project-name",
+            project,
+            "--env-file",
+            str(env_file),
+            "--profile",
+            "https",
+            "-f",
+            "compose.yaml",
+            "-f",
+            "infra/gcp/compose.image.yaml",
+        ]
+        if name == "dev":
+            command += ["-f", "infra/gcp/compose.dev.yaml"]
+        result = subprocess.run(
+            command + ["config", "--format", "json"],
+            cwd=ROOT,
+            env=env,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        configs[name] = json.loads(result.stdout)
+    dev, prod = configs["dev"], configs["prod"]
+    assert set(dev["services"]) == {"app", "db"}
+    assert "caddy" in prod["services"]
+    for service, memory, cpus in (("app", 384, 0.25), ("db", 128, 0.15)):
+        settings = dev["services"][service]
+        assert int(settings["mem_limit"]) == memory * 1024 * 1024
+        assert settings["memswap_limit"] == settings["mem_limit"]
+        assert float(settings["cpus"]) == cpus
+        assert settings["restart"] == "no"
+        assert "mem_limit" not in prod["services"][service]
+    ports = dev["services"]["app"]["ports"]
+    assert len(ports) == 1
+    assert (ports[0]["host_ip"], str(ports[0]["published"]), ports[0]["target"]) == (
+        "127.0.0.1",
+        "8081",
+        8000,
+    )
+    assert not dev["services"]["db"].get("ports")
+    for kind, key in (
+        ("volumes", "freshfirst-postgres-data"),
+        ("networks", "freshfirst"),
+    ):
+        assert dev[kind][key]["name"] == f"freshfirst-dev_{key}"
+        assert prod[kind][key]["name"] == f"freshfirst_{key}"
+    for service, key in (
+        ("app", "FRESHFIRST_AUTH_SECRET"),
+        ("db", "POSTGRES_PASSWORD"),
+    ):
+        assert (
+            dev["services"][service]["environment"][key]
+            != prod["services"][service]["environment"][key]
+        )
+    command = dev["services"]["db"]["command"]
+    assert {
+        "shared_buffers=16MB",
+        "work_mem=1MB",
+        "maintenance_work_mem=16MB",
+        "max_connections=20",
+    } <= set(command)

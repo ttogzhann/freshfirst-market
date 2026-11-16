@@ -46,7 +46,7 @@ records and the artifact before OIDC authentication, then pulls that same digest
 
 After reviewing a pinned checkout, install `freshfirst-release.sh` as
 `/usr/local/sbin/freshfirst-release` (root:root, mode 0750), the reviewed
-`compose.image.yaml` into `/opt/freshfirst/infra/gcp/`, and
+`compose.image.yaml` and `compose.dev.yaml` into `/opt/freshfirst/infra/gcp/`, and
 `deploy.conf.example` as `/etc/freshfirst/deploy.conf` (root:root, mode 0600).
 Set its exact image repository allowlist. Retain the old helper as a legacy
 tool; the new workflow never invokes its branch-reset/build behavior.
@@ -66,8 +66,19 @@ database once (operator-approved command on the VM):
 
 ```bash
 sudo docker compose --project-directory /opt/freshfirst --project-name freshfirst-dev \
-  --env-file /etc/freshfirst/dev.env -f /opt/freshfirst/compose.yaml up -d db
+  --env-file /etc/freshfirst/dev.env -f /opt/freshfirst/compose.yaml \
+  -f /opt/freshfirst/infra/gcp/compose.dev.yaml up -d db
 ```
+
+Dev requires Docker Compose >= 2.24.4. The release helper automatically adds
+`compose.dev.yaml` only for dev; production uses only the base and image files.
+The overlay limits app to 384 MiB/0.25 CPU and PostgreSQL to 128 MiB/0.15 CPU,
+disables swap and automatic restart for both, and reduces PostgreSQL buffers,
+per-operation memory and connection count. Dev binds only `127.0.0.1:8081` and
+removes Caddy entirely, including when the HTTPS profile is requested. These
+are resource ceilings, not evidence of runtime capacity on the shared VM.
+Bootstrap must include the overlay so the database receives its limits;
+app-only releases do not retrofit limits onto an existing database container.
 
 Verify the existing production project/volume identities before installation;
 if they differ from this table, reconcile the reviewed configuration first.
