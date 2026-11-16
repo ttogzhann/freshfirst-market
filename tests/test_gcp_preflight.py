@@ -18,14 +18,15 @@ def workflow(name):
     )
 
 
-def test_preflight_is_manual_and_all_deployments_remain_held():
+def test_preflight_is_manual_and_production_remains_held():
     gcp, render = workflow("gcp"), workflow("render")
-    for job in (
-        gcp["jobs"]["build-dev"],
-        gcp["jobs"]["promote-production"],
-        render["jobs"]["deploy-render"],
-    ):
+    for job in (gcp["jobs"]["promote-production"], render["jobs"]["deploy-render"]):
         assert job["if"].strip().startswith("false &&")
+    assert (
+        gcp["jobs"]["build-dev"]["if"]
+        .strip()
+        .startswith("github.event_name == 'workflow_run' &&")
+    )
     inputs = gcp["on"]["workflow_dispatch"]["inputs"]
     assert inputs["preflight"]["type"] == "boolean"
     assert inputs["preflight"]["default"] == "false"
