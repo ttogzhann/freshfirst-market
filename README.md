@@ -1,10 +1,34 @@
 # FreshFirst Market
 
-FreshFirst is a recipe and pantry application with per-account data isolation. Its
-React/TypeScript frontend communicates with a FastAPI backend over HTTP; SQLAlchemy
-and SQLite persist pantry, recipes, basket selections, shopping changes, purchase
-transfers and cooking history. The backend is the source of truth for recipe matching,
-quantities, shopping and cooking calculations.
+FreshFirst is a production-built recipe, pantry, basket, shopping-list and cooking-history
+application with secure per-account data isolation. Users can register, manage pantry stock,
+find recipes, adapt servings, build shopping lists, record purchases and confirm cooking.
+The backend is the source of truth for authentication, quantities, expiry-aware matching,
+shopping calculations and cooking transactions.
+
+Live demo: [freshfirst-yk43.onrender.com](https://freshfirst-yk43.onrender.com/) ·
+[Google Cloud HTTPS demo](https://34.171.30.130.nip.io/)
+
+## Technology and architecture
+
+- React, TypeScript, Vite and TanStack Start SSR frontend.
+- FastAPI, SQLAlchemy and Pydantic backend with strict validation and CSRF-protected sessions.
+- SQLite by default for independent local development; PostgreSQL for Compose and production.
+- Docker production image and Docker Compose with health-gated PostgreSQL startup.
+- Caddy reverse proxy for automatic Let's Encrypt HTTPS, HTTP-to-HTTPS redirects and persistent certificates on GCP.
+- Terraform for one cost-conscious Google Compute Engine VM and persistent PostgreSQL storage.
+- GitHub Actions for backend, frontend, production-image, PostgreSQL integration and Playwright checks.
+
+The production request path is:
+
+```text
+Browser -> Caddy (80/443) -> FreshFirst production gateway -> TanStack Start SSR
+                                              \-> FastAPI -> PostgreSQL
+```
+
+PostgreSQL is private to the Compose network. The GCP HTTPS deployment uses the free
+`34.171.30.130.nip.io` DNS hostname; a domain you control can replace it without changing
+the application architecture.
 
 ## Development
 
@@ -157,13 +181,38 @@ The E2E runner uses only disposable test resources. Do not run `down -v` against
 Compose project or the existing Issue #55 container. SQLite regression tests and the HTTP-level
 Compose integration test remain separate commands and are not replaced by this browser suite.
 
+The MVP browser coverage is tracked as small, reviewable issues:
+
+- [#75 Pantry lifecycle, filters, expiry, edit and removal](https://github.com/ttogzhann/freshfirst-market/issues/75)
+- [#76 Recipe search, categories, sorting, servings and import report](https://github.com/ttogzhann/freshfirst-market/issues/76)
+- [#77 Basket quantity, substitution and removal](https://github.com/ttogzhann/freshfirst-market/issues/77)
+- [#78 Manual shopping-list lifecycle and pantry transfer](https://github.com/ttogzhann/freshfirst-market/issues/78)
+- [#79 Account isolation](https://github.com/ttogzhann/freshfirst-market/issues/79)
+
+All five issues are labeled `e2e-test` and closed with evidence from the real Compose browser
+run.
+
+## AI-native delivery workflow
+
+FreshFirst is developed through GitHub Issues and small dependency-ordered pull requests.
+Each issue is groomed first, implemented in an isolated branch, and reviewed by independent
+QA against an exact commit before integration. CI is the deployment gate: backend, frontend,
+production-image, PostgreSQL integration and Playwright checks must pass before the protected
+Render deployment. The GCP workflow is separately approval-gated through `gcp-production` and
+uses keyless GitHub OIDC; it does not run Terraform automatically.
+
 ## Part 3 deployment summary
 
 The verified deployments are:
 
 - Render: [https://freshfirst-yk43.onrender.com](https://freshfirst-yk43.onrender.com/), with the existing Render auto-deploy pipeline gated by GitHub Actions checks.
-- Google Cloud Compute Engine: [http://34.171.30.130/](http://34.171.30.130/), provisioned with [`infra/gcp/`](infra/gcp/). It runs the production Dockerfile with Docker Compose and private PostgreSQL on persistent VM storage.
+- Google Cloud Compute Engine: [https://34.171.30.130.nip.io/](https://34.171.30.130.nip.io/), provisioned with [`infra/gcp/`](infra/gcp/). The deployed branch adds Caddy HTTPS with persistent certificate storage, while PostgreSQL remains private on persistent VM storage.
 
 Part 3 setup includes the production Docker image, PostgreSQL persistence, Docker Compose health-gated startup, real PostgreSQL integration coverage, Terraform Compute Engine provisioning, and pinned Playwright browser E2E coverage. Render CI/CD runs backend, frontend, production-image, Compose PostgreSQL, and Playwright checks before its protected Render deploy job.
 
 The GCP GitHub Actions workflow is approval-gated but is not operational by default: it still requires project-specific GitHub OIDC/Workload Identity configuration, a protected `gcp-production` environment, minimal IAP/OS Login permissions, and operator approval. It does not run `terraform apply`. No GCP deployment is triggered by this documentation update.
+
+The repository default branch is the stable Part 3 submission baseline. The deployed
+`feature/render-deployment` branch additionally contains the approved free-text pantry UI,
+HTTP-to-HTTPS GCP proxy updates and related authentication regression fix; this documentation
+PR does not copy application or infrastructure commits into `main`.

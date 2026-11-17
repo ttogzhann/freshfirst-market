@@ -1,4 +1,3 @@
-# New name deliberately does not match the legacy default-branch GCP listener.
 name: FreshFirst checks
 
 on:
@@ -134,7 +133,7 @@ jobs:
     name: Deploy Render after all tests
     needs: [backend, frontend, production-image, compose-integration, playwright-e2e]
     if: >-
-      github.event_name == 'workflow_dispatch' && inputs.deploy == true && github.ref == 'refs/heads/feature/render-deployment'
+      false && github.event_name == 'workflow_dispatch' && inputs.deploy == true && github.ref == 'refs/heads/feature/render-deployment'
     runs-on: ubuntu-24.04
     environment: render-production
     timeout-minutes: 15
