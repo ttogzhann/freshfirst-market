@@ -188,7 +188,8 @@ case "$*" in
  *".Config.Image"*) echo old-image;;
  *"{{.Image}}"*) echo "${RUNNING_IMAGE_ID:-$TEST_IMAGE_ID}";;
  "image inspect --format {{json .RepoDigests}}"*) printf '["%s"]\\n' "${REPORTED_IMAGE:-$TEST_IMAGE}";;
- "image inspect --format {{.Id}}"*) echo "$TEST_IMAGE_ID";;
+ "manifest inspect"*) printf '{"config":{"digest":"%s"}}\\n' "${MANIFEST_CONFIG_ID:-$TEST_IMAGE_ID}";;
+ "image inspect --format {{.Id}}"*) if [ "${ON_VM:-}" = 1 ]; then echo "$TEST_IMAGE_ID"; else echo "${LOCAL_IMAGE_ID:-$TEST_IMAGE_ID}"; fi;;
  "image save"*) cp "$SOURCE_ARCHIVE" "$4";;
  "image load") cat > "$IMPORTED_ARCHIVE";;
  *"up -d"*) [ "$FRESHFIRST_IMAGE" = "$TEST_IMAGE_ID" ] || exit 92;;
@@ -225,6 +226,8 @@ exit 93
         verify_only=False,
         available_kb=None,
         environment="dev",
+        containerd=False,
+        manifest_mismatch=False,
     ):
         archive, image_id = image_archive()
         data = archive if data is None else data
@@ -258,6 +261,10 @@ exit 93
             env["RUNNING_IMAGE_ID"] = running
         if reported:
             env["REPORTED_IMAGE"] = reported
+        if containerd:
+            env["LOCAL_IMAGE_ID"] = IMAGE.split("@")[1]
+        if manifest_mismatch:
+            env["MANIFEST_CONFIG_ID"] = "sha256:" + "0" * 64
         prefix = f'export PATH="{binary_path}:$PATH"\n'
         if workflow:
             env.pop("ON_VM")
@@ -270,8 +277,15 @@ exit 93
                 for s in w["jobs"]["build-dev"]["steps"]
                 if s.get("id") == "dev-transfer"
             )
-            script = step["run"].replace(
-                "/usr/local/sbin/freshfirst-release-dev-archive", helper.as_posix()
+            script = (
+                step["run"]
+                .replace(
+                    "/usr/local/sbin/freshfirst-release-dev-archive", helper.as_posix()
+                )
+                .replace(
+                    ".deployment-tools/infra/gcp/verify-image-archive.py",
+                    (app / "infra/gcp/verify-image-archive.py").as_posix(),
+                )
             )
             command = [bash, "-c", prefix + script]
             stdin = b""
@@ -377,7 +391,19 @@ def test_workflow_exports_exact_registry_digest_and_transfers_only_image_bytes(
     assert not list(temp.glob("freshfirst-dev.*.tar"))
 
 
-def test_workflow_keeps_holds_preflight_and_one_build_with_no_vm_credentials():
+@pytest.mark.parametrize("options", [{"containerd": True}, {"manifest_mismatch": True}])
+def test_runner_checks_registry_config_with_containerd_ids(runtime, options):
+    result, state, log, _, image_id = runtime(workflow=True, **options)
+    if options.get("containerd"):
+        assert result.returncode == 0, result.stderr.decode(errors="replace")
+        assert (state / "dev/current-image-id").read_text().strip() == image_id
+    else:
+        assert result.returncode != 0
+        assert "1 image load" not in log.read_text()
+        assert not (state / "dev/current-image").exists()
+
+
+def test_workflow_keeps_production_holds_preflight_and_one_build_without_credentials():
     def load(name):
         return yaml.load(
             (ROOT / f".github/workflows/{name}.yml").read_text(encoding="utf-8-sig"),
@@ -386,12 +412,19 @@ def test_workflow_keeps_holds_preflight_and_one_build_with_no_vm_credentials():
 
     gcp, render = load("gcp"), load("render")
     for job in (
-        gcp["jobs"]["build-dev"],
         gcp["jobs"]["promote-production"],
         render["jobs"]["deploy-render"],
     ):
         assert job["if"].strip().startswith("false &&")
     dev = gcp["jobs"]["build-dev"]
+    assert dev["if"].strip().startswith("github.event_name == 'workflow_run' &&")
+    for guard in (
+        "conclusion == 'success'",
+        "event == 'push'",
+        "head_branch == 'feature/render-deployment'",
+        "head_repository.full_name == github.repository",
+    ):
+        assert guard in dev["if"]
     assert (
         sum("docker/build-push-action@" in s.get("uses", "") for s in dev["steps"]) == 1
     )

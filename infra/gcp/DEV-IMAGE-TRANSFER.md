@@ -1,7 +1,31 @@
-# Held dev image transfer without VM registry credentials
+# Dev image transfer without VM registry credentials
+
+## Dev-only activation
+
+PR #99 merged at `71cb484`; the operator confirmed normalized production
+snapshots match, and archive EOF preflight `44026078637` passed. Dev activation
+removes only the dev hold; both production `false &&` holds remain. PR #98
+must stay unmerged. No observability configuration is activated.
+
+Before transfer, the runner checks 512 MiB available VM RAM, production health
+and the isolated healthy dev PostgreSQL container. The installed helper enforces
+archive and Docker disk headroom. Registry manifest config verification supports
+containerd-backed Docker, and both runner and VM verify archive config/layers.
+After release, check dev app/database health, no swap/restart, CPU/RAM limits and
+loopback-only 8081, then compare normalized production and dev-database snapshots
+and helper/Compose hashes. A failed gate stops the run without automatic repairs.
+Only then publish `healthy-dev-release` metadata.
+
+For the first approved run, rerun successful **push** CI `43897127661` once:
+`gh run rerun 43897127661 --repo ttogzhann/freshfirst-market`.
+Its successful completion triggers one automatic dev run using source
+`5b788cfcbaf79b4f5ec3aa58b9ebfdf16c437c43`. A manual CI dispatch does not qualify.
+Do not dispatch production or the test-image publisher.
+
+## Historical transport review and prerequisites
 
 Draft PR #98 remains blocked and must not be merged as-is. This replacement
-prepares the alternative transport; **dev and both production jobs stay held**.
+prepared the alternative transport with dev and both production jobs held.
 This comparison fix performs no live transfer/import or deployment. The
 operator's separate import-test evidence is recorded below.
 

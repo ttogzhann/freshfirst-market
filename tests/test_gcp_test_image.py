@@ -20,7 +20,7 @@ def workflow(name="gcp"):
     )
 
 
-def test_publisher_is_manual_mutually_exclusive_and_all_deployments_stay_held():
+def test_publisher_is_manual_mutually_exclusive_and_production_stays_held():
     w = workflow()
     job = w["jobs"]["publish-import-test-image"]
     assert job["if"] == (
@@ -33,7 +33,6 @@ def test_publisher_is_manual_mutually_exclusive_and_all_deployments_stay_held():
         == "false"
     )
     for j in [
-        w["jobs"]["build-dev"],
         w["jobs"]["promote-production"],
         workflow("render")["jobs"]["deploy-render"],
     ]:
