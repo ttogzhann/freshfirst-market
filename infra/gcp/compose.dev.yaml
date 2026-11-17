@@ -1,6 +1,13 @@
 # Dev only. Load after compose.yaml and compose.image.yaml (Compose >= 2.24.4).
 services:
   app:
+    environment:
+      FRESHFIRST_TELEMETRY_ENABLED: ${FRESHFIRST_TELEMETRY_ENABLED:-false}
+      FRESHFIRST_TELEMETRY_ENVIRONMENT: dev
+      FRESHFIRST_TELEMETRY_SAMPLE_RATIO: ${FRESHFIRST_TELEMETRY_SAMPLE_RATIO:-0.1}
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      OTEL_EXPORTER_OTLP_HEADERS: ${OTEL_EXPORTER_OTLP_HEADERS:-}
     mem_limit: 384m
     memswap_limit: 384m # Equal to RAM disables container swap.
     cpus: 0.25

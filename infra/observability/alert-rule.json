@@ -1,0 +1,106 @@
+{
+  "uid": "freshfirst-dev-traffic-demo",
+  "title": "FreshFirstDevTrafficDemo",
+  "folderUID": "REPLACE_DEV_FOLDER_UID",
+  "ruleGroup": "FreshFirst dev",
+  "condition": "C",
+  "for": "0s",
+  "noDataState": "OK",
+  "execErrState": "Error",
+  "labels": {
+    "freshfirst_environment": "dev",
+    "severity": "info"
+  },
+  "annotations": {
+    "summary": "Safe GET traffic demonstration; read-only AI diagnostic requested"
+  },
+  "data": [
+    {
+      "refId": "A",
+      "relativeTimeRange": {
+        "from": 300,
+        "to": 0
+      },
+      "datasourceUid": "REPLACE_METRICS_UID",
+      "model": {
+        "refId": "A",
+        "expr": "sum(increase(freshfirst_http_requests_total{freshfirst_environment=\"dev\",http_route=\"/api/ingredients\",http_request_method=\"GET\"}[5m]))",
+        "instant": true,
+        "intervalMs": 1000,
+        "maxDataPoints": 43200
+      }
+    },
+    {
+      "refId": "B",
+      "relativeTimeRange": {
+        "from": 0,
+        "to": 0
+      },
+      "datasourceUid": "__expr__",
+      "model": {
+        "refId": "B",
+        "type": "reduce",
+        "expression": "A",
+        "reducer": "last",
+        "conditions": [
+          {
+            "type": "query",
+            "evaluator": {
+              "type": "gt",
+              "params": []
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "B"
+              ]
+            },
+            "reducer": {
+              "type": "last",
+              "params": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "refId": "C",
+      "relativeTimeRange": {
+        "from": 0,
+        "to": 0
+      },
+      "datasourceUid": "__expr__",
+      "model": {
+        "refId": "C",
+        "type": "threshold",
+        "expression": "B",
+        "conditions": [
+          {
+            "type": "query",
+            "evaluator": {
+              "type": "gt",
+              "params": [
+                20
+              ]
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "C"
+              ]
+            },
+            "reducer": {
+              "type": "last",
+              "params": []
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "isPaused": true
+}
