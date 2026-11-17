@@ -192,6 +192,8 @@ jobs:
       group: freshfirst-gcp-dev
       cancel-in-progress: false
     timeout-minutes: 30
+    env:
+      GCP_SSH_KEY: ${{ runner.temp }}/freshfirst-dev-ssh
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -231,6 +233,19 @@ jobs:
           create_credentials_file: true
           export_environment_variables: true
           cleanup_credentials: true
+      - name: Prepare noninteractive IAP SSH outside snapshot data
+        env:
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          GCP_VM_NAME: ${{ vars.GCP_VM_NAME }}
+          GCP_ZONE: ${{ vars.GCP_ZONE }}
+        run: |
+          set -euo pipefail
+          # gcloud's first ssh-keygen inherits stdout; log setup separately.
+          # Keep host-key verification unchanged and surface every diagnostic.
+          gcloud compute ssh "$GCP_VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --tunnel-through-iap --quiet \
+            --ssh-key-file "$GCP_SSH_KEY" --ssh-flag=-T --ssh-flag=-oBatchMode=yes --ssh-key-expire-after=10m \
+            --command true </dev/null 1>&2
+          test -s "$GCP_SSH_KEY" && test -s "$GCP_SSH_KEY.pub"
       - name: Check production health, dev database isolation and host headroom
         env:
           GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
@@ -238,9 +253,11 @@ jobs:
           GCP_ZONE: ${{ vars.GCP_ZONE }}
         run: |
           set -euo pipefail
-          gcloud compute ssh "$GCP_VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --tunnel-through-iap --quiet --ssh-flag=-T --ssh-key-expire-after=10m \
-            --command 'bash -s -- before' < .deployment-tools/infra/gcp/dev-host-check.sh \
-            | python3 .deployment-tools/infra/gcp/normalize-production-snapshot.py > "$RUNNER_TEMP/production.before"
+          test -s "$GCP_SSH_KEY" && test -s "$GCP_SSH_KEY.pub"
+          gcloud compute ssh "$GCP_VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --tunnel-through-iap --quiet \
+            --ssh-key-file "$GCP_SSH_KEY" --ssh-flag=-T --ssh-flag=-oBatchMode=yes --ssh-key-expire-after=10m \
+            --command 'bash -s -- before' < .deployment-tools/infra/gcp/dev-host-check.sh > "$RUNNER_TEMP/production.before.raw"
+          python3 .deployment-tools/infra/gcp/normalize-production-snapshot.py "$RUNNER_TEMP/production.before.raw" > "$RUNNER_TEMP/production.before"
       - name: Transfer verified image archive and release dev
         id: dev-transfer
         env:
@@ -270,8 +287,10 @@ jobs:
           [[ "$archive_sha" =~ ^[a-f0-9]{64}$ ]]
           archive_size=$(stat -c %s "$archive")
           [[ "$archive_size" =~ ^[1-9][0-9]{0,9}$ && "$archive_size" -le 1073741824 ]]
+          test -s "$GCP_SSH_KEY" && test -s "$GCP_SSH_KEY.pub"
           cat "$archive" \
-            | gcloud compute ssh "$GCP_VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --tunnel-through-iap --quiet --ssh-flag=-T --ssh-key-expire-after=10m \
+            | gcloud compute ssh "$GCP_VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --tunnel-through-iap --quiet \
+              --ssh-key-file "$GCP_SSH_KEY" --ssh-flag=-T --ssh-flag=-oBatchMode=yes --ssh-key-expire-after=10m \
               --command "sudo -n /usr/local/sbin/freshfirst-release-dev-archive dev '$IMAGE' --image-archive-stdin '$archive_sha' '$archive_size' '$image_id'"
           printf 'archive_sha256=%s\narchive_size=%s\nimage_id=%s\n' "$archive_sha" "$archive_size" "$image_id" >> "$GITHUB_OUTPUT"
       - name: Verify dev health and unchanged production metadata
@@ -281,9 +300,11 @@ jobs:
           GCP_ZONE: ${{ vars.GCP_ZONE }}
         run: |
           set -euo pipefail
-          gcloud compute ssh "$GCP_VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --tunnel-through-iap --quiet --ssh-flag=-T --ssh-key-expire-after=10m \
-            --command 'bash -s -- after' < .deployment-tools/infra/gcp/dev-host-check.sh \
-            | python3 .deployment-tools/infra/gcp/normalize-production-snapshot.py > "$RUNNER_TEMP/production.after"
+          test -s "$GCP_SSH_KEY" && test -s "$GCP_SSH_KEY.pub"
+          gcloud compute ssh "$GCP_VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --tunnel-through-iap --quiet \
+            --ssh-key-file "$GCP_SSH_KEY" --ssh-flag=-T --ssh-flag=-oBatchMode=yes --ssh-key-expire-after=10m \
+            --command 'bash -s -- after' < .deployment-tools/infra/gcp/dev-host-check.sh > "$RUNNER_TEMP/production.after.raw"
+          python3 .deployment-tools/infra/gcp/normalize-production-snapshot.py "$RUNNER_TEMP/production.after.raw" > "$RUNNER_TEMP/production.after"
           cmp "$RUNNER_TEMP/production.before" "$RUNNER_TEMP/production.after"
           printf '%s\n' 'Dev app and isolated database healthy; limits and loopback port verified; production healthy and metadata unchanged.' >> "$GITHUB_STEP_SUMMARY"
       - name: Record healthy dev release
@@ -313,6 +334,9 @@ jobs:
           name: healthy-dev-release
           path: release.json
           retention-days: 90
+      - name: Remove runner-only SSH key
+        if: always()
+        run: rm -f -- "$GCP_SSH_KEY" "$GCP_SSH_KEY.pub"
 
   promote-production:
     # Production requires a separate reviewed activation and independent approval.
