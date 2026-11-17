@@ -1,4 +1,4 @@
-name: FreshFirst Render CI/CD
+name: FreshFirst checks
 
 on:
   pull_request:
