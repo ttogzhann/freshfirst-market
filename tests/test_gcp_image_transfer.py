@@ -233,6 +233,9 @@ exit 93
         data = archive if data is None else data
         source = tmp_path / "source.tar"
         source.write_bytes(data)
+        ssh_key = tmp_path / "runner-ssh"
+        ssh_key.write_text("mock private key")
+        ssh_key.with_suffix(".pub").write_text("mock public key")
         env = {
             **os.environ,
             "TEST_PYTHON": sys.executable,
@@ -243,6 +246,7 @@ exit 93
             "IMPORTED_ARCHIVE": (tmp_path / "imported.tar").as_posix(),
             "SOURCE_ARCHIVE": source.as_posix(),
             "RUNNER_TEMP": tmp_path.as_posix(),
+            "GCP_SSH_KEY": ssh_key.as_posix(),
             "GITHUB_OUTPUT": (tmp_path / "outputs").as_posix(),
             "IMAGE": IMAGE,
             "GCP_PROJECT_ID": "test",
