@@ -115,7 +115,11 @@ secret in SSH argv or an exported container environment variable.
 
 After separate deployment approval, install the reviewed Compose files and image
 using the existing approved archive process. The digest must already be imported
-locally: `--pull never` will not fetch it. Then, in a privileged Bash DEV session:
+locally: `--pull never` will not fetch it. Use
+`sudoedit /etc/freshfirst/dev.env` to set only the nonsecret DEV endpoint,
+temporary sample ratio `1` and approved image digest from the table above.
+Preserve existing database/authentication values and add no header variables.
+Then, in a privileged Bash DEV session:
 
 ```bash
 compose=(sudo docker compose --project-directory /opt/freshfirst
