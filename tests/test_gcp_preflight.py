@@ -92,7 +92,7 @@ IFS= read -r unexpected && exit 97
 case "$FAILURE" in
   message) echo 'different error'; exit 1;;
   success) exit 0;;
-  *) echo 'Missing registry token on stdin' >&2; exit 1;;
+  *) echo 'Missing image archive on stdin' >&2; exit 1;;
 esac
 """,
     }

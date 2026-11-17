@@ -73,15 +73,16 @@ jobs:
           test "$(stat -c '%u:%g:%a' "$helper")" = '0:0:750'
           image=us-central1-docker.pkg.dev/freshfirst-513520/freshfirst/app@sha256:0000000000000000000000000000000000000000000000000000000000000000
           printf 'Applicable command-specific sudo policy (inspect input/session logging):\n'
-          sudo -n -ll "$helper" dev "$image" --registry-token-stdin
+          zero=0000000000000000000000000000000000000000000000000000000000000000
+          sudo -n -ll "$helper" dev "$image" --image-archive-stdin "$zero" 1 "sha256:$zero"
           rc=0
-          result=$(sudo -n "$helper" dev "$image" --registry-token-stdin </dev/null 2>&1) || rc=$?
-          if [ "$rc" -ne 1 ] || [ "$result" != 'Missing registry token on stdin' ]; then
+          result=$(sudo -n "$helper" dev "$image" --image-archive-stdin "$zero" 1 "sha256:$zero" </dev/null 2>&1) || rc=$?
+          if [ "$rc" -ne 1 ] || [ "$result" != 'Missing image archive on stdin' ]; then
             printf 'FAIL: expected missing-token rejection; exit=%s\n' "$rc" >&2
             exit 1
           fi
           printf 'PASS: SSH and passwordless sudo without TTY; helper rejected EOF before Docker.\n'
-          printf 'AUDITING: UNVERIFIED. Administrator must confirm no stdin/session recording before any registry token is sent.\n'
+          printf 'AUDITING: UNVERIFIED. Dev transport sends only image bytes, never registry credentials.\n'
           REMOTE
           )
           gcloud compute ssh "$GCP_VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" \
@@ -130,20 +131,17 @@ jobs:
           push: true
           tags: ${{ vars.GCP_IMAGE_REPOSITORY }}:${{ github.event.workflow_run.head_sha }}
           platforms: linux/amd64
-      - name: Mint short-lived dev pull credential after the build
-        id: dev-pull-token
+      - name: Refresh runner OIDC credentials after the build
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
-          token_format: access_token
-          access_token_lifetime: 600s
           create_credentials_file: true
           export_environment_variables: true
           cleanup_credentials: true
-      - name: Deploy immutable release to dev
+      - name: Transfer verified image archive and release dev
+        id: dev-transfer
         env:
-          REGISTRY_ACCESS_TOKEN: ${{ steps.dev-pull-token.outputs.access_token }}
           IMAGE: ${{ vars.GCP_IMAGE_REPOSITORY }}@${{ steps.image.outputs.digest }}
           GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
           GCP_VM_NAME: ${{ vars.GCP_VM_NAME }}
@@ -152,24 +150,42 @@ jobs:
           set +x
           set -euo pipefail
           [[ "$IMAGE" =~ ^[a-z0-9-]+-docker\.pkg\.dev/[a-z0-9-]+/[a-z0-9_-]+/[a-z0-9/_-]+@sha256:[a-f0-9]{64}$ ]]
-          test -n "$REGISTRY_ACCESS_TOKEN"
-          printf '%s\n' "$REGISTRY_ACCESS_TOKEN" \
-            | gcloud compute ssh "$GCP_VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --tunnel-through-iap --quiet --ssh-flag=-T \
-              --command "sudo -n /usr/local/sbin/freshfirst-release dev '$IMAGE' --registry-token-stdin"
-          unset REGISTRY_ACCESS_TOKEN
+          archive=$(mktemp "$RUNNER_TEMP/freshfirst-dev.XXXXXX.tar")
+          trap 'rm -f -- "$archive"' EXIT
+          docker pull --platform linux/amd64 "$IMAGE"
+          docker image inspect --format '{{json .RepoDigests}}' "$IMAGE" \
+            | python3 -c 'import json,sys; assert sys.argv[1] in json.load(sys.stdin), "Registry digest mismatch"' "$IMAGE"
+          image_id=$(docker image inspect --format '{{.Id}}' "$IMAGE")
+          [[ "$image_id" =~ ^sha256:[a-f0-9]{64}$ ]]
+          # Saving by ID produces an untagged archive; no registry credentials are included.
+          docker image save --output "$archive" "$image_id"
+          archive_sha=$(sha256sum "$archive" | cut -d ' ' -f 1)
+          [[ "$archive_sha" =~ ^[a-f0-9]{64}$ ]]
+          archive_size=$(stat -c %s "$archive")
+          [[ "$archive_size" =~ ^[1-9][0-9]{0,9}$ && "$archive_size" -le 1073741824 ]]
+          cat "$archive" \
+            | gcloud compute ssh "$GCP_VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --tunnel-through-iap --quiet --ssh-flag=-T --ssh-key-expire-after=10m \
+              --command "sudo -n /usr/local/sbin/freshfirst-release dev '$IMAGE' --image-archive-stdin '$archive_sha' '$archive_size' '$image_id'"
+          printf 'archive_sha256=%s\narchive_size=%s\nimage_id=%s\n' "$archive_sha" "$archive_size" "$image_id" >> "$GITHUB_OUTPUT"
       - name: Record healthy dev release
         env:
           IMAGE: ${{ vars.GCP_IMAGE_REPOSITORY }}@${{ steps.image.outputs.digest }}
           DIGEST: ${{ steps.image.outputs.digest }}
           SOURCE_SHA: ${{ github.event.workflow_run.head_sha }}
           CI_RUN_ID: ${{ github.event.workflow_run.id }}
+          IMAGE_ID: ${{ steps.dev-transfer.outputs.image_id }}
+          ARCHIVE_SHA256: ${{ steps.dev-transfer.outputs.archive_sha256 }}
+          ARCHIVE_SIZE: ${{ steps.dev-transfer.outputs.archive_size }}
         run: |
           python3 - <<'PY'
           import json, os
           release = {"image": os.environ["IMAGE"], "digest": os.environ["DIGEST"],
                      "source_sha": os.environ["SOURCE_SHA"], "ci_run_id": int(os.environ["CI_RUN_ID"]),
                      "repository": os.environ["GITHUB_REPOSITORY"],
-                     "dev_run_id": int(os.environ["GITHUB_RUN_ID"]), "dev_healthy": True}
+                     "dev_run_id": int(os.environ["GITHUB_RUN_ID"]), "dev_healthy": True,
+                     "transport": "verified-image-archive", "image_id": os.environ["IMAGE_ID"],
+                     "archive_sha256": os.environ["ARCHIVE_SHA256"],
+                     "archive_size": int(os.environ["ARCHIVE_SIZE"])}
           with open("release.json", "w") as f: json.dump(release, f)
           PY
           cat release.json >> "$GITHUB_STEP_SUMMARY"
