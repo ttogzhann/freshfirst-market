@@ -76,42 +76,28 @@ For this dev VM, prefer [direct Grafana Cloud OTLP ingestion](https://grafana.co
 over running Grafana/Prometheus/Loki/Tempo locally. It supports metrics, traces
 and logs without a VM service account. Use the stack's OpenTelemetry connection
 page to obtain its HTTPS base endpoint and a narrowly scoped write token. Store
-`OTEL_EXPORTER_OTLP_HEADERS` (the portal's URL-encoded authorization value) only
-in a private root-owned `0600` env file; never source/print it in CI, commit it or
-place credentials in the endpoint URL. Direct ingestion is a dev/quickstart
-tradeoff; a remote collector can add buffering without consuming this VM's RAM.
+the portal's URL-encoded OTLP header value only in the private DEV file described
+in [the DEV activation runbook](DEV-ACTIVATION.md). Do not put the token in an
+`OTEL_EXPORTER_OTLP_HEADERS` environment variable or in `dev.env`: Docker inspect
+exposes container environment values. The application reads
+`FRESHFIRST_TELEMETRY_HEADERS_FILE` and passes parsed headers directly to all
+three exporters without copying credentials into its environment. Generic and
+signal-specific SDK header environment variables are rejected before providers
+start; remote dev export requires the file. The file option is rejected for
+production/test/local telemetry environments. Local loopback collectors may run
+without headers.
 
-Set these additional values in the private **dev** environment file:
+The optional `compose.telemetry.yaml` mounts only
+`/etc/freshfirst/dev-secrets/otlp-headers` as a read-only file-backed Compose secret
+and explicitly enables dev instrumentation. It is not loaded by ordinary archive
+releases. The default dev overlay forces telemetry off, so a subsequent ordinary
+release disables it. Never load the telemetry overlay for production. Production
+holds, release helpers, database configuration and resource limits are unchanged.
 
-```dotenv
-FRESHFIRST_TELEMETRY_ENVIRONMENT=dev
-FRESHFIRST_TELEMETRY_SAMPLE_RATIO=0.1
-OTEL_EXPORTER_OTLP_ENDPOINT=https://YOUR-STACK-OTLP-GATEWAY/otlp
-OTEL_EXPORTER_OTLP_HEADERS=REPLACE_PRIVATELY_WITH_PORTAL_VALUE
-```
-
-The separate `compose.telemetry.yaml` explicitly enables instrumentation and
-passes these values into the app container. For a later approved dev-only
-operation, append it to the existing reviewed image/dev Compose configuration:
-
-```bash
-sudo docker compose --project-directory /opt/freshfirst \
-  --project-name freshfirst-dev --env-file /etc/freshfirst/dev.env \
-  -f /opt/freshfirst/compose.yaml \
-  -f /opt/freshfirst/infra/gcp/compose.image.yaml \
-  -f /opt/freshfirst/infra/gcp/compose.dev.yaml \
-  -f /opt/freshfirst/infra/observability/compose.telemetry.yaml config --quiet
-```
-
-Supply the approved `FRESHFIRST_IMAGE` digest through the env file for this manual
-Compose command. Do not print the rendered config because it contains secrets.
-After separate deployment approval, the same command with `up -d --no-deps
---no-build --pull never app` instead of `config --quiet` recreates only dev app.
-The dev Compose overlay now passes telemetry settings from the private dev env
-file, with instrumentation disabled by default. A later approved dev release can
-preserve explicit opt-in without the separate telemetry overlay. The optional
-telemetry overlay forces opt-in; never load it for production. Production stays
-off; no GCP deployment hold or GitHub environment setting is changed here.
+The activation runbook contains the complete nonsecret environment table,
+root/group file permissions for app UID/GID 10001, later operator-only commands
+and live verification procedure. No secret file, deployment, infrastructure or
+GitHub Actions secret operation was performed while preparing these files.
 
 With no attached VM service account, telemetry can still use the managed token.
 Dev image pulls are now prepared to use the deployer's short-lived OIDC token
