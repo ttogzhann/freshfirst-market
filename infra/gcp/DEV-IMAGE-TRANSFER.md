@@ -2,7 +2,8 @@
 
 Draft PR #98 remains blocked and must not be merged as-is. This replacement
 prepares the alternative transport; **dev and both production jobs stay held**.
-No live image build, transfer, import or deployment has been performed here.
+This comparison fix performs no live transfer/import or deployment. The
+operator's separate import-test evidence is recorded below.
 
 ## Chain of verification
 
@@ -70,10 +71,10 @@ do not pass it to the registry-digest interface as a replacement digest.
 - Verify the exact archive-mode arguments are allowed by noninteractive sudo.
   The updated manual preflight sends EOF with dummy nonsecret hashes/size and
   expects `Missing image archive on stdin` before any Docker call. Re-run only
-  after separate approval; the older installed helper is not archive-compatible.
-- With separate approval, validate an actual Docker-save/load on the VM's Docker
-  version, free disk and memory headroom while keeping the release job held. The
-  current tests use synthetic archives and mocked Docker/SSH, not a live import.
+  after separate approval. The operator has already installed the archive helper.
+- The operator reports the approved BusyBox import passed with resource headroom,
+  as described below. Compare the saved evidence using the normalizer; do not
+  repeat installation or import for this fix.
 - Only after transport verification, approve removal of **dev's** hold in a
   separate PR and coordinate a fresh feature-push CI run. Preserve both production
   holds and manual preflight. Verify app health, ID/digest metadata, resource
@@ -87,9 +88,40 @@ The existing legacy production helper is not replaced or activated by this PR.
 
 ## One Cloud Shell installation/import-only procedure (approval required)
 
+**Existing VM: do not repeat installation/import.** The operator reports that
+the helper/verifier from `9d786f5` imported the approved BusyBox digest
+`sha256:63bb1322b9692d0a4ba0084a8168277d767a73048fc79a4869b912fe32d26bee`
+with config/layer/archive checks passing, 825 MiB available RAM and 26 GiB free
+Docker disk. Production/container/volume/Compose evidence was unchanged except
+Caddy's mount-array ordering; dev PostgreSQL stayed healthy. These are operator
+observations, not a new live verification by this change.
+
+`normalize-production-snapshot.py` sorts complete mount objects, JSON object keys
+and container records, while preserving every mount field and all other metadata
+and file hashes. It supports both the earlier raw format and new JSON lines. For
+the already collected evidence, run only this local comparison in Cloud Shell
+from a checkout containing the new normalizer (set `CHECK_DIR` to the saved path):
+
+```bash
+python3 infra/gcp/normalize-production-snapshot.py "$CHECK_DIR/production.before" > "$CHECK_DIR/production.before.normalized"
+python3 infra/gcp/normalize-production-snapshot.py "$CHECK_DIR/production.after" > "$CHECK_DIR/production.after.normalized"
+cmp "$CHECK_DIR/production.before.normalized" "$CHECK_DIR/production.after.normalized"
+```
+
+This compares metadata, not database contents. Unexpected/missing records fail
+closed. No repeat image transfer or production audit is required for this fix.
+
+After separately approving and merging this still-held PR, run only the manual
+archive EOF preflight (no import or deployment):
+
+```bash
+gh workflow run gcp.yml --repo ttogzhann/freshfirst-market --ref main \
+  -f preflight=true -f publish_test_image=false -f deploy=false
+```
+
 Run from an authenticated operator's repository checkout only after approval of
 the exact commit and an existing small test-image digest in the configured app
-repository. No digest is chosen or published here. This procedure creates only
+repository. This fresh-host reference procedure creates only
 two new host files plus their directory, imports one untagged test image, and
 does not start a container. Existing target files cause an abort instead of an
 overwrite. Import-only mode requires 512 MiB available RAM, limits the archive
@@ -99,17 +131,19 @@ and expanded layers to 64 MiB, checks both disks, and preserves release records.
 set -euo pipefail
 REVIEWED_SHA=REPLACE_WITH_APPROVED_COMMIT
 IMAGE=us-central1-docker.pkg.dev/freshfirst-513520/freshfirst/app@sha256:REPLACE_WITH_APPROVED_SMALL_TEST_DIGEST
+EXPECTED_CONFIG_ID=sha256:REPLACE_WITH_APPROVED_CONFIG_DIGEST
 [[ "$REVIEWED_SHA" =~ ^[a-f0-9]{40}$ ]]
 [[ "$IMAGE" =~ ^us-central1-docker\.pkg\.dev/freshfirst-513520/freshfirst/app@sha256:[a-f0-9]{64}$ ]]
+[[ "$EXPECTED_CONFIG_ID" =~ ^sha256:[a-f0-9]{64}$ ]]
 CHECK_DIR=$(mktemp -d)
 FLAGS=(--project=freshfirst-513520 --zone=us-central1-a --tunnel-through-iap --quiet)
 vm() { gcloud compute ssh freshfirst "${FLAGS[@]}" --ssh-flag=-T --command "$1"; }
-for file in freshfirst-release.sh verify-image-archive.py; do
+for file in freshfirst-release.sh verify-image-archive.py normalize-production-snapshot.py; do
   git show "$REVIEWED_SHA:infra/gcp/$file" > "$CHECK_DIR/$file"
 done
-SNAPSHOT='set -eu; sudo -n sha256sum /usr/local/sbin/freshfirst-release /opt/freshfirst/compose.yaml /opt/freshfirst/infra/gcp/compose.image.yaml /opt/freshfirst/infra/gcp/compose.dev.yaml; ids=$(sudo -n docker ps -aq --filter label=com.docker.compose.project=freshfirst); test -n "$ids"; sudo -n docker inspect --format "{{.Name}} {{.Id}} {{.Image}} {{.State.StartedAt}} {{.RestartCount}} {{json .HostConfig.PortBindings}} {{json .Mounts}}" $ids'
+SNAPSHOT='set -eu; sudo -n sha256sum /usr/local/sbin/freshfirst-release /opt/freshfirst/compose.yaml /opt/freshfirst/infra/gcp/compose.image.yaml /opt/freshfirst/infra/gcp/compose.dev.yaml; ids=$(sudo -n docker ps -aq --filter label=com.docker.compose.project=freshfirst); test -n "$ids"; sudo -n docker inspect --format "{\"name\":{{json .Name}},\"id\":{{json .Id}},\"image\":{{json .Image}},\"started_at\":{{json .State.StartedAt}},\"restart_count\":{{json .RestartCount}},\"ports\":{{json .HostConfig.PortBindings}},\"mounts\":{{json .Mounts}}}" $ids'
 RESOURCES='set -eu; free -m; root=$(sudo -n docker info --format "{{.DockerRootDir}}"); df -h /var/lib/freshfirst-releases/dev "$root"; ids=$(sudo -n docker ps -q --filter label=com.docker.compose.project=freshfirst); test -n "$ids"; sudo -n docker stats --no-stream --format "{{.Name}} {{.MemUsage}} {{.CPUPerc}}" $ids'
-vm "$SNAPSHOT" | LC_ALL=C sort > "$CHECK_DIR/production.before"
+vm "$SNAPSHOT" | python3 "$CHECK_DIR/normalize-production-snapshot.py" > "$CHECK_DIR/production.before"
 vm "$RESOURCES"
 curl -fsS --max-time 15 -o /dev/null https://34.171.30.130.nip.io/healthz
 
@@ -126,16 +160,20 @@ vm "printf '%s  %s\n' '$H' /usr/local/sbin/freshfirst-release-dev-archive '$V' /
 gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 docker pull --platform linux/amd64 "$IMAGE"
 docker image inspect --format '{{json .RepoDigests}}' "$IMAGE" | python3 -c 'import json,sys; assert sys.argv[1] in json.load(sys.stdin)' "$IMAGE"
-ID=$(docker image inspect --format '{{.Id}}' "$IMAGE")
-[[ "$ID" =~ ^sha256:[a-f0-9]{64}$ ]]
-docker image save --output "$CHECK_DIR/test.tar" "$ID"
+docker manifest inspect "$IMAGE" > "$CHECK_DIR/manifest.json"
+python3 -c 'import json,sys; assert json.load(open(sys.argv[1]))["config"]["digest"] == sys.argv[2]' "$CHECK_DIR/manifest.json" "$EXPECTED_CONFIG_ID"
+LOCAL_ID=$(docker image inspect --format '{{.Id}}' "$IMAGE")
+[[ "$LOCAL_ID" == "$EXPECTED_CONFIG_ID" || "$LOCAL_ID" == "${IMAGE##*@}" ]]
+docker image save --output "$CHECK_DIR/raw.tar" "$LOCAL_ID"
+[[ $(stat -c %s "$CHECK_DIR/raw.tar") -lt 67108864 ]]
+python3 "$CHECK_DIR/verify-image-archive.py" "$CHECK_DIR/raw.tar" "$EXPECTED_CONFIG_ID" "$CHECK_DIR" 67108864 > "$CHECK_DIR/test.tar"
 HASH=$(sha256sum "$CHECK_DIR/test.tar" | cut -d ' ' -f 1)
 SIZE=$(stat -c %s "$CHECK_DIR/test.tar")
 [[ "$SIZE" -le 67108864 ]]
 IMPORT_RC=0
-cat "$CHECK_DIR/test.tar" | vm "sudo -n /usr/local/sbin/freshfirst-release-dev-archive dev '$IMAGE' --verify-image-archive-stdin '$HASH' '$SIZE' '$ID'" || IMPORT_RC=$?
+cat "$CHECK_DIR/test.tar" | vm "sudo -n /usr/local/sbin/freshfirst-release-dev-archive dev '$IMAGE' --verify-image-archive-stdin '$HASH' '$SIZE' '$EXPECTED_CONFIG_ID'" || IMPORT_RC=$?
 
-vm "$SNAPSHOT" | LC_ALL=C sort > "$CHECK_DIR/production.after"
+vm "$SNAPSHOT" | python3 "$CHECK_DIR/normalize-production-snapshot.py" > "$CHECK_DIR/production.after"
 cmp "$CHECK_DIR/production.before" "$CHECK_DIR/production.after"
 vm "$RESOURCES"
 curl -fsS --max-time 15 -o /dev/null https://34.171.30.130.nip.io/healthz

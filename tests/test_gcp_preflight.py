@@ -34,7 +34,7 @@ def test_preflight_is_manual_and_all_deployments_remain_held():
     job = gcp["jobs"]["oidc-preflight"]
     assert job["if"] == (
         "github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && "
-        "inputs.preflight == true && inputs.deploy != true"
+        "inputs.preflight == true && inputs.deploy != true && inputs.publish_test_image != true"
     )
     assert job["environment"] == "gcp-development"
     auth = next(
