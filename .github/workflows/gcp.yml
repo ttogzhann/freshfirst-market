@@ -7,6 +7,11 @@ on:
     branches: [feature/render-deployment]
   workflow_dispatch:
     inputs:
+      publish_test_image:
+        description: Publish the pinned small import-test image only (no VM access)
+        required: true
+        default: false
+        type: boolean
       preflight:
         description: Run token-free OIDC SSH/sudo checks only (main branch)
         required: true
@@ -36,7 +41,7 @@ permissions:
 
 jobs:
   oidc-preflight:
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.preflight == true && inputs.deploy != true
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.preflight == true && inputs.deploy != true && inputs.publish_test_image != true
     runs-on: ubuntu-24.04
     environment: gcp-development
     permissions:
@@ -88,6 +93,86 @@ jobs:
             --tunnel-through-iap --quiet --ssh-flag=-T --ssh-key-expire-after=5m \
             --command "$remote_command" </dev/null
           printf '%s\n' 'SSH/sudo preflight passed. Auditing remains UNVERIFIED; deployments remain held.' >> "$GITHUB_STEP_SUMMARY"
+
+  publish-import-test-image:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.publish_test_image == true && inputs.preflight != true && inputs.deploy != true
+    runs-on: ubuntu-24.04
+    environment: gcp-development
+    permissions:
+      contents: read
+      id-token: write
+    concurrency:
+      group: freshfirst-gcp-test-image-publish
+      cancel-in-progress: false
+    timeout-minutes: 10
+    env:
+      # Docker Official BusyBox 1.37.0, linux/amd64 manifest (not a mutable tag).
+      TEST_BASE_IMAGE: docker.io/library/busybox@sha256:66a6306db78bf2dbf3487f293aa8d6990d8e506fdffab9cc43fe422becf886e4
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Verify small linux/amd64 archive before publishing
+        id: archive
+        run: |
+          set -euo pipefail
+          archive=$(mktemp "$RUNNER_TEMP/freshfirst-import-test.XXXXXX.tar")
+          trap 'rm -f -- "$archive"' EXIT
+          docker pull --platform linux/amd64 "$TEST_BASE_IMAGE"
+          test "$(docker image inspect --format '{{.Os}}/{{.Architecture}}' "$TEST_BASE_IMAGE")" = linux/amd64
+          image_id=$(docker image inspect --format '{{.Id}}' "$TEST_BASE_IMAGE")
+          [[ "$image_id" =~ ^sha256:[a-f0-9]{64}$ ]]
+          docker image save --output "$archive" "$image_id"
+          size=$(stat -c %s "$archive")
+          [[ "$size" =~ ^[1-9][0-9]{0,9}$ && "$size" -lt 67108864 ]]
+          checksum=$(sha256sum "$archive" | cut -d ' ' -f 1)
+          [[ "$checksum" =~ ^[a-f0-9]{64}$ ]]
+          printf 'image_id=%s\narchive_size=%s\narchive_sha256=%s\n' "$image_id" "$size" "$checksum" >> "$GITHUB_OUTPUT"
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+          cleanup_credentials: true
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Publish existing image and record immutable test evidence
+        env:
+          IMAGE_REPOSITORY: ${{ vars.GCP_IMAGE_REPOSITORY }}
+          REGISTRY: ${{ vars.GCP_ARTIFACT_REGISTRY_HOST }}
+          IMAGE_ID: ${{ steps.archive.outputs.image_id }}
+          ARCHIVE_SIZE: ${{ steps.archive.outputs.archive_size }}
+          ARCHIVE_SHA256: ${{ steps.archive.outputs.archive_sha256 }}
+        run: |
+          set +x
+          set -euo pipefail
+          [[ "$IMAGE_REPOSITORY" =~ ^[a-z0-9-]+-docker\.pkg\.dev/[a-z0-9-]+/[a-z0-9_-]+/[a-z0-9/_-]+$ ]]
+          test "$REGISTRY" = "${IMAGE_REPOSITORY%%/*}"
+          gcloud auth configure-docker "$REGISTRY" --quiet
+          tag="$IMAGE_REPOSITORY:import-test-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          docker tag "$IMAGE_ID" "$tag"
+          docker push "$tag"
+          image=$(docker image inspect --format '{{json .RepoDigests}}' "$tag" \
+            | python3 -c 'import json,sys; refs=[r for r in json.load(sys.stdin) if r.startswith(sys.argv[1]+"@sha256:")]; assert len(refs)==1; print(refs[0])' "$IMAGE_REPOSITORY")
+          digest=${image##*@}
+          [[ "$digest" =~ ^sha256:[a-f0-9]{64}$ ]]
+          test "$image" = "$IMAGE_REPOSITORY@$digest"
+          docker pull --platform linux/amd64 "$image"
+          test "$(docker image inspect --format '{{.Id}}' "$image")" = "$IMAGE_ID"
+          export TEST_IMAGE=$image
+          python3 - <<'PY'
+          import json, os
+          record = {"image": os.environ["TEST_IMAGE"], "source_image": os.environ["TEST_BASE_IMAGE"],
+                    "digest": os.environ["TEST_IMAGE"].split("@")[1], "image_id": os.environ["IMAGE_ID"],
+                    "platform": "linux/amd64", "archive_size": int(os.environ["ARCHIVE_SIZE"]),
+                    "archive_sha256": os.environ["ARCHIVE_SHA256"], "source_sha": os.environ["GITHUB_SHA"],
+                    "run_id": int(os.environ["GITHUB_RUN_ID"]), "repository": os.environ["GITHUB_REPOSITORY"]}
+          with open("import-test-image.json", "w") as f: json.dump(record, f)
+          PY
+          cat import-test-image.json >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gcp-import-test-image
+          path: import-test-image.json
+          retention-days: 30
 
   build-dev:
     # Activation hold: remove false only after all MILESTONE1.md prerequisites are verified.
