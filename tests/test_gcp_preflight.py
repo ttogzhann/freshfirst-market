@@ -18,10 +18,9 @@ def workflow(name):
     )
 
 
-def test_preflight_is_manual_and_all_deployments_remain_held():
+def test_preflight_is_manual_and_production_deployments_remain_held():
     gcp, render = workflow("gcp"), workflow("render")
     for job in (
-        gcp["jobs"]["build-dev"],
         gcp["jobs"]["promote-production"],
         render["jobs"]["deploy-render"],
     ):

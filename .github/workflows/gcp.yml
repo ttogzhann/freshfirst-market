@@ -176,9 +176,8 @@ jobs:
           retention-days: 30
 
   build-dev:
-    # Activation hold: remove false only after all MILESTONE1.md prerequisites are verified.
+    # Dev-only activation: verified archive transport; production stays held.
     if: >-
-      false &&
       github.event_name == 'workflow_run' &&
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'push' &&
@@ -198,6 +197,12 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
           persist-credentials: false
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.sha }}
+          path: .deployment-tools
+          sparse-checkout: infra/gcp
+          persist-credentials: false
       - uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
@@ -216,6 +221,8 @@ jobs:
           push: true
           tags: ${{ vars.GCP_IMAGE_REPOSITORY }}:${{ github.event.workflow_run.head_sha }}
           platforms: linux/amd64
+          provenance: false
+          sbom: false
       - name: Refresh runner OIDC credentials after the build
         uses: google-github-actions/auth@v2
         with:
@@ -224,6 +231,16 @@ jobs:
           create_credentials_file: true
           export_environment_variables: true
           cleanup_credentials: true
+      - name: Check production health, dev database isolation and host headroom
+        env:
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          GCP_VM_NAME: ${{ vars.GCP_VM_NAME }}
+          GCP_ZONE: ${{ vars.GCP_ZONE }}
+        run: |
+          set -euo pipefail
+          gcloud compute ssh "$GCP_VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --tunnel-through-iap --quiet --ssh-flag=-T --ssh-key-expire-after=10m \
+            --command 'bash -s -- before' < .deployment-tools/infra/gcp/dev-host-check.sh \
+            | python3 .deployment-tools/infra/gcp/normalize-production-snapshot.py > "$RUNNER_TEMP/production.before"
       - name: Transfer verified image archive and release dev
         id: dev-transfer
         env:
@@ -235,15 +252,20 @@ jobs:
           set +x
           set -euo pipefail
           [[ "$IMAGE" =~ ^[a-z0-9-]+-docker\.pkg\.dev/[a-z0-9-]+/[a-z0-9_-]+/[a-z0-9/_-]+@sha256:[a-f0-9]{64}$ ]]
+          raw=$(mktemp "$RUNNER_TEMP/freshfirst-dev.raw.XXXXXX.tar")
           archive=$(mktemp "$RUNNER_TEMP/freshfirst-dev.XXXXXX.tar")
-          trap 'rm -f -- "$archive"' EXIT
+          trap 'rm -f -- "$raw" "$archive"' EXIT
           docker pull --platform linux/amd64 "$IMAGE"
           docker image inspect --format '{{json .RepoDigests}}' "$IMAGE" \
             | python3 -c 'import json,sys; assert sys.argv[1] in json.load(sys.stdin), "Registry digest mismatch"' "$IMAGE"
-          image_id=$(docker image inspect --format '{{.Id}}' "$IMAGE")
+          image_id=$(docker manifest inspect "$IMAGE" | python3 -c 'import json,sys; print(json.load(sys.stdin)["config"]["digest"])')
           [[ "$image_id" =~ ^sha256:[a-f0-9]{64}$ ]]
-          # Saving by ID produces an untagged archive; no registry credentials are included.
-          docker image save --output "$archive" "$image_id"
+          local_id=$(docker image inspect --format '{{.Id}}' "$IMAGE")
+          [[ "$local_id" == "$image_id" || "$local_id" == "${IMAGE##*@}" ]]
+          docker image save --output "$raw" "$local_id"
+          [[ $(stat -c %s "$raw") -le 1073741824 ]]
+          # Bind config/layers to the registry manifest, including containerd Docker IDs.
+          python3 .deployment-tools/infra/gcp/verify-image-archive.py "$raw" "$image_id" "$RUNNER_TEMP" 1073741824 > "$archive"
           archive_sha=$(sha256sum "$archive" | cut -d ' ' -f 1)
           [[ "$archive_sha" =~ ^[a-f0-9]{64}$ ]]
           archive_size=$(stat -c %s "$archive")
@@ -252,6 +274,18 @@ jobs:
             | gcloud compute ssh "$GCP_VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --tunnel-through-iap --quiet --ssh-flag=-T --ssh-key-expire-after=10m \
               --command "sudo -n /usr/local/sbin/freshfirst-release-dev-archive dev '$IMAGE' --image-archive-stdin '$archive_sha' '$archive_size' '$image_id'"
           printf 'archive_sha256=%s\narchive_size=%s\nimage_id=%s\n' "$archive_sha" "$archive_size" "$image_id" >> "$GITHUB_OUTPUT"
+      - name: Verify dev health and unchanged production metadata
+        env:
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          GCP_VM_NAME: ${{ vars.GCP_VM_NAME }}
+          GCP_ZONE: ${{ vars.GCP_ZONE }}
+        run: |
+          set -euo pipefail
+          gcloud compute ssh "$GCP_VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --tunnel-through-iap --quiet --ssh-flag=-T --ssh-key-expire-after=10m \
+            --command 'bash -s -- after' < .deployment-tools/infra/gcp/dev-host-check.sh \
+            | python3 .deployment-tools/infra/gcp/normalize-production-snapshot.py > "$RUNNER_TEMP/production.after"
+          cmp "$RUNNER_TEMP/production.before" "$RUNNER_TEMP/production.after"
+          printf '%s\n' 'Dev app and isolated database healthy; limits and loopback port verified; production healthy and metadata unchanged.' >> "$GITHUB_STEP_SUMMARY"
       - name: Record healthy dev release
         env:
           IMAGE: ${{ vars.GCP_IMAGE_REPOSITORY }}@${{ steps.image.outputs.digest }}
