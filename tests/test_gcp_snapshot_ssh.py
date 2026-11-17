@@ -83,6 +83,7 @@ fi
         "GCP_SSH_KEY": (tmp_path / "runner-ssh").as_posix(),
         "RUNNER_TEMP": tmp_path.as_posix(),
         "GITHUB_STEP_SUMMARY": (tmp_path / "summary").as_posix(),
+        "GITHUB_ENV": (tmp_path / "github-env").as_posix(),
         "SNAPSHOT": snapshot.as_posix(),
         "GCP_PROJECT_ID": "test",
         "GCP_VM_NAME": "test",
@@ -115,6 +116,23 @@ fi
         Loader=yaml.BaseLoader,
     )
     steps = workflow["jobs"]["build-dev"]["steps"]
+    initialize = next(
+        s["run"]
+        for s in steps
+        if s.get("name") == "Initialize runner-only SSH key path"
+    )
+    keys = []
+    for _ in range(2):
+        initialized = run(initialize)
+        assert initialized.returncode == 0, initialized.stderr
+        name, key = Path(env["GITHUB_ENV"]).read_text().splitlines()[-1].split("=", 1)
+        assert name == "GCP_SSH_KEY"
+        key_path = Path(key)
+        assert key_path.parent.parent.resolve() == tmp_path.resolve()
+        assert key_path.parent.is_dir() and not key_path.exists()
+        keys.append(key)
+    assert keys[0] != keys[1]
+    env["GCP_SSH_KEY"] = keys[-1]
     setup = next(
         s["run"]
         for s in steps
