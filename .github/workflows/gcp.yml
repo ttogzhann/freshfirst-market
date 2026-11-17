@@ -68,7 +68,7 @@ jobs:
           set -eu
           test ! -t 0 && test ! -t 1
           printf 'Noninteractive SSH identity: %s (uid=%s)\n' "$(id -un)" "$(id -u)"
-          helper=/usr/local/sbin/freshfirst-release
+          helper=/usr/local/sbin/freshfirst-release-dev-archive
           test -f "$helper" && test ! -L "$helper"
           test "$(stat -c '%u:%g:%a' "$helper")" = '0:0:750'
           image=us-central1-docker.pkg.dev/freshfirst-513520/freshfirst/app@sha256:0000000000000000000000000000000000000000000000000000000000000000
@@ -165,7 +165,7 @@ jobs:
           [[ "$archive_size" =~ ^[1-9][0-9]{0,9}$ && "$archive_size" -le 1073741824 ]]
           cat "$archive" \
             | gcloud compute ssh "$GCP_VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --tunnel-through-iap --quiet --ssh-flag=-T --ssh-key-expire-after=10m \
-              --command "sudo -n /usr/local/sbin/freshfirst-release dev '$IMAGE' --image-archive-stdin '$archive_sha' '$archive_size' '$image_id'"
+              --command "sudo -n /usr/local/sbin/freshfirst-release-dev-archive dev '$IMAGE' --image-archive-stdin '$archive_sha' '$archive_size' '$image_id'"
           printf 'archive_sha256=%s\narchive_size=%s\nimage_id=%s\n' "$archive_sha" "$archive_size" "$image_id" >> "$GITHUB_OUTPUT"
       - name: Record healthy dev release
         env:

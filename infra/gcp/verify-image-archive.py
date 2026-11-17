@@ -36,7 +36,12 @@ def safe_name(name):
     return str(path)
 
 
-def normalize(archive_path, image_id, output, docker_root=None):
+def normalize(
+    archive_path, image_id, output, docker_root=None, max_expanded_bytes=None
+):
+    limit = MAX_EXPANDED_BYTES if max_expanded_bytes is None else max_expanded_bytes
+    if not 0 < limit <= MAX_EXPANDED_BYTES:
+        raise ValueError("Invalid expanded layer limit")
     if not re.fullmatch(r"sha256:[a-f0-9]{64}", image_id):
         raise ValueError("Invalid image ID")
     with tarfile.open(archive_path, "r:") as archive:
@@ -83,7 +88,7 @@ def normalize(archive_path, image_id, output, docker_root=None):
                 while chunk := stream.read(1024 * 1024):
                     size += len(chunk)
                     expanded += len(chunk)
-                    if expanded > MAX_EXPANDED_BYTES:
+                    if expanded > limit:
                         raise ValueError("Expanded layer size limit exceeded")
                     digest.update(chunk)
             sizes.append(size)
@@ -124,6 +129,7 @@ if __name__ == "__main__":
             sys.argv[2],
             sys.stdout.buffer,
             sys.argv[3] if len(sys.argv) > 3 else None,
+            int(sys.argv[4]) if len(sys.argv) > 4 else None,
         )
     except (
         ValueError,

@@ -62,10 +62,11 @@ do not pass it to the registry-digest interface as a replacement digest.
 ## Remaining activation requirements (separate approval)
 
 - Review/merge this held PR; keep draft PR #98 blocked. Do not remove any holds.
-- Install the updated `freshfirst-release.sh` as root:root mode 0750 and
-  `verify-image-archive.py` at `/opt/freshfirst/infra/gcp/verify-image-archive.py`
-  as root:root mode 0644. Install both together; retain existing Compose/env/
-  allowlist files. Never read or replace production secrets.
+- Install `freshfirst-release.sh` separately as
+  `/usr/local/sbin/freshfirst-release-dev-archive` (root:root, 0750) and the verifier
+  at `/usr/local/lib/freshfirst-dev-archive/verify-image-archive.py` (root:root, 0644).
+  Never overwrite `/usr/local/sbin/freshfirst-release`, existing Compose/env/
+  allowlist files or volumes. The new entry point rejects production mode.
 - Verify the exact archive-mode arguments are allowed by noninteractive sudo.
   The updated manual preflight sends EOF with dummy nonsecret hashes/size and
   expects `Missing image archive on stdin` before any Docker call. Re-run only
@@ -82,5 +83,70 @@ The previous audit limitations are not declared resolved. If stdin/session
 recording exists, it may capture image contents (reviewed application code), but
 not a registry bearer token. The image must remain free of baked credentials and
 personal data; never add credentials to build args, layers or archive metadata.
-The unchanged, held legacy production helper path is not part of this dev design
-and is not activated by this PR.
+The existing legacy production helper is not replaced or activated by this PR.
+
+## One Cloud Shell installation/import-only procedure (approval required)
+
+Run from an authenticated operator's repository checkout only after approval of
+the exact commit and an existing small test-image digest in the configured app
+repository. No digest is chosen or published here. This procedure creates only
+two new host files plus their directory, imports one untagged test image, and
+does not start a container. Existing target files cause an abort instead of an
+overwrite. Import-only mode requires 512 MiB available RAM, limits the archive
+and expanded layers to 64 MiB, checks both disks, and preserves release records.
+
+```bash
+set -euo pipefail
+REVIEWED_SHA=REPLACE_WITH_APPROVED_COMMIT
+IMAGE=us-central1-docker.pkg.dev/freshfirst-513520/freshfirst/app@sha256:REPLACE_WITH_APPROVED_SMALL_TEST_DIGEST
+[[ "$REVIEWED_SHA" =~ ^[a-f0-9]{40}$ ]]
+[[ "$IMAGE" =~ ^us-central1-docker\.pkg\.dev/freshfirst-513520/freshfirst/app@sha256:[a-f0-9]{64}$ ]]
+CHECK_DIR=$(mktemp -d)
+FLAGS=(--project=freshfirst-513520 --zone=us-central1-a --tunnel-through-iap --quiet)
+vm() { gcloud compute ssh freshfirst "${FLAGS[@]}" --ssh-flag=-T --command "$1"; }
+for file in freshfirst-release.sh verify-image-archive.py; do
+  git show "$REVIEWED_SHA:infra/gcp/$file" > "$CHECK_DIR/$file"
+done
+SNAPSHOT='set -eu; sudo -n sha256sum /usr/local/sbin/freshfirst-release /opt/freshfirst/compose.yaml /opt/freshfirst/infra/gcp/compose.image.yaml /opt/freshfirst/infra/gcp/compose.dev.yaml; ids=$(sudo -n docker ps -aq --filter label=com.docker.compose.project=freshfirst); test -n "$ids"; sudo -n docker inspect --format "{{.Name}} {{.Id}} {{.Image}} {{.State.StartedAt}} {{.RestartCount}} {{json .HostConfig.PortBindings}} {{json .Mounts}}" $ids'
+RESOURCES='set -eu; free -m; root=$(sudo -n docker info --format "{{.DockerRootDir}}"); df -h /var/lib/freshfirst-releases/dev "$root"; ids=$(sudo -n docker ps -q --filter label=com.docker.compose.project=freshfirst); test -n "$ids"; sudo -n docker stats --no-stream --format "{{.Name}} {{.MemUsage}} {{.CPUPerc}}" $ids'
+vm "$SNAPSHOT" | LC_ALL=C sort > "$CHECK_DIR/production.before"
+vm "$RESOURCES"
+curl -fsS --max-time 15 -o /dev/null https://34.171.30.130.nip.io/healthz
+
+vm 'sudo -n test ! -e /usr/local/sbin/freshfirst-release-dev-archive && sudo -n test ! -L /usr/local/sbin/freshfirst-release-dev-archive && sudo -n test ! -e /usr/local/lib/freshfirst-dev-archive && sudo -n test ! -L /usr/local/lib/freshfirst-dev-archive'
+STAGE=$(vm 'mktemp -d /tmp/freshfirst-archive-check.XXXXXX')
+[[ "$STAGE" =~ ^/tmp/freshfirst-archive-check\.[A-Za-z0-9]+$ ]]
+gcloud compute scp "${FLAGS[@]}" "$CHECK_DIR/freshfirst-release.sh" "$CHECK_DIR/verify-image-archive.py" "freshfirst:$STAGE/"
+vm "sudo -n install -d -o root -g root -m 0755 /usr/local/lib/freshfirst-dev-archive && sudo -n install -o root -g root -m 0750 '$STAGE/freshfirst-release.sh' /usr/local/sbin/freshfirst-release-dev-archive && sudo -n install -o root -g root -m 0644 '$STAGE/verify-image-archive.py' /usr/local/lib/freshfirst-dev-archive/verify-image-archive.py"
+H=$(sha256sum "$CHECK_DIR/freshfirst-release.sh" | cut -d ' ' -f 1)
+V=$(sha256sum "$CHECK_DIR/verify-image-archive.py" | cut -d ' ' -f 1)
+vm "printf '%s  %s\n' '$H' /usr/local/sbin/freshfirst-release-dev-archive '$V' /usr/local/lib/freshfirst-dev-archive/verify-image-archive.py | sudo -n sha256sum -c -"
+
+# Authentication is local to Cloud Shell; no credential is copied to the VM.
+gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+docker pull --platform linux/amd64 "$IMAGE"
+docker image inspect --format '{{json .RepoDigests}}' "$IMAGE" | python3 -c 'import json,sys; assert sys.argv[1] in json.load(sys.stdin)' "$IMAGE"
+ID=$(docker image inspect --format '{{.Id}}' "$IMAGE")
+[[ "$ID" =~ ^sha256:[a-f0-9]{64}$ ]]
+docker image save --output "$CHECK_DIR/test.tar" "$ID"
+HASH=$(sha256sum "$CHECK_DIR/test.tar" | cut -d ' ' -f 1)
+SIZE=$(stat -c %s "$CHECK_DIR/test.tar")
+[[ "$SIZE" -le 67108864 ]]
+IMPORT_RC=0
+cat "$CHECK_DIR/test.tar" | vm "sudo -n /usr/local/sbin/freshfirst-release-dev-archive dev '$IMAGE' --verify-image-archive-stdin '$HASH' '$SIZE' '$ID'" || IMPORT_RC=$?
+
+vm "$SNAPSHOT" | LC_ALL=C sort > "$CHECK_DIR/production.after"
+cmp "$CHECK_DIR/production.before" "$CHECK_DIR/production.after"
+vm "$RESOURCES"
+curl -fsS --max-time 15 -o /dev/null https://34.171.30.130.nip.io/healthz
+[[ "$IMPORT_RC" -eq 0 ]] || { printf 'Import failed (exit %s); stop without repairs.\n' "$IMPORT_RC"; exit "$IMPORT_RC"; }
+printf 'Import-only test passed; production metadata/helper/Compose hashes unchanged. Evidence: %s\n' "$CHECK_DIR"
+```
+
+On any failure, stop; do not change permissions, clean images globally or reset
+databases. The imported untagged test image intentionally remains for inspection;
+never prune shared images automatically. Staging contains source files only.
+Production secrets and database contents are never read. After separately merging
+the still-held PR and installing these files, approve the updated GitHub manual
+archive EOF preflight to recheck the deployer's new entry point. No automatic
+deployment is enabled by installation or an import-only test.

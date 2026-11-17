@@ -104,7 +104,9 @@ esac
     if os.name == "nt":
         binary_path = "/" + binary_path[0].lower() + binary_path[2:]
     command = workflow("gcp")["jobs"]["oidc-preflight"]["steps"][-1]["run"]
-    command = command.replace("/usr/local/sbin/freshfirst-release", helper.as_posix())
+    command = command.replace(
+        "/usr/local/sbin/freshfirst-release-dev-archive", helper.as_posix()
+    )
     result = subprocess.run(
         [bash, "-c", f'export PATH="{binary_path}:$PATH"\n' + command],
         input=b"",

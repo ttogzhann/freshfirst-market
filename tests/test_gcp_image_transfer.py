@@ -162,12 +162,16 @@ def runtime(tmp_path):
         .read_text()
         .replace("/etc/freshfirst", config.as_posix())
         .replace("/opt/freshfirst", app.as_posix())
+        .replace(
+            "/usr/local/lib/freshfirst-dev-archive", (app / "infra/gcp").as_posix()
+        )
         .replace("/var/lib/freshfirst-releases", state.as_posix()),
         newline="\n",
     )
     scripts = {
         "install": "#!/bin/sh\nexit 0\n",
         "flock": "#!/bin/sh\nexit 0\n",
+        "awk": '#!/bin/sh\ncase "$*" in *MemAvailable*) echo "${AVAILABLE_KB:-9999999}";; *) exec /usr/bin/awk "$@";; esac\n',
         "stat": '#!/bin/sh\ncase "$2" in %u) echo 0;; %a) case "$3" in *verify-image-archive.py) echo 644;; *) echo 600;; esac;; %s) wc -c < "$3" | tr -d " ";; esac\n',
         "df": '#!/bin/sh\necho "Filesystem size used available percent mount"\necho "test 9999999999 0 ${FREE_BYTES:-9999999999} 0% /"\n',
         "python3": '#!/bin/sh\nexec "$TEST_PYTHON" "$@"\n',
@@ -218,6 +222,9 @@ exit 93
         running=None,
         workflow=False,
         reported=None,
+        verify_only=False,
+        available_kb=None,
+        environment="dev",
     ):
         archive, image_id = image_archive()
         data = archive if data is None else data
@@ -242,6 +249,11 @@ exit 93
         }
         if free is not None:
             env["FREE_BYTES"] = str(free)
+        if available_kb is not None:
+            env["AVAILABLE_KB"] = str(available_kb)
+        if verify_only:
+            (state / "dev/current-image").write_text("existing-release")
+            (state / "dev/previous-image").write_text("existing-previous")
         if running:
             env["RUNNING_IMAGE_ID"] = running
         if reported:
@@ -259,7 +271,7 @@ exit 93
                 if s.get("id") == "dev-transfer"
             )
             script = step["run"].replace(
-                "/usr/local/sbin/freshfirst-release", helper.as_posix()
+                "/usr/local/sbin/freshfirst-release-dev-archive", helper.as_posix()
             )
             command = [bash, "-c", prefix + script]
             stdin = b""
@@ -271,9 +283,11 @@ exit 93
             command = [
                 bash,
                 str(runner),
-                "dev",
+                environment,
                 IMAGE,
-                "--image-archive-stdin",
+                "--verify-image-archive-stdin"
+                if verify_only
+                else "--image-archive-stdin",
                 checksum or hashlib.sha256(data).hexdigest(),
                 str(size or len(data) or 1),
                 image_id,
@@ -299,6 +313,29 @@ def test_helper_imports_only_verified_image_and_preserves_digest_metadata(runtim
     assert not list((state / "dev").glob("transfer.*"))
     with tarfile.open(temp / "imported.tar") as archive:
         assert "index.json" not in archive.getnames()
+
+
+def test_separate_dev_helper_rejects_production_before_docker(runtime):
+    result, _, log, _, _ = runtime(environment="prod")
+    assert result.returncode != 0
+    assert not log.exists()
+
+
+@pytest.mark.parametrize("available_kb", [9999999, 1])
+def test_import_only_preserves_release_state_and_never_recreates_app(
+    runtime, available_kb
+):
+    result, state, log, _, _ = runtime(verify_only=True, available_kb=available_kb)
+    assert (result.returncode == 0) == (available_kb >= 524288), result.stderr.decode(
+        errors="replace"
+    )
+    assert (state / "dev/current-image").read_text() == "existing-release"
+    assert (state / "dev/previous-image").read_text() == "existing-previous"
+    assert not (state / "dev/pending-image").exists()
+    assert not list((state / "dev").glob("transfer.*"))
+    calls = log.read_text()
+    assert "up -d" not in calls
+    assert ("1 image load" in calls) == (available_kb >= 524288)
 
 
 @pytest.mark.parametrize(

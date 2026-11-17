@@ -2,7 +2,7 @@
 set +x # Tokens must never enter shell tracing, including bash -x invocations.
 set -Eeuo pipefail
 fail() { echo "$*" >&2; exit 1; }
-[[ ( $# == 6 && $1 == dev && $3 == --image-archive-stdin ) || ( $# == 2 && $1 == prod ) ]] || fail 'Usage: freshfirst-release dev IMAGE@sha256:DIGEST --image-archive-stdin ARCHIVE_SHA256 SIZE IMAGE_ID | prod IMAGE@sha256:DIGEST'
+[[ $# == 6 && $1 == dev && ( $3 == --image-archive-stdin || $3 == --verify-image-archive-stdin ) ]] || fail 'Usage: freshfirst-release-dev-archive dev IMAGE@sha256:DIGEST --image-archive-stdin|--verify-image-archive-stdin ARCHIVE_SHA256 SIZE IMAGE_ID'
 environment=$1
 image=$2
 [[ $image =~ ^[a-z0-9-]+-docker\.pkg\.dev/[a-z0-9-]+/[a-z0-9_-]+/[a-z0-9/_-]+@sha256:[a-f0-9]{64}$ ]] || fail 'Invalid immutable image reference'
@@ -53,28 +53,27 @@ exec 9>"$state/lock"
 flock -n 9 || fail 'Another deployment is running for this environment'
 db_id=$("${compose[@]}" ps -q db)
 [[ -n $db_id && $(docker inspect --format '{{.State.Health.Status}}' "$db_id") == healthy ]] || fail 'Existing healthy environment database required'
-previous=$("${compose[@]}" ps -q app)
-if [[ -n $previous ]]; then docker inspect --format '{{.Config.Image}}' "$previous" >"$state/previous-image"; fi
 umask 077
-credentials=
 transfer=
-cleanup_credentials() {
-  if [[ -n $credentials ]]; then
-    rm -f -- "$credentials/config.json"
-    rmdir -- "$credentials"
-    credentials=
-  fi
+cleanup_transfer() {
   if [[ -n $transfer ]]; then
     rm -f -- "$transfer/image.tar"
     rmdir -- "$transfer"
     transfer=
   fi
 }
-trap cleanup_credentials EXIT
+trap cleanup_transfer EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 if [[ $environment == dev ]]; then
-  verifier=$app_dir/infra/gcp/verify-image-archive.py
+  verifier=/usr/local/lib/freshfirst-dev-archive/verify-image-archive.py
+  expanded_limit=1073741824
+  if [[ $3 == --verify-image-archive-stdin ]]; then
+    [[ $archive_size -le 67108864 ]] || fail 'Import-only test archive exceeds 64 MiB'
+    available_kb=$(awk '/^MemAvailable:/ {print $2}' /proc/meminfo)
+    [[ $available_kb =~ ^[0-9]+$ && $available_kb -ge 524288 ]] || fail 'Import-only test requires 512 MiB available RAM'
+    expanded_limit=67108864
+  fi
   [[ -f $verifier && $(stat -c %u "$verifier") == 0 && $(stat -c %a "$verifier") == 644 ]] || fail 'Install root-owned mode 0644 image verifier first'
   available=$(df -PB1 "$state" | awk 'NR==2 {print $4}')
   [[ $available =~ ^[0-9]+$ && $available -ge $((3 * archive_size + 536870912)) ]] || fail 'Insufficient disk headroom for image archive'
@@ -85,22 +84,20 @@ if [[ $environment == dev ]]; then
   docker_root=$(docker info --format '{{.DockerRootDir}}')
   [[ -d $docker_root ]] || fail 'Cannot verify Docker storage headroom'
   # Validate everything before emitting an untagged normalized archive to Docker.
-  python3 "$verifier" "$transfer/image.tar" "$image_id" "$docker_root" | docker image load >/dev/null
+  python3 "$verifier" "$transfer/image.tar" "$image_id" "$docker_root" "$expanded_limit" | docker image load >/dev/null
   [[ $(docker image inspect --format '{{.Id}}' "$image_id") == "$image_id" ]] || fail 'Loaded image ID mismatch'
+  if [[ $3 == --verify-image-archive-stdin ]]; then
+    cleanup_transfer
+    echo "dev import verified: $image $image_id"
+    exit 0
+  fi
   export FRESHFIRST_IMAGE=$image_id
   printf '%s\n' "$image_id" >"$state/pending-image-id"
   printf '%s %s\n' "$archive_sha" "$archive_size" >"$state/pending-archive"
-else
-  credentials=$(mktemp -d)
-  export DOCKER_CONFIG=$credentials
-  curl --fail --silent --show-error -H 'Metadata-Flavor: Google' \
-    http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token \
-    | python3 -c 'import json,sys; print(json.load(sys.stdin)["access_token"])' \
-    | docker login --username oauth2accesstoken --password-stdin "https://${IMAGE_REPOSITORY%%/*}" >/dev/null
-  "${compose[@]}" pull app
 fi
-cleanup_credentials
-unset DOCKER_CONFIG
+cleanup_transfer
+previous=$("${compose[@]}" ps -q app)
+if [[ -n $previous ]]; then docker inspect --format '{{.Config.Image}}' "$previous" >"$state/previous-image"; fi
 printf '%s\n' "$image" >"$state/pending-image"
 "${compose[@]}" up -d --no-deps --no-build --pull never app
 for attempt in {1..30}; do
