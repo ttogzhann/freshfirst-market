@@ -3,8 +3,10 @@
 import json
 import logging
 import os
+import re
+import stat
 from time import perf_counter
-from urllib.parse import urlsplit
+from urllib.parse import unquote_to_bytes, urlsplit
 
 from opentelemetry import context, trace
 from opentelemetry._logs import LogRecord, SeverityNumber
@@ -22,6 +24,61 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.trace.sampling import ParentBased, TraceIdRatioBased
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 from sqlalchemy import event
+
+
+def exporter_headers(*, required=False):
+    """Read a bounded private header file, never copy credentials into the environment."""
+    # SDK exporters can otherwise fall back to these even with explicit empty headers.
+    if any(
+        name in os.environ
+        for name in (
+            "OTEL_EXPORTER_OTLP_HEADERS",
+            "OTEL_EXPORTER_OTLP_TRACES_HEADERS",
+            "OTEL_EXPORTER_OTLP_METRICS_HEADERS",
+            "OTEL_EXPORTER_OTLP_LOGS_HEADERS",
+        )
+    ):
+        raise ValueError("Telemetry header environment variables are unsupported; use the file")
+    path = os.getenv("FRESHFIRST_TELEMETRY_HEADERS_FILE", "")
+    if not path:
+        if required:
+            raise ValueError("Remote dev telemetry requires a private headers file")
+        return {}
+    try:
+        if not os.path.isabs(path):
+            raise ValueError()
+        flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
+        with os.fdopen(os.open(path, flags), "rb") as stream:
+            info = os.fstat(stream.fileno())
+            if not stat.S_ISREG(info.st_mode) or info.st_size > 8192:
+                raise ValueError()
+            # Root/group-readable is intentional for the non-root container UID.
+            if os.name == "posix" and info.st_mode & 0o027:
+                raise ValueError()
+            raw = stream.read(8193)
+        if len(raw) > 8192:
+            raise ValueError()
+        text = raw.decode("ascii").removesuffix("\n")
+        if not text or any(ord(char) < 33 or ord(char) > 126 for char in text):
+            raise ValueError()
+        headers = {}
+        for pair in text.split(","):
+            name, value = pair.split("=", 1)
+            if not re.fullmatch(r"[!#$%&'*+.^_`|~0-9A-Za-z-]+", name):
+                raise ValueError()
+            if not value or re.search(r"%(?![0-9A-Fa-f]{2})", value):
+                raise ValueError()
+            value = unquote_to_bytes(value).decode("ascii")
+            if any(ord(char) < 32 or ord(char) > 126 for char in value):
+                raise ValueError()
+            name = name.lower()
+            if name in headers:
+                raise ValueError()
+            headers[name] = value
+        return headers
+    except (OSError, ValueError, UnicodeError):
+        # Do not leak file paths, header content or decoder exception details.
+        raise ValueError("Cannot read valid private telemetry headers file") from None
 
 
 def configure(engine):
@@ -45,6 +102,11 @@ def configure(engine):
     ratio = float(os.getenv("FRESHFIRST_TELEMETRY_SAMPLE_RATIO", "0.1"))
     if not 0 <= ratio <= 1:
         raise ValueError("Telemetry sample ratio must be between 0 and 1")
+    if os.getenv("FRESHFIRST_TELEMETRY_HEADERS_FILE") and environment != "dev":
+        raise ValueError("Private telemetry headers files are supported only for dev")
+    headers = exporter_headers(
+        required=environment == "dev" and url.hostname not in {"localhost", "127.0.0.1", "::1"}
+    )
     # Explicit Resource avoids environment/host detectors leaking arbitrary attributes.
     resource = Resource(
         {"service.name": "freshfirst-api", "deployment.environment.name": environment}
@@ -54,7 +116,7 @@ def configure(engine):
     )
     traces.add_span_processor(
         BatchSpanProcessor(
-            OTLPSpanExporter(endpoint=endpoint + "/v1/traces", timeout=3),
+            OTLPSpanExporter(endpoint=endpoint + "/v1/traces", headers=headers, timeout=3),
             max_queue_size=256,
             max_export_batch_size=64,
             schedule_delay_millis=5000,
@@ -73,7 +135,7 @@ def configure(engine):
         ],
         metric_readers=[
             PeriodicExportingMetricReader(
-                OTLPMetricExporter(endpoint=endpoint + "/v1/metrics", timeout=3),
+                OTLPMetricExporter(endpoint=endpoint + "/v1/metrics", headers=headers, timeout=3),
                 export_interval_millis=60000,
                 export_timeout_millis=5000,
             )
@@ -82,7 +144,7 @@ def configure(engine):
     logs = LoggerProvider(resource=resource, shutdown_on_exit=False)
     logs.add_log_record_processor(
         BatchLogRecordProcessor(
-            OTLPLogExporter(endpoint=endpoint + "/v1/logs", timeout=3),
+            OTLPLogExporter(endpoint=endpoint + "/v1/logs", headers=headers, timeout=3),
             max_queue_size=256,
             max_export_batch_size=64,
             schedule_delay_millis=5000,
