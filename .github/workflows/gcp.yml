@@ -192,9 +192,13 @@ jobs:
       group: freshfirst-gcp-dev
       cancel-in-progress: false
     timeout-minutes: 30
-    env:
-      GCP_SSH_KEY: ${{ runner.temp }}/freshfirst-dev-ssh
     steps:
+      - name: Initialize runner-only SSH key path
+        run: |
+          set -euo pipefail
+          umask 077
+          ssh_dir=$(mktemp -d "${RUNNER_TEMP:?}/freshfirst-dev-ssh.XXXXXX")
+          printf 'GCP_SSH_KEY=%s/key\n' "$ssh_dir" >> "$GITHUB_ENV"
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
