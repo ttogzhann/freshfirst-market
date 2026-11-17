@@ -7,6 +7,16 @@ on:
     branches: [feature/render-deployment]
   workflow_dispatch:
     inputs:
+      publish_test_image:
+        description: Publish the pinned small import-test image only (no VM access)
+        required: true
+        default: false
+        type: boolean
+      preflight:
+        description: Run token-free OIDC SSH/sudo checks only (main branch)
+        required: true
+        default: false
+        type: boolean
       deploy:
         description: Explicitly approve promoting the verified dev digest to production
         required: true
@@ -14,15 +24,15 @@ on:
         type: boolean
       dev_run_id:
         description: Successful automatic GCP dev run ID (also used for rollback)
-        required: true
+        required: false
         type: string
       digest:
         description: Exact sha256 digest recorded by that dev run
-        required: true
+        required: false
         type: string
       source_sha:
         description: Full source commit recorded by that dev run
-        required: true
+        required: false
         type: string
 
 permissions:
@@ -30,10 +40,144 @@ permissions:
   actions: read
 
 jobs:
+  oidc-preflight:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.preflight == true && inputs.deploy != true && inputs.publish_test_image != true
+    runs-on: ubuntu-24.04
+    environment: gcp-development
+    permissions:
+      contents: read
+      id-token: write
+    concurrency:
+      group: freshfirst-gcp-dev
+      cancel-in-progress: false
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+          cleanup_credentials: true
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Verify OIDC deployer SSH and token-free sudo rejection
+        env:
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          GCP_VM_NAME: ${{ vars.GCP_VM_NAME }}
+          GCP_ZONE: ${{ vars.GCP_ZONE }}
+        run: |
+          set +x
+          set -euo pipefail
+          remote_command=$(cat <<'REMOTE'
+          set -eu
+          test ! -t 0 && test ! -t 1
+          printf 'Noninteractive SSH identity: %s (uid=%s)\n' "$(id -un)" "$(id -u)"
+          helper=/usr/local/sbin/freshfirst-release-dev-archive
+          test -f "$helper" && test ! -L "$helper"
+          test "$(stat -c '%u:%g:%a' "$helper")" = '0:0:750'
+          image=us-central1-docker.pkg.dev/freshfirst-513520/freshfirst/app@sha256:0000000000000000000000000000000000000000000000000000000000000000
+          printf 'Applicable command-specific sudo policy (inspect input/session logging):\n'
+          zero=0000000000000000000000000000000000000000000000000000000000000000
+          sudo -n -ll "$helper" dev "$image" --image-archive-stdin "$zero" 1 "sha256:$zero"
+          rc=0
+          result=$(sudo -n "$helper" dev "$image" --image-archive-stdin "$zero" 1 "sha256:$zero" </dev/null 2>&1) || rc=$?
+          if [ "$rc" -ne 1 ] || [ "$result" != 'Missing image archive on stdin' ]; then
+            printf 'FAIL: expected missing-token rejection; exit=%s\n' "$rc" >&2
+            exit 1
+          fi
+          printf 'PASS: SSH and passwordless sudo without TTY; helper rejected EOF before Docker.\n'
+          printf 'AUDITING: UNVERIFIED. Dev transport sends only image bytes, never registry credentials.\n'
+          REMOTE
+          )
+          gcloud compute ssh "$GCP_VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" \
+            --tunnel-through-iap --quiet --ssh-flag=-T --ssh-key-expire-after=5m \
+            --command "$remote_command" </dev/null
+          printf '%s\n' 'SSH/sudo preflight passed. Auditing remains UNVERIFIED; deployments remain held.' >> "$GITHUB_STEP_SUMMARY"
+
+  publish-import-test-image:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.publish_test_image == true && inputs.preflight != true && inputs.deploy != true
+    runs-on: ubuntu-24.04
+    environment: gcp-development
+    permissions:
+      contents: read
+      id-token: write
+    concurrency:
+      group: freshfirst-gcp-test-image-publish
+      cancel-in-progress: false
+    timeout-minutes: 10
+    env:
+      # Docker Official BusyBox 1.37.0, linux/amd64 manifest (not a mutable tag).
+      TEST_BASE_IMAGE: docker.io/library/busybox@sha256:66a6306db78bf2dbf3487f293aa8d6990d8e506fdffab9cc43fe422becf886e4
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Verify small linux/amd64 archive before publishing
+        id: archive
+        run: |
+          set -euo pipefail
+          archive=$(mktemp "$RUNNER_TEMP/freshfirst-import-test.XXXXXX.tar")
+          trap 'rm -f -- "$archive"' EXIT
+          docker pull --platform linux/amd64 "$TEST_BASE_IMAGE"
+          test "$(docker image inspect --format '{{.Os}}/{{.Architecture}}' "$TEST_BASE_IMAGE")" = linux/amd64
+          image_id=$(docker image inspect --format '{{.Id}}' "$TEST_BASE_IMAGE")
+          [[ "$image_id" =~ ^sha256:[a-f0-9]{64}$ ]]
+          docker image save --output "$archive" "$image_id"
+          size=$(stat -c %s "$archive")
+          [[ "$size" =~ ^[1-9][0-9]{0,9}$ && "$size" -lt 67108864 ]]
+          checksum=$(sha256sum "$archive" | cut -d ' ' -f 1)
+          [[ "$checksum" =~ ^[a-f0-9]{64}$ ]]
+          printf 'image_id=%s\narchive_size=%s\narchive_sha256=%s\n' "$image_id" "$size" "$checksum" >> "$GITHUB_OUTPUT"
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+          cleanup_credentials: true
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Publish existing image and record immutable test evidence
+        env:
+          IMAGE_REPOSITORY: ${{ vars.GCP_IMAGE_REPOSITORY }}
+          REGISTRY: ${{ vars.GCP_ARTIFACT_REGISTRY_HOST }}
+          IMAGE_ID: ${{ steps.archive.outputs.image_id }}
+          ARCHIVE_SIZE: ${{ steps.archive.outputs.archive_size }}
+          ARCHIVE_SHA256: ${{ steps.archive.outputs.archive_sha256 }}
+        run: |
+          set +x
+          set -euo pipefail
+          [[ "$IMAGE_REPOSITORY" =~ ^[a-z0-9-]+-docker\.pkg\.dev/[a-z0-9-]+/[a-z0-9_-]+/[a-z0-9/_-]+$ ]]
+          test "$REGISTRY" = "${IMAGE_REPOSITORY%%/*}"
+          gcloud auth configure-docker "$REGISTRY" --quiet
+          tag="$IMAGE_REPOSITORY:import-test-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          docker tag "$IMAGE_ID" "$tag"
+          docker push "$tag"
+          image=$(docker image inspect --format '{{json .RepoDigests}}' "$tag" \
+            | python3 -c 'import json,sys; refs=[r for r in json.load(sys.stdin) if r.startswith(sys.argv[1]+"@sha256:")]; assert len(refs)==1; print(refs[0])' "$IMAGE_REPOSITORY")
+          digest=${image##*@}
+          [[ "$digest" =~ ^sha256:[a-f0-9]{64}$ ]]
+          test "$image" = "$IMAGE_REPOSITORY@$digest"
+          docker pull --platform linux/amd64 "$image"
+          test "$(docker image inspect --format '{{.Id}}' "$image")" = "$IMAGE_ID"
+          export TEST_IMAGE=$image
+          python3 - <<'PY'
+          import json, os
+          record = {"image": os.environ["TEST_IMAGE"], "source_image": os.environ["TEST_BASE_IMAGE"],
+                    "digest": os.environ["TEST_IMAGE"].split("@")[1], "image_id": os.environ["IMAGE_ID"],
+                    "platform": "linux/amd64", "archive_size": int(os.environ["ARCHIVE_SIZE"]),
+                    "archive_sha256": os.environ["ARCHIVE_SHA256"], "source_sha": os.environ["GITHUB_SHA"],
+                    "run_id": int(os.environ["GITHUB_RUN_ID"]), "repository": os.environ["GITHUB_REPOSITORY"]}
+          with open("import-test-image.json", "w") as f: json.dump(record, f)
+          PY
+          cat import-test-image.json >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gcp-import-test-image
+          path: import-test-image.json
+          retention-days: 30
+
   build-dev:
-    # Activation hold: remove false only after all MILESTONE1.md prerequisites are verified.
+    # Dev-only activation: verified archive transport; production stays held.
     if: >-
-      false &&
       github.event_name == 'workflow_run' &&
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'push' &&
@@ -49,9 +193,21 @@ jobs:
       cancel-in-progress: false
     timeout-minutes: 30
     steps:
+      - name: Initialize runner-only SSH key path
+        run: |
+          set -euo pipefail
+          umask 077
+          ssh_dir=$(mktemp -d "${RUNNER_TEMP:?}/freshfirst-dev-ssh.XXXXXX")
+          printf 'GCP_SSH_KEY=%s/key\n' "$ssh_dir" >> "$GITHUB_ENV"
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.sha }}
+          path: .deployment-tools
+          sparse-checkout: infra/gcp
           persist-credentials: false
       - uses: google-github-actions/auth@v2
         with:
@@ -71,20 +227,44 @@ jobs:
           push: true
           tags: ${{ vars.GCP_IMAGE_REPOSITORY }}:${{ github.event.workflow_run.head_sha }}
           platforms: linux/amd64
-      - name: Mint short-lived dev pull credential after the build
-        id: dev-pull-token
+          provenance: false
+          sbom: false
+      - name: Refresh runner OIDC credentials after the build
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
-          token_format: access_token
-          access_token_lifetime: 600s
           create_credentials_file: true
           export_environment_variables: true
           cleanup_credentials: true
-      - name: Deploy immutable release to dev
+      - name: Prepare noninteractive IAP SSH outside snapshot data
         env:
-          REGISTRY_ACCESS_TOKEN: ${{ steps.dev-pull-token.outputs.access_token }}
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          GCP_VM_NAME: ${{ vars.GCP_VM_NAME }}
+          GCP_ZONE: ${{ vars.GCP_ZONE }}
+        run: |
+          set -euo pipefail
+          # gcloud's first ssh-keygen inherits stdout; log setup separately.
+          # Keep host-key verification unchanged and surface every diagnostic.
+          gcloud compute ssh "$GCP_VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --tunnel-through-iap --quiet \
+            --ssh-key-file "$GCP_SSH_KEY" --ssh-flag=-T --ssh-flag=-oBatchMode=yes --ssh-key-expire-after=10m \
+            --command true </dev/null 1>&2
+          test -s "$GCP_SSH_KEY" && test -s "$GCP_SSH_KEY.pub"
+      - name: Check production health, dev database isolation and host headroom
+        env:
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          GCP_VM_NAME: ${{ vars.GCP_VM_NAME }}
+          GCP_ZONE: ${{ vars.GCP_ZONE }}
+        run: |
+          set -euo pipefail
+          test -s "$GCP_SSH_KEY" && test -s "$GCP_SSH_KEY.pub"
+          gcloud compute ssh "$GCP_VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --tunnel-through-iap --quiet \
+            --ssh-key-file "$GCP_SSH_KEY" --ssh-flag=-T --ssh-flag=-oBatchMode=yes --ssh-key-expire-after=10m \
+            --command 'bash -s -- before' < .deployment-tools/infra/gcp/dev-host-check.sh > "$RUNNER_TEMP/production.before.raw"
+          python3 .deployment-tools/infra/gcp/normalize-production-snapshot.py "$RUNNER_TEMP/production.before.raw" > "$RUNNER_TEMP/production.before"
+      - name: Transfer verified image archive and release dev
+        id: dev-transfer
+        env:
           IMAGE: ${{ vars.GCP_IMAGE_REPOSITORY }}@${{ steps.image.outputs.digest }}
           GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
           GCP_VM_NAME: ${{ vars.GCP_VM_NAME }}
@@ -93,24 +273,63 @@ jobs:
           set +x
           set -euo pipefail
           [[ "$IMAGE" =~ ^[a-z0-9-]+-docker\.pkg\.dev/[a-z0-9-]+/[a-z0-9_-]+/[a-z0-9/_-]+@sha256:[a-f0-9]{64}$ ]]
-          test -n "$REGISTRY_ACCESS_TOKEN"
-          printf '%s\n' "$REGISTRY_ACCESS_TOKEN" \
-            | gcloud compute ssh "$GCP_VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --tunnel-through-iap --quiet --ssh-flag=-T \
-              --command "sudo -n /usr/local/sbin/freshfirst-release dev '$IMAGE' --registry-token-stdin"
-          unset REGISTRY_ACCESS_TOKEN
+          raw=$(mktemp "$RUNNER_TEMP/freshfirst-dev.raw.XXXXXX.tar")
+          archive=$(mktemp "$RUNNER_TEMP/freshfirst-dev.XXXXXX.tar")
+          trap 'rm -f -- "$raw" "$archive"' EXIT
+          docker pull --platform linux/amd64 "$IMAGE"
+          docker image inspect --format '{{json .RepoDigests}}' "$IMAGE" \
+            | python3 -c 'import json,sys; assert sys.argv[1] in json.load(sys.stdin), "Registry digest mismatch"' "$IMAGE"
+          image_id=$(docker manifest inspect "$IMAGE" | python3 -c 'import json,sys; print(json.load(sys.stdin)["config"]["digest"])')
+          [[ "$image_id" =~ ^sha256:[a-f0-9]{64}$ ]]
+          local_id=$(docker image inspect --format '{{.Id}}' "$IMAGE")
+          [[ "$local_id" == "$image_id" || "$local_id" == "${IMAGE##*@}" ]]
+          docker image save --output "$raw" "$local_id"
+          [[ $(stat -c %s "$raw") -le 1073741824 ]]
+          # Bind config/layers to the registry manifest, including containerd Docker IDs.
+          python3 .deployment-tools/infra/gcp/verify-image-archive.py "$raw" "$image_id" "$RUNNER_TEMP" 1073741824 > "$archive"
+          archive_sha=$(sha256sum "$archive" | cut -d ' ' -f 1)
+          [[ "$archive_sha" =~ ^[a-f0-9]{64}$ ]]
+          archive_size=$(stat -c %s "$archive")
+          [[ "$archive_size" =~ ^[1-9][0-9]{0,9}$ && "$archive_size" -le 1073741824 ]]
+          test -s "$GCP_SSH_KEY" && test -s "$GCP_SSH_KEY.pub"
+          cat "$archive" \
+            | gcloud compute ssh "$GCP_VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --tunnel-through-iap --quiet \
+              --ssh-key-file "$GCP_SSH_KEY" --ssh-flag=-T --ssh-flag=-oBatchMode=yes --ssh-key-expire-after=10m \
+              --command "sudo -n /usr/local/sbin/freshfirst-release-dev-archive dev '$IMAGE' --image-archive-stdin '$archive_sha' '$archive_size' '$image_id'"
+          printf 'archive_sha256=%s\narchive_size=%s\nimage_id=%s\n' "$archive_sha" "$archive_size" "$image_id" >> "$GITHUB_OUTPUT"
+      - name: Verify dev health and unchanged production metadata
+        env:
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          GCP_VM_NAME: ${{ vars.GCP_VM_NAME }}
+          GCP_ZONE: ${{ vars.GCP_ZONE }}
+        run: |
+          set -euo pipefail
+          test -s "$GCP_SSH_KEY" && test -s "$GCP_SSH_KEY.pub"
+          gcloud compute ssh "$GCP_VM_NAME" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE" --tunnel-through-iap --quiet \
+            --ssh-key-file "$GCP_SSH_KEY" --ssh-flag=-T --ssh-flag=-oBatchMode=yes --ssh-key-expire-after=10m \
+            --command 'bash -s -- after' < .deployment-tools/infra/gcp/dev-host-check.sh > "$RUNNER_TEMP/production.after.raw"
+          python3 .deployment-tools/infra/gcp/normalize-production-snapshot.py "$RUNNER_TEMP/production.after.raw" > "$RUNNER_TEMP/production.after"
+          cmp "$RUNNER_TEMP/production.before" "$RUNNER_TEMP/production.after"
+          printf '%s\n' 'Dev app and isolated database healthy; limits and loopback port verified; production healthy and metadata unchanged.' >> "$GITHUB_STEP_SUMMARY"
       - name: Record healthy dev release
         env:
           IMAGE: ${{ vars.GCP_IMAGE_REPOSITORY }}@${{ steps.image.outputs.digest }}
           DIGEST: ${{ steps.image.outputs.digest }}
           SOURCE_SHA: ${{ github.event.workflow_run.head_sha }}
           CI_RUN_ID: ${{ github.event.workflow_run.id }}
+          IMAGE_ID: ${{ steps.dev-transfer.outputs.image_id }}
+          ARCHIVE_SHA256: ${{ steps.dev-transfer.outputs.archive_sha256 }}
+          ARCHIVE_SIZE: ${{ steps.dev-transfer.outputs.archive_size }}
         run: |
           python3 - <<'PY'
           import json, os
           release = {"image": os.environ["IMAGE"], "digest": os.environ["DIGEST"],
                      "source_sha": os.environ["SOURCE_SHA"], "ci_run_id": int(os.environ["CI_RUN_ID"]),
                      "repository": os.environ["GITHUB_REPOSITORY"],
-                     "dev_run_id": int(os.environ["GITHUB_RUN_ID"]), "dev_healthy": True}
+                     "dev_run_id": int(os.environ["GITHUB_RUN_ID"]), "dev_healthy": True,
+                     "transport": "verified-image-archive", "image_id": os.environ["IMAGE_ID"],
+                     "archive_sha256": os.environ["ARCHIVE_SHA256"],
+                     "archive_size": int(os.environ["ARCHIVE_SIZE"])}
           with open("release.json", "w") as f: json.dump(release, f)
           PY
           cat release.json >> "$GITHUB_STEP_SUMMARY"
@@ -119,9 +338,13 @@ jobs:
           name: healthy-dev-release
           path: release.json
           retention-days: 90
+      - name: Remove runner-only SSH key
+        if: always()
+        run: rm -f -- "$GCP_SSH_KEY" "$GCP_SSH_KEY.pub"
 
   promote-production:
-    if: github.event_name == 'workflow_dispatch' && inputs.deploy == true && github.ref == 'refs/heads/feature/render-deployment'
+    # Production requires a separate reviewed activation and independent approval.
+    if: false && github.event_name == 'workflow_dispatch' && inputs.deploy == true && github.ref == 'refs/heads/feature/render-deployment'
     runs-on: ubuntu-24.04
     environment: gcp-production
     permissions:

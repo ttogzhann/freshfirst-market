@@ -95,6 +95,7 @@ class Telemetry:
     def __init__(self, engine, traces, meters, logs):
         self.engine, self.traces, self.meters, self.logs = engine, traces, meters, logs
         self.tracer = traces.get_tracer("freshfirst")
+        self.environment = traces.resource.attributes.get("deployment.environment.name", "dev")
         meter = meters.get_meter("freshfirst")
         self.requests = meter.create_counter("freshfirst.http.requests", unit="1")
         self.duration = meter.create_histogram("http.server.request.duration", unit="s")
@@ -149,6 +150,7 @@ class Telemetry:
         path = getattr(route, "path", "unmatched")
         operation = getattr(route, "operation_id", None)
         attributes = {
+            "freshfirst.environment": self.environment,
             "http.request.method": method,
             "http.route": path,
             "http.response.status_code": status,
