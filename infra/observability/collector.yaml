@@ -1,0 +1,32 @@
+# Optional local workstation smoke test; do not install a telemetry stack on the VM.
+# docker run --rm -p 127.0.0.1:4318:4318 -v "$PWD/infra/observability/collector.yaml:/etc/otelcol/config.yaml:ro" otel/opentelemetry-collector:0.151.0
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 64
+    spike_limit_mib: 16
+  batch:
+    send_batch_size: 64
+    timeout: 5s
+exporters:
+  debug:
+    verbosity: basic
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [debug]
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [debug]
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [debug]

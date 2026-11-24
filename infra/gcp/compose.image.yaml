@@ -1,0 +1,4 @@
+# Retain the existing Compose services, network and volume names.
+services:
+  app:
+    image: ${FRESHFIRST_IMAGE:?Supply an immutable Artifact Registry image digest}
